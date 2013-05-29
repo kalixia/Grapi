@@ -58,7 +58,7 @@ In order to configure a Maven project, you can use something like this:
         </compilerArgs>
     </configuration>
 </plugin>
-``
+```
 
 ## Usage
 
