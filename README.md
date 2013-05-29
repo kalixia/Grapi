@@ -5,6 +5,18 @@ RaWSAG is a Java source code generator based on APT (Javac plugin).
 RaWSAG analyzes your JAX-RS source code and generate some code in order to expose your JAX-RS resources through
 [Netty](http://netty.io) 4.
 
+
+### Introduction
+
+Basically RaWSAG generates some optimized Java code for ease of use of JAX-RS resources through Netty.
+
+There is no runtime dependency on any JAX-RS provider (*actually only a small one on Jersey UriTemplate class
+which will be removed later on*) and RaWSAG is not a JAX-RS provider.
+
+RaWSAG avoids the introspection *crap* and generate Java source code that will work according to the JAX-RS resources.
+When some JAX-RS features aren't used, some Java code is dropped from the generated source code in order to both reduce
+complexity of the generated source code, but also in order to improve performance and maintenance of code.
+
 Additionally, RaWSAG can generate a [Dagger](https://github.com/square/dagger) module in order to simplify even more
 the use of the generated code.
 
