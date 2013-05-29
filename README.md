@@ -39,6 +39,7 @@ Then you simply need to add two dependencies to your project/module (where your 
 There are currently two options available:
 
 | Option | Description
+|--------|------------
 | dagger | Additionally generate a Dagger module, named ``` GeneratedJaxRsDaggerModule ```
 | rxjava | Use HTTP chunks when a JAX-RS method returns an ``` Observable ```
 
