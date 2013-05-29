@@ -20,7 +20,7 @@ First, you need to build the project as it is not *yet* available via a Maven re
 ```
 
 Then you simply need to add two dependencies to your project/module (where your JAX-RS source code is located):
-```
+```xml
 <dependency>
     <groupId>com.kalixia.rawsag</groupId>
     <artifactId>netty-codecs</artifactId>
@@ -43,7 +43,7 @@ There are currently two options available:
 | rxjava | Use HTTP chunks when a JAX-RS method returns an ``` Observable ```
 
 In order to configure a Maven project, you can use something like this:
-```
+```xml
 <plugin>
     <artifactId>maven-compiler-plugin</artifactId>
     <version>3.1</version>
