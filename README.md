@@ -6,22 +6,42 @@ RaWSAG analyzes your JAX-RS source code and generate some code in order to expos
 [Netty](http://netty.io) 4.
 
 
-### Introduction
+## Introduction
 
 Basically RaWSAG generates some optimized Java code for ease of use of JAX-RS resources through Netty.
 
 There is no runtime dependency on any JAX-RS provider (*actually only a small one on Jersey UriTemplate class
 which will be removed later on*) and RaWSAG is not a JAX-RS provider.
 
-RaWSAG avoids the introspection *crap* and generate Java source code that will work according to the JAX-RS resources.
+RaWSAG avoids the introspection *crap* and generates Java source code which will work according to the JAX-RS resources.
 When some JAX-RS features aren't used, some Java code is dropped from the generated source code in order to both reduce
-complexity of the generated source code, but also in order to improve performance and maintenance of code.
+complexity of the generated source code and improve the performance and maintenance of code.
 
 Additionally, RaWSAG can generate a [Dagger](https://github.com/square/dagger) module in order to simplify even more
 the use of the generated code.
 
 Finally if your JAX-RS resources return some [RxJava](https://github.com/Netflix/RxJava) ``` Observable ``` then the
-generated Netty code with use HTTP Transfer-Encoding and emit an HTTP chunk for each of data element.
+generated Netty code with use HTTP Transfer-Encoding, emit HTTP chunks for each data element and wrap them all in a
+JSon array.
+
+
+## Current Status
+
+The project is in early stages. It's being successfully used and tested on other projects.
+
+They are though some few limitations worth knowing. These limitations will be taken care of and are only
+missing features:
+
+* the WS stack is highly experimental at the moment
+* no support for Response JAX-RS instances
+* no support for @Consumes
+* no support for @QueryParam
+* no support for @HeaderParam
+* no support for @CookieParam
+* no support for JAX-RS exceptions
+* no support for @FormParam
+* no support for @MatrixParam
+* no support for processing Groovy sources (probably through AST transformations)
 
 
 ## Setup
@@ -71,6 +91,11 @@ In order to configure a Maven project, you can use something like this:
     </configuration>
 </plugin>
 ```
+
+When you run ``` mvn compile ``` you'll find the generated source code in ``` target/generated-sources/annotations ```.
+Each JAX-RS resource's method generates a Java class. There is also one ``` GeneratedJaxRsModuleHandler ``` created
+which references all the generated classes.
+
 
 ## Usage
 
