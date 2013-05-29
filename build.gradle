@@ -1,0 +1,16 @@
+apply plugin: 'maven'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+
+subprojects {
+    group = 'com.kalixia.rawsag'
+    version = '0.1-SNAPSHOT'
+    sourceCompatibility = JavaVersion.VERSION_1_7
+
+    apply plugin: 'java'
+    apply plugin: 'maven'
+
+    repositories {
+        mavenCentral()
+    }
+}

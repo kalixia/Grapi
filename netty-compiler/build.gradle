@@ -1,0 +1,4 @@
+dependencies {
+    compile project(':netty-codecs')
+    compile 'com.squareup:javawriter:1.0.5'
+}

@@ -1,0 +1,1 @@
+include 'netty-codecs', 'netty-compiler'
