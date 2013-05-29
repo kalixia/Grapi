@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.kalixia.rawsag</groupId>
+    <artifactId>rawsag</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <description>REST and WebSockets APIs Generator</description>
+
+    <modules>
+        <module>netty-codecs</module>
+        <module>netty-compiler</module>
+    </modules>
+
+    <properties>
+        <rxjava.version>0.9.0</rxjava.version>
+        <jackson.version>2.2.1</jackson.version>
+        <spock.version>0.7-groovy-2.0</spock.version>
+        <dagger.version>1.0.0</dagger.version>
+        <groovy.version>2.1.3</groovy.version>
+        <netty.version>4.0.0.CR3</netty.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Netty dependencies -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.javassist</groupId>
+                <artifactId>javassist</artifactId>
+                <version>3.17.1-GA</version>
+            </dependency>
+
+            <!-- RxJava dependencies -->
+            <dependency>
+                <groupId>com.netflix.rxjava</groupId>
+                <artifactId>rxjava-core</artifactId>
+                <version>${rxjava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.netflix.rxjava</groupId>
+                <artifactId>rxjava-groovy</artifactId>
+                <version>${rxjava.version}</version>
+            </dependency>
+
+            <!-- Dagger dependencies -->
+            <dependency>
+                <groupId>com.squareup.dagger</groupId>
+                <artifactId>dagger</artifactId>
+                <version>${dagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.dagger</groupId>
+                <artifactId>dagger-compiler</artifactId>
+                <version>${dagger.version}</version>
+                <optional>true</optional>
+            </dependency>
+
+            <!-- Jackson dependencies -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <!-- JAX-RS dependencies -->
+            <dependency>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>javax.ws.rs-api</artifactId>
+                <version>2.0-rc3</version>
+            </dependency>
+
+            <!-- Groovy dependencies -->
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>${groovy.version}</version>
+            </dependency>
+
+            <!-- Logging dependencies -->
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.0.10</version>
+            </dependency>
+
+            <!-- Test dependencies -->
+            <dependency>
+                <groupId>org.spockframework</groupId>
+                <artifactId>spock-core</artifactId>
+                <version>${spock.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.11</version>
+                <scope>test</scope>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                    <configuration>
+                        <source>1.7</source>
+                        <target>1.7</target>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.gmaven</groupId>
+                    <artifactId>gmaven-plugin</artifactId>
+                    <version>1.4</version>
+                    <configuration>
+                        <providerSelection>2.0</providerSelection>
+                        <targetBytecode>1.7</targetBytecode>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>generateStubs</goal>
+                                <goal>compile</goal>
+                                <goal>generateTestStubs</goal>
+                                <goal>testCompile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.spockframework</groupId>
+                    <artifactId>spock-maven</artifactId>
+                    <version>${spock.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>find-specs</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>
