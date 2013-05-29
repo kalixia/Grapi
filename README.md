@@ -62,7 +62,7 @@ In order to configure a Maven project, you can use something like this:
 
 ## Usage
 
-### ChannelInitializer
+### Netty pipeline
 
 Netty uses a ``` ChannelInitializer ``` in order to setup the *pipeline*.
 
@@ -115,7 +115,8 @@ public class ApiServerChannelInitializer extends ChannelInitializer<SocketChanne
 
 ### Dagger
 
-RaWSAG will generate a class named GeneratedJaxRsDaggerModule. You have two different ways to use this module:
+RaWSAG will generate a class named ```GeneratedJaxRsDaggerModule ```. You have two different ways to use this module:
+
 1. reference the generated Dagger module from another module of your own,
 2. create the ``` ObjectGraph ``` with this module (and eventually other ones too).
 
