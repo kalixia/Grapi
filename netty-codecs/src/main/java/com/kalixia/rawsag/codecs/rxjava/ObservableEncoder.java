@@ -19,6 +19,7 @@ import rx.Observer;
 import rx.Subscription;
 
 import javax.inject.Inject;
+import java.nio.charset.Charset;
 
 /**
  * Encoder transforming RxJava's {@link Observable} into many HTTP objects, through HTTP chunks.
@@ -32,15 +33,14 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
     @Inject
     ObjectMapper objectMapper;
 
-    private static final ByteBuf LIST_BEGIN = Unpooled.wrappedBuffer("[".getBytes());
-    private static final ByteBuf LIST_END   = Unpooled.wrappedBuffer("]".getBytes());
-    private static final ByteBuf LIST_ITEM_SEPARATOR = Unpooled.wrappedBuffer(",".getBytes());
+    private static final ByteBuf LIST_BEGIN = Unpooled.wrappedBuffer("[".getBytes(Charset.defaultCharset()));
+    private static final ByteBuf LIST_END   = Unpooled.wrappedBuffer("]".getBytes(Charset.defaultCharset()));
+    private static final ByteBuf LIST_ITEM_SEPARATOR = Unpooled.wrappedBuffer(",".getBytes(Charset.defaultCharset()));
 
     @Override
     @SuppressWarnings("unchecked")
     protected void encode(final ChannelHandlerContext ctx, final ObservableApiResponse<?> apiResponse, final MessageBuf<Object> out)
             throws Exception {
-        // TODO: figure out which HTTP status to send!
         DefaultHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, apiResponse.status());
         HttpHeaders.setTransferEncodingChunked(response);
         response.headers().set(HttpHeaders.Names.CONTENT_TYPE, apiResponse.contentType());

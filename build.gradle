@@ -2,16 +2,46 @@ apply plugin: 'maven'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
+ext.sourceCompatibility = JavaVersion.VERSION_1_7
+
 subprojects {
     group = 'com.kalixia.rawsag'
     version = '0.1-SNAPSHOT'
-    sourceCompatibility = JavaVersion.VERSION_1_7
+
+    repositories {
+        mavenCentral()
+    }
 
     apply plugin: 'java'
     apply plugin: 'maven'
     apply plugin: 'idea'
 
-    repositories {
-        mavenCentral()
+    // FindBugs
+//    apply plugin: 'findbugs'
+//    tasks.withType(findbugs) {
+//        omitVisitors = ["MissingClass"]     // don't understand why FindBugs keeps complaining about a missing class
+//    }
+
+    // PMD
+    apply plugin: 'pmd'
+
+    // JaCoCo
+    apply plugin: 'jacoco'
+    jacoco {
+        toolVersion = "0.6.2.201302030002"
+    }
+    jacocoTestReport {
+        reports {
+            xml.enabled false
+            csv.enabled false
+            html.destination "${buildDir}/jacocoHtml"
+        }
+    }
+    test {
+        jacoco {
+            append = false
+            destPath = file("$buildDir/jacoco/jacocoTest.exec")
+            classDumpPath = file("$buildDir/jacoco/classpathdumps")
+        }
     }
 }
