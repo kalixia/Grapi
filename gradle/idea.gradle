@@ -1,0 +1,44 @@
+allprojects {
+    apply plugin: 'idea'
+}
+
+idea {
+    project {
+        jdkName = '1.7'
+        languageLevel = '1.7'
+
+        ipr.withXml { provider ->
+            def compilerConfiguration = provider.node.component.find {
+                it.@name == 'CompilerConfiguration'
+            }
+
+            def annotationProcessing = compilerConfiguration.annotationProcessing[0]
+            annotationProcessing.@enabled = true
+            annotationProcessing.@useClasspath = true
+            annotationProcessing.appendNode(
+                    'processor', [
+                    name: 'com.kalixia.rawsag.apt.jaxrs.StaticAnalysisCompiler',
+                    options: ''
+            ])
+            annotationProcessing.appendNode(
+                    'processModule', [
+                    name: project.name,
+                    generatedDirName: 'gen'
+            ])
+        }
+    }
+}
+
+subprojects {
+    idea {
+        module {
+            downloadJavadoc = true
+            downloadSources = true
+//            sourceDirs = [ project.sourceSets.main.allSource ]
+//            sourceDirs += project.sourceSets.main.allSource
+//            sourceDirs += project.sourceSets.allJava.srcDirs
+//            sourceDirs += file('build/libs')
+//            sourceDirs += file("$buildDir/generated-src")
+        }
+    }
+}

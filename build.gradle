@@ -1,8 +1,9 @@
 apply plugin: 'maven'
-apply plugin: 'idea'
 apply plugin: 'eclipse'
 
 ext.sourceCompatibility = JavaVersion.VERSION_1_7
+
+apply from: file('gradle/idea.gradle')
 
 subprojects {
     group = 'com.kalixia.rawsag'
@@ -14,7 +15,6 @@ subprojects {
 
     apply plugin: 'java'
     apply plugin: 'maven'
-    apply plugin: 'idea'
 
     // FindBugs
 //    apply plugin: 'findbugs'
@@ -45,3 +45,4 @@ subprojects {
         }
     }
 }
+

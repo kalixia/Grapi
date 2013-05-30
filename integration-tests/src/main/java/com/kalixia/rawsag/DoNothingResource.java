@@ -1,4 +1,4 @@
-package com.kalixia.ha.api.rest;
+package com.kalixia.rawsag;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
