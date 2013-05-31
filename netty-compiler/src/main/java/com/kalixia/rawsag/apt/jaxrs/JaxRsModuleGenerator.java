@@ -147,10 +147,10 @@ public class JaxRsModuleGenerator {
                         .endControlFlow()
                     .endControlFlow()
                     .emitEndOfLineComment("no matching handler found -- issue a 404 error")
-                    .emitStatement("LOGGER.info(\"Could not locate a JAX-RS resource for path '{}' and method {}\"," +
+                    .emitStatement("LOGGER.info(\"Could not locate a JAX-RS resource for path '{}' and method {}\", " +
                             "request.uri(), request.method());")
                     .emitEmptyLine()
-                    .emitStatement("ctx.write(new ApiResponse(request.id(), HttpResponseStatus.NOT_FOUND," +
+                    .emitStatement("ctx.write(new ApiResponse(request.id(), HttpResponseStatus.NOT_FOUND, " +
                             "ERROR_WRONG_URL, MediaType.TEXT_PLAIN))")
                 .endMethod();
     }

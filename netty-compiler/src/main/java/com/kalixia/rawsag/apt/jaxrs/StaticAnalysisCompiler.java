@@ -27,9 +27,7 @@ import java.util.TreeMap;
 
 @SupportedAnnotationTypes({ "javax.ws.rs.*" })
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
-@SupportedOptions({
-    "dagger"
-})
+@SupportedOptions({ "dagger", "rxjava" })
 public class StaticAnalysisCompiler extends AbstractProcessor {
     private Elements elementUtils;
     private Messager messager;
@@ -37,6 +35,8 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
     private JaxRsMethodGenerator methodGenerator;
     private JaxRsModuleGenerator moduleGenerator;
     private JaxRsDaggerModuleGenerator daggerGenerator;
+    private SortedMap<String,String> uriTemplateToHandlerName;
+    private List<String> generatedHandlers;
     public static final String GENERATOR_NAME = "netty-rest";
 
     @Override
@@ -49,12 +49,13 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
         methodGenerator = new JaxRsMethodGenerator(filer, messager, options);
         moduleGenerator = new JaxRsModuleGenerator(filer, messager, options);
         daggerGenerator = new JaxRsDaggerModuleGenerator(filer, messager, options);
+        uriTemplateToHandlerName = new TreeMap<>(new UriTemplatePrecedenceComparator());
+        generatedHandlers = new ArrayList<>();
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         Set<? extends Element> resources = roundEnv.getElementsAnnotatedWith(Path.class);
-        SortedMap<String,String> uriTemplateToHandlerName = new TreeMap<>(new UriTemplatePrecedenceComparator());
 
         for (Element resource : resources) {
             // only keep classes
@@ -94,10 +95,10 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
             }
         }
 
-        List<String> generatedHandlers = new ArrayList<>(uriTemplateToHandlerName.values());
+        generatedHandlers.addAll(uriTemplateToHandlerName.values());
 
         // TODO: use package from APT processor options
-        if (!resources.isEmpty() && generatedHandlers.size() > 0) {
+        if (roundEnv.processingOver() && generatedHandlers.size() > 0) {
             String firstHandlerName = generatedHandlers.get(0);
             String packageName = firstHandlerName.substring(0, firstHandlerName.lastIndexOf('.'));
 //            System.out.printf("Package name %s%n", packageName);
