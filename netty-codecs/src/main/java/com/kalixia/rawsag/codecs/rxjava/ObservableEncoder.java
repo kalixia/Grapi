@@ -1,6 +1,7 @@
 package com.kalixia.rawsag.codecs.rxjava;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kalixia.rawsag.ObservableApiResponse;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.MessageBuf;
@@ -12,14 +13,17 @@ import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpVersion;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 
 import javax.inject.Inject;
 import java.nio.charset.Charset;
+
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
  * Encoder transforming RxJava's {@link Observable} into many HTTP objects, through HTTP chunks.
@@ -41,10 +45,10 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
     @SuppressWarnings("unchecked")
     protected void encode(final ChannelHandlerContext ctx, final ObservableApiResponse<?> apiResponse, final MessageBuf<Object> out)
             throws Exception {
-        DefaultHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, apiResponse.status());
+        DefaultHttpResponse response = new DefaultHttpResponse(HTTP_1_1, apiResponse.status());
         HttpHeaders.setTransferEncodingChunked(response);
-        response.headers().set(HttpHeaders.Names.CONTENT_TYPE, apiResponse.contentType());
-        response.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+        response.headers().set(CONTENT_TYPE, apiResponse.contentType());
+        response.headers().set(CONNECTION, KEEP_ALIVE);
         // insert request ID header
         if (apiResponse.id() != null) {
             response.headers().set("X-Api-Request-ID", apiResponse.id().toString());
