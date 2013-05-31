@@ -19,8 +19,6 @@ import org.slf4j.MDC;
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
-
 @ChannelHandler.Sharable
 public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiResponse> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RESTCodec.class);
@@ -39,10 +37,12 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         String contentType = request.headers().get(HttpHeaders.Names.ACCEPT);
 
         InetSocketAddress clientAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        out.add(new ApiRequest(requestID,
+        ApiRequest apiRequest = new ApiRequest(requestID,
                 request.getUri(), request.getMethod(),
                 request.content(), contentType,
-                clientAddress.getHostName()));
+                clientAddress.getHostName());
+        LOGGER.debug("About to handle request {}", request);
+        out.add(apiRequest);
     }
 
     @Override
@@ -54,11 +54,12 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         // insert usual HTTP headers
         httpResponse.headers().set(HttpHeaders.Names.CONTENT_LENGTH, apiResponse.content().readableBytes());
         httpResponse.headers().set(HttpHeaders.Names.CONTENT_TYPE, apiResponse.contentType());
-        httpResponse.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+//        httpResponse.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
         // insert request ID header
         if (apiResponse.id() != null) {
             httpResponse.headers().set("X-Api-Request-ID", apiResponse.id().toString());
         }
+        LOGGER.debug("About to return response {}", httpResponse);
         out.add(httpResponse);
     }
 

@@ -62,6 +62,8 @@ public class JaxRsMethodGenerator {
                     .emitImports("io.netty.buffer.Unpooled")
                     .emitImports("io.netty.handler.codec.http.HttpMethod")
                     .emitImports("io.netty.handler.codec.http.HttpResponseStatus")
+                    .emitImports("org.slf4j.Logger")
+                    .emitImports("org.slf4j.LoggerFactory")
                     .emitImports("javax.ws.rs.core.MediaType")
                     .emitImports("java.util.Map")
                     .emitImports(Generated.class.getName())
@@ -86,6 +88,7 @@ public class JaxRsMethodGenerator {
             writer
                     .emitField("ObjectMapper", "objectMapper", PRIVATE | FINAL)
                     .emitField("String", "URI_TEMPLATE", PRIVATE | STATIC | FINAL, stringLiteral(uriTemplate))
+                    .emitField("Logger", "LOGGER", PRIVATE | STATIC | FINAL, "LoggerFactory.getLogger(" + handlerClassName  + ".class)")
             ;
             generateConstructor(writer, handlerClassName);
             generateMatchesMethod(writer, method);
