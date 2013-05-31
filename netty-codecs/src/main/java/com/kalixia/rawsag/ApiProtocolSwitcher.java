@@ -1,6 +1,7 @@
 package com.kalixia.rawsag;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kalixia.rawsag.codecs.CORSCodec;
 import com.kalixia.rawsag.codecs.rest.RESTCodec;
 import com.kalixia.rawsag.codecs.websockets.WebSocketsApiRequestDecoder;
 import com.kalixia.rawsag.codecs.websockets.WebSocketsApiResponseEncoder;
@@ -25,6 +26,7 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
     private final ObjectMapper objectMapper;
     private static final ChannelHandler webSocketsServerProtocolUpdater = new WebSocketsServerProtocolUpdater();
     private static final ChannelHandler webSocketsApiResponseEncoder = new WebSocketsApiResponseEncoder();
+    private static final CORSCodec corsCodec = new CORSCodec();
     private static final ChannelHandler restCodec = new RESTCodec();
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiProtocolSwitcher.class);
 
@@ -44,8 +46,8 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
             pipeline.remove(this);
         } else {
             LOGGER.debug("Switching to REST pipeline...");
-//            pipeline.replace(this, "rest-codec", restCodec);
-            pipeline.addBefore("api-request-logger", "rest-codec", restCodec);
+            pipeline.addBefore("api-request-logger", "cors-codec", corsCodec);
+            pipeline.addAfter("cors-codec", "rest-codec", restCodec);
             pipeline.remove(this);
         }
         out.add(BufUtil.retain(msg));
