@@ -1,6 +1,5 @@
 package com.kalixia.rawsag.codecs.rxjava;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kalixia.rawsag.ObservableApiResponse;
 import io.netty.buffer.ByteBuf;
@@ -13,6 +12,8 @@ import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -40,6 +41,7 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
     private static final ByteBuf LIST_BEGIN = Unpooled.wrappedBuffer("[".getBytes(Charset.defaultCharset()));
     private static final ByteBuf LIST_END   = Unpooled.wrappedBuffer("]".getBytes(Charset.defaultCharset()));
     private static final ByteBuf LIST_ITEM_SEPARATOR = Unpooled.wrappedBuffer(",".getBytes(Charset.defaultCharset()));
+    private static final Logger LOGGER = LoggerFactory.getLogger(ObservableEncoder.class);
 
     @Override
     @SuppressWarnings("unchecked")
@@ -48,7 +50,7 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
         DefaultHttpResponse response = new DefaultHttpResponse(HTTP_1_1, apiResponse.status());
         HttpHeaders.setTransferEncodingChunked(response);
         response.headers().set(CONTENT_TYPE, apiResponse.contentType());
-        response.headers().set(CONNECTION, KEEP_ALIVE);
+//        response.headers().set(CONNECTION, KEEP_ALIVE);
         // insert request ID header
         if (apiResponse.id() != null) {
             response.headers().set("X-Api-Request-ID", apiResponse.id().toString());
@@ -57,7 +59,8 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
 
         out.add(new DefaultHttpContent(LIST_BEGIN));
 
-        Subscription subscription = apiResponse.observable().subscribe(new Observer() {
+        Observable observable = apiResponse.observable();
+        Subscription subscription = observable.subscribe(new Observer() {
             private boolean first = true;
 
             @Override
@@ -69,12 +72,14 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
                         buffer = Unpooled.wrappedBuffer(content);
                         first = false;
                     } else {
-                        buffer = Unpooled.wrappedBuffer(LIST_ITEM_SEPARATOR, Unpooled.wrappedBuffer(content));
+                        buffer = Unpooled.wrappedBuffer(
+                                Unpooled.copiedBuffer(LIST_ITEM_SEPARATOR),
+                                Unpooled.wrappedBuffer(content));
                     }
                     DefaultHttpContent chunk = new DefaultHttpContent(buffer);
                     out.add(chunk);
-                } catch (JsonProcessingException e) {
-                    ctx.fireExceptionCaught(e);
+                } catch (Throwable t) {
+                    ctx.fireExceptionCaught(t);
                 }
             }
 
@@ -86,11 +91,11 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
 
             @Override
             public void onError(Exception e) {
+                LOGGER.error("Unexpected error while processing Observable", e);
                 ctx.fireExceptionCaught(e);
             }
 
         });
-
         subscription.unsubscribe();
     }
 
