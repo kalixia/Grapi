@@ -10,7 +10,6 @@ import io.netty.handler.codec.MessageToMessageCodec;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +17,12 @@ import org.slf4j.MDC;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
+
+import static io.netty.handler.codec.http.HttpHeaders.Names.ACCEPT;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
 
 @ChannelHandler.Sharable
 public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiResponse> {
@@ -34,7 +39,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         }
         MDC.put(MDCLogging.MDC_REQUEST_ID, requestID.toString());
 
-        String contentType = request.headers().get(HttpHeaders.Names.ACCEPT);
+        String contentType = request.headers().get(ACCEPT);
 
         InetSocketAddress clientAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         ApiRequest apiRequest = new ApiRequest(requestID,
@@ -52,9 +57,9 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
                 apiResponse.status(),
                 apiResponse.content());
         // insert usual HTTP headers
-        httpResponse.headers().set(HttpHeaders.Names.CONTENT_LENGTH, apiResponse.content().readableBytes());
-        httpResponse.headers().set(HttpHeaders.Names.CONTENT_TYPE, apiResponse.contentType());
-//        httpResponse.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+        httpResponse.headers().set(CONTENT_LENGTH, apiResponse.content().readableBytes());
+        httpResponse.headers().set(CONTENT_TYPE, apiResponse.contentType());
+        httpResponse.headers().set(CONNECTION, KEEP_ALIVE);
         // insert request ID header
         if (apiResponse.id() != null) {
             httpResponse.headers().set("X-Api-Request-ID", apiResponse.id().toString());
