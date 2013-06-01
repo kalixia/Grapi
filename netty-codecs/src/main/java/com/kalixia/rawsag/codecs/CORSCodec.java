@@ -61,11 +61,11 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
     @Override
     protected void encode(ChannelHandlerContext ctx, HttpResponse response, MessageBuf<Object> out) throws Exception {
         String origin = ctx.channel().attr(attrOrigin).getAndRemove();
-        LOGGER.info("Origin: {}", origin);
+        LOGGER.debug("Origin: {}", origin);
         if (origin != null) {
             response.headers().add(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
         }
-        LOGGER.info("Response is: {}", response);
+        LOGGER.debug("Response is: {}", response);
         out.add(BufUtil.retain(response));
     }
 
