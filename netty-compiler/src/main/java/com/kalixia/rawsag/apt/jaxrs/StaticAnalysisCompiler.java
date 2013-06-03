@@ -27,7 +27,7 @@ import java.util.TreeMap;
 
 @SupportedAnnotationTypes({ "javax.ws.rs.*" })
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
-@SupportedOptions({ "dagger", "rxjava" })
+@SupportedOptions({ "dagger" })
 public class StaticAnalysisCompiler extends AbstractProcessor {
     private Elements elementUtils;
     private Messager messager;

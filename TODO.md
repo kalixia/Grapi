@@ -1,7 +1,7 @@
 TODO:
 -----
 
-* add support for CORS requests
+* fix support for RxJava
 * add support for Response JAX-RS instances
 * add support for @Consumes
 * add support for @QueryParam

@@ -20,14 +20,22 @@ complexity of the generated source code and improve the performance and maintena
 Additionally, RaWSAG can generate a [Dagger](https://github.com/square/dagger) module in order to simplify even more
 the use of the generated code.
 
-Finally if your JAX-RS resources return some [RxJava](https://github.com/Netflix/RxJava) ``` Observable ``` then the
-generated Netty code with use HTTP Transfer-Encoding, emit HTTP chunks for each data element and wrap them all in a
-JSon array.
-
 
 ## Current Status
 
 The project is in early stages. It's being successfully used and tested on other projects.
+
+### Working Features
+
+| Feature          | Description
+|------------------|----------------------------------------------------------------------------------------------------
+| @Path            | Full working with all HTTP verbs, URI templates and path precedence rules
+| @Produces        | Correctly expose your resources with the proper content-type
+| Data conversion  | Uses Jackson in order to convert objects to the appropriate data format (XML, JSon, etc.) -- both for incoming data and outgoing data
+| CORS             | A Cross-Origin Resource Sharing (CORS) handler is available if needed
+
+
+### Current Limitations
 
 They are though some few limitations worth knowing. These limitations will be taken care of and are only
 missing features:
@@ -73,7 +81,6 @@ There are currently two options available:
 | Option | Description
 |--------|------------
 | dagger | Additionally generate a Dagger module, named ``` GeneratedJaxRsDaggerModule ```
-| rxjava | Use HTTP chunks when a JAX-RS method returns an ``` Observable ```
 
 In order to configure a Maven project, you can use something like this:
 ```xml
@@ -86,7 +93,6 @@ In order to configure a Maven project, you can use something like this:
         <encoding>UTF-8</encoding>
         <compilerArgs>
             <compilerArg>-Adagger=true</compilerArg>
-            <compilerArg>-Arxjava=true</compilerArg>
         </compilerArgs>
     </configuration>
 </plugin>
@@ -109,15 +115,19 @@ This will allow you JAX-RS resources to be reached both by HTTP requests and via
 ```java
 public class ApiServerChannelInitializer extends ChannelInitializer<SocketChannel> {
     private final ObjectMapper objectMapper;
-    private final ObservableEncoder rxjavaHandler;  // optional: no need if you don't use RxJava
+    private final ChannelHandler apiProtocolSwitcher;
+    private final ObservableEncoder rxjavaHandler;
     private final GeneratedJaxRsModuleHandler jaxRsHandlers;
     private static final ChannelHandler debugger = new MessageLoggingHandler(LogLevel.TRACE);
     private static final ChannelHandler apiRequestLogger = new MessageLoggingHandler(RESTCodec.class, LogLevel.DEBUG);
 
     @Inject
-    public ApiServerChannelInitializer(ObjectMapper objectMapper, ObservableEncoder rxjavaHandler,
+    public ApiServerChannelInitializer(ObjectMapper objectMapper,
+                                       ApiProtocolSwitcher apiProtocolSwitcher,
+                                       ObservableEncoder rxjavaHandler,
                                        GeneratedJaxRsModuleHandler jaxRsModuleHandler) {
         this.objectMapper = objectMapper;
+        this.apiProtocolSwitcher = apiProtocolSwitcher;
         this.rxjavaHandler = rxjavaHandler;
         this.jaxRsHandlers =  jaxRsModuleHandler;
         SimpleModule nettyModule = new SimpleModule("Netty", PackageVersion.VERSION);
@@ -136,13 +146,11 @@ public class ApiServerChannelInitializer extends ChannelInitializer<SocketChanne
         pipeline.addLast("inflater", new HttpContentCompressor());
 
         // Alters the pipeline depending on either REST or WebSockets requests
-        pipeline.addLast("api-protocol-switcher", new ApiProtocolSwitcher(objectMapper));
+        pipeline.addLast("api-protocol-switcher", apiProtocolSwitcher);
         pipeline.addLast("debugger", debugger);
 
         // Logging handlers for API requests
         pipeline.addLast("api-request-logger", apiRequestLogger);
-
-        pipeline.addLast("rxjava-handler", rxjavaHandler);
 
         // JAX-RS handlers
         pipeline.addLast("jax-rs-handler", jaxRsHandlers);
