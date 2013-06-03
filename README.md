@@ -116,7 +116,6 @@ This will allow you JAX-RS resources to be reached both by HTTP requests and via
 public class ApiServerChannelInitializer extends ChannelInitializer<SocketChannel> {
     private final ObjectMapper objectMapper;
     private final ChannelHandler apiProtocolSwitcher;
-    private final ObservableEncoder rxjavaHandler;
     private final GeneratedJaxRsModuleHandler jaxRsHandlers;
     private static final ChannelHandler debugger = new MessageLoggingHandler(LogLevel.TRACE);
     private static final ChannelHandler apiRequestLogger = new MessageLoggingHandler(RESTCodec.class, LogLevel.DEBUG);
@@ -124,11 +123,9 @@ public class ApiServerChannelInitializer extends ChannelInitializer<SocketChanne
     @Inject
     public ApiServerChannelInitializer(ObjectMapper objectMapper,
                                        ApiProtocolSwitcher apiProtocolSwitcher,
-                                       ObservableEncoder rxjavaHandler,
                                        GeneratedJaxRsModuleHandler jaxRsModuleHandler) {
         this.objectMapper = objectMapper;
         this.apiProtocolSwitcher = apiProtocolSwitcher;
-        this.rxjavaHandler = rxjavaHandler;
         this.jaxRsHandlers =  jaxRsModuleHandler;
         SimpleModule nettyModule = new SimpleModule("Netty", PackageVersion.VERSION);
         nettyModule.addSerializer(new ByteBufSerializer());
