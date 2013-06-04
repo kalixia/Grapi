@@ -46,6 +46,7 @@ public class JaxRsModuleGenerator {
                             // add imports
                     .emitImports("com.kalixia.rawsag.ApiRequest")
                     .emitImports("com.kalixia.rawsag.ApiResponse")
+                    .emitImports("com.kalixia.rawsag.MDCLogging")
                     .emitImports("com.kalixia.rawsag.codecs.jaxrs.JaxRsPipeline")
                     .emitImports("com.kalixia.rawsag.codecs.jaxrs.GeneratedJaxRsMethodHandler")
                     .emitImports("io.netty.buffer.ByteBuf")
@@ -58,6 +59,7 @@ public class JaxRsModuleGenerator {
                     .emitImports("com.fasterxml.jackson.databind.ObjectMapper")
                     .emitImports("org.slf4j.Logger")
                     .emitImports("org.slf4j.LoggerFactory")
+                    .emitImports("org.slf4j.MDC")
                     .emitImports("java.nio.charset.Charset")
                     .emitImports("java.util.List")
                     .emitImports("java.util.Arrays")
@@ -132,6 +134,7 @@ public class JaxRsModuleGenerator {
                 .emitAnnotation(Override.class)
                 .beginMethod("void", "decode", PROTECTED,
                         "ChannelHandlerContext", "ctx", "ApiRequest", "request", "MessageBuf<Object>", "out")
+                    .emitStatement("MDC.put(MDCLogging.MDC_REQUEST_ID, request.id().toString())")
                     .beginControlFlow("for (GeneratedJaxRsMethodHandler handler : handlers)")
                         .beginControlFlow("if (handler.matches(request))")
                             .beginControlFlow("try")

@@ -13,9 +13,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
-import io.netty.util.concurrent.DefaultThreadFactory;
-import io.netty.util.concurrent.EventExecutorGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -29,7 +26,6 @@ import java.net.InetSocketAddress;
 @ChannelHandler.Sharable
 public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest> {
     private final ObjectMapper objectMapper;
-    private final EventExecutorGroup restEventGroup;
     private static final ChannelHandler webSocketsServerProtocolUpdater = new WebSocketsServerProtocolUpdater();
     private static final ChannelHandler webSocketsApiResponseEncoder = new WebSocketsApiResponseEncoder();
     private static final CORSCodec corsCodec = new CORSCodec();
@@ -39,10 +35,6 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
     @Inject
     public ApiProtocolSwitcher(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        // TODO: allow customization of the thread pool!
-        this.restEventGroup = new DefaultEventExecutorGroup(
-                Runtime.getRuntime().availableProcessors(),
-                new DefaultThreadFactory("rest"));
     }
 
     @Override
@@ -58,7 +50,7 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
         } else {
             LOGGER.debug("Switching to REST pipeline...");
             pipeline.addBefore("api-request-logger", "cors-codec", corsCodec);
-            pipeline.addAfter(restEventGroup, "cors-codec", "rest-codec", restCodec);
+            pipeline.addAfter("cors-codec", "rest-codec", restCodec);
             pipeline.remove(this);
         }
         out.add(BufUtil.retain(msg));

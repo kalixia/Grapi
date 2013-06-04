@@ -32,7 +32,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
     protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, MessageBuf<Object> out) throws Exception {
         UUID requestID;
         String requestIDasString = request.headers().get("X-Api-Request-ID");
-        if (requestIDasString != null && "".equals(requestIDasString)) {
+        if (requestIDasString != null && !"".equals(requestIDasString)) {
             requestID = UUID.fromString(requestIDasString);
         } else {
             requestID = UUID.randomUUID();
@@ -53,7 +53,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
     @Override
     protected void encode(ChannelHandlerContext ctx, ApiResponse apiResponse, MessageBuf<Object> out) throws Exception {
         FullHttpResponse httpResponse = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1,       // TODO: reply with the expectations from the request
+                HttpVersion.HTTP_1_1,
                 apiResponse.status(),
                 apiResponse.content());
         // insert usual HTTP headers

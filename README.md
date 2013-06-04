@@ -117,6 +117,7 @@ public class ApiServerChannelInitializer extends ChannelInitializer<SocketChanne
     private final ObjectMapper objectMapper;
     private final ChannelHandler apiProtocolSwitcher;
     private final GeneratedJaxRsModuleHandler jaxRsHandlers;
+    private final EventExecutorGroup jaxRsGroup;
     private static final ChannelHandler debugger = new MessageLoggingHandler(LogLevel.TRACE);
     private static final ChannelHandler apiRequestLogger = new MessageLoggingHandler(RESTCodec.class, LogLevel.DEBUG);
 
@@ -130,6 +131,8 @@ public class ApiServerChannelInitializer extends ChannelInitializer<SocketChanne
         SimpleModule nettyModule = new SimpleModule("Netty", PackageVersion.VERSION);
         nettyModule.addSerializer(new ByteBufSerializer());
         objectMapper.registerModule(nettyModule);
+        jaxRsGroup = new DefaultEventExecutorGroup(Runtime.getRuntime().availableProcessors(),
+                new DefaultThreadFactory("jax-rs"));
     }
 
     @Override
@@ -150,7 +153,7 @@ public class ApiServerChannelInitializer extends ChannelInitializer<SocketChanne
         pipeline.addLast("api-request-logger", apiRequestLogger);
 
         // JAX-RS handlers
-        pipeline.addLast("jax-rs-handler", jaxRsHandlers);
+        pipeline.addLast(jaxRsGroup, "jax-rs-handler", jaxRsHandlers);
     }
 }
 ```
