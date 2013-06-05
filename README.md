@@ -18,7 +18,8 @@ When some JAX-RS features aren't used, some Java code is dropped from the genera
 complexity of the generated source code and improve the performance and maintenance of code.
 
 Additionally, RaWSAG can generate a [Dagger](https://github.com/square/dagger) module in order to simplify even more
-the use of the generated code.
+the use of the generated code and also use [Metrics](http://metrics.codahale.com) in order to measure various timings
+about your JAX-RS resources.
 
 
 ## Current Status
@@ -33,6 +34,8 @@ The project is in early stages. It's being successfully used and tested on other
 | @Produces        | Correctly expose your resources with the proper content-type
 | Data conversion  | Uses Jackson in order to convert objects to the appropriate data format (XML, JSon, etc.) -- both for incoming data and outgoing data
 | CORS             | A Cross-Origin Resource Sharing (CORS) handler is available if needed
+| Dagger           | Generate a Dagger module simplifying even more the use of the generated code
+| Metrics          | Expose your JAX-RS resource calls as [Metrics](http://metrics.codahale.com)
 
 
 ### Current Limitations
@@ -93,6 +96,7 @@ In order to configure a Maven project, you can use something like this:
         <encoding>UTF-8</encoding>
         <compilerArgs>
             <compilerArg>-Adagger=true</compilerArg>
+            <compilerArg>-Ametrics=true</compilerArg>
         </compilerArgs>
     </configuration>
 </plugin>

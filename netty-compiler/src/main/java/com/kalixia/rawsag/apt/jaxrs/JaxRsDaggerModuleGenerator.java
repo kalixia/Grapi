@@ -5,6 +5,7 @@ import com.squareup.java.JavaWriter;
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
+import javax.inject.Singleton;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
@@ -20,12 +21,16 @@ public class JaxRsDaggerModuleGenerator {
     private final Filer filer;
     private final Messager messager;
     private final boolean useDagger;
+    private final boolean useMetrics;
     private static final String MODULE_HANDLER = "GeneratedJaxRsDaggerModule";
 
     public JaxRsDaggerModuleGenerator(Filer filer, Messager messager, Map<String, String> options) {
         this.filer = filer;
         this.messager = messager;
-        this.useDagger = options.containsKey("dagger") && "true".equals(options.get("dagger"));
+        this.useDagger = options.containsKey(Options.DAGGER.getValue())
+                && "true".equals(options.get(Options.DAGGER.getValue()));
+        this.useMetrics = options.containsKey(Options.METRICS.getValue())
+                && "true".equals(options.get(Options.METRICS.getValue()));
     }
 
     public void generateDaggerModule(String destPackage, List<String> generatedHandlers) {
@@ -40,23 +45,28 @@ public class JaxRsDaggerModuleGenerator {
             JavaWriter writer = new JavaWriter(handlerWriter);
             writer
                     .emitPackage(destPackage.toString())
-                            // add imports
-                    .emitImports("com.kalixia.rawsag.codecs.jaxrs.JaxRsPipeline")
-                    .emitImports("com.kalixia.rawsag.codecs.jaxrs.GeneratedJaxRsMethodHandler")
                     .emitImports("dagger.Module")
                     .emitImports("dagger.Provides")
-                    .emitImports("com.fasterxml.jackson.databind.ObjectMapper")
+                    .emitImports("com.fasterxml.jackson.databind.ObjectMapper");
+
+            if (useMetrics) {
+                writer.emitImports("com.codahale.metrics.MetricRegistry");
+            }
+
+            writer
+                    .emitImports(Singleton.class.getName())
                     .emitImports(Generated.class.getName())
                     .emitEmptyLine()
                             // begin class
                     .emitJavadoc("Dagger module for all generated classes.")
                     .emitAnnotation("Module(library = true)")
                     .emitAnnotation(Generated.class.getSimpleName(), stringLiteral(StaticAnalysisCompiler.GENERATOR_NAME))
-                    .beginType(daggerModuleClassName, "class", PUBLIC)
-            ;
+                    .beginType(daggerModuleClassName, "class", PUBLIC);
 
-//            generateProvideJaxRsPipelineMethod(writer, generatedHandlers);
             generateProvideObjectMapperMethod(writer);
+            if (useMetrics)
+                generateProvideMetricRegistryMethod(writer);
+
             // end class
             writer.endType();
         } catch (IOException e) {
@@ -72,29 +82,21 @@ public class JaxRsDaggerModuleGenerator {
         }
     }
 
-    private JavaWriter generateProvideJaxRsPipelineMethod(JavaWriter writer, List<String> generatedHandlers)
-            throws IOException {
-        List<String> args = new ArrayList<>();
-        args.add("ObjectMapper");
-        args.add("objectMapper");
-        for (int i = 0; i < generatedHandlers.size(); i++) {
-            args.add("GeneratedJaxRsMethodHandler");
-            args.add(String.format("handler%d", i + 1));
-        }
-        return writer
-                .emitEmptyLine()
-                .emitAnnotation("Provides")
-                .beginMethod("JaxRsPipeline", "provideJaxRsPipeline", 0, args.toArray(new String[args.size()]))
-                .emitStatement("return new %s(objectMapper)", JaxRsModuleGenerator.MODULE_HANDLER)
-                .endMethod();
-    }
-
     private JavaWriter generateProvideObjectMapperMethod(JavaWriter writer) throws IOException {
         return writer
                 .emitEmptyLine()
-                .emitAnnotation("Provides")
+                .emitAnnotation("Provides").emitAnnotation("Singleton")
                 .beginMethod("ObjectMapper", "provideObjectMapper", 0)
                 .emitStatement("return new ObjectMapper()")
+                .endMethod();
+    }
+
+    private JavaWriter generateProvideMetricRegistryMethod(JavaWriter writer) throws IOException {
+        return writer
+                .emitEmptyLine()
+                .emitAnnotation("Provides").emitAnnotation("Singleton")
+                .beginMethod("MetricRegistry", "provideMetricRegistry", 0)
+                .emitStatement("return new MetricRegistry()")
                 .endMethod();
     }
 

@@ -13,6 +13,9 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static com.squareup.java.JavaWriter.stringLiteral;
@@ -25,14 +28,19 @@ public class JaxRsMethodGenerator {
     private final Filer filer;
     private final Messager messager;
     private final boolean useDagger;
+    private final boolean useMetrics;
     private final boolean useRxJava;
     private final JaxRsAnalyzer analyzer = new JaxRsAnalyzer();
 
     public JaxRsMethodGenerator(Filer filer, Messager messager, Map<String, String> options) {
         this.filer = filer;
         this.messager = messager;
-        this.useDagger = options.containsKey("dagger") && "true".equals(options.get("dagger"));
-        this.useRxJava = options.containsKey("rxjava") && "true".equals(options.get("rxjava"));
+        this.useDagger = options.containsKey(Options.DAGGER.getValue())
+                && "true".equals(options.get(Options.DAGGER.getValue()));
+        this.useMetrics = options.containsKey(Options.METRICS.getValue())
+                && "true".equals(options.get(Options.METRICS.getValue()));
+        this.useRxJava = options.containsKey(Options.RXJAVA.getValue())
+                && "true".equals(options.get(Options.RXJAVA.getValue()));
     }
 
     public String generateHandlerClass(String resourceClassName, PackageElement resourcePackage,
@@ -61,11 +69,24 @@ public class JaxRsMethodGenerator {
 //                        .emitImports("io.netty.channel.ChannelHandler.Sharable")
                     .emitImports("io.netty.buffer.Unpooled")
                     .emitImports("io.netty.handler.codec.http.HttpMethod")
-                    .emitImports("io.netty.handler.codec.http.HttpResponseStatus")
+                    .emitImports("io.netty.handler.codec.http.HttpResponseStatus");
+            if (useMetrics) {
+                writer
+                        .emitImports("com.codahale.metrics.Timer")
+                        .emitImports("com.codahale.metrics.MetricRegistry")
+                        .emitImports("com.codahale.metrics.annotation.Timed");
+            }
+
+            writer
                     .emitImports("org.slf4j.Logger")
                     .emitImports("org.slf4j.LoggerFactory")
                     .emitImports("javax.ws.rs.core.MediaType")
-                    .emitImports("java.util.Map")
+                    .emitImports("java.util.Map");
+
+            if (useDagger)
+                writer.emitImports(Inject.class.getName());
+
+            writer
                     .emitImports(Generated.class.getName())
                     .emitEmptyLine()
                             // begin class
@@ -85,12 +106,16 @@ public class JaxRsMethodGenerator {
             }
             writer.emitEmptyLine();
 
+            writer.emitField("ObjectMapper", "objectMapper", PRIVATE | FINAL);
+            if (useMetrics) {
+                writer.emitField("Timer", "timer", PRIVATE | FINAL);
+            }
             writer
-                    .emitField("ObjectMapper", "objectMapper", PRIVATE | FINAL)
                     .emitField("String", "URI_TEMPLATE", PRIVATE | STATIC | FINAL, stringLiteral(uriTemplate))
-                    .emitField("Logger", "LOGGER", PRIVATE | STATIC | FINAL, "LoggerFactory.getLogger(" + handlerClassName  + ".class)")
-            ;
-            generateConstructor(writer, handlerClassName);
+                    .emitField("Logger", "LOGGER", PRIVATE | STATIC | FINAL,
+                            "LoggerFactory.getLogger(" + handlerClassName + ".class)");
+
+            generateConstructor(writer, handlerClassName, resourceClassName, method);
             generateMatchesMethod(writer, method);
             generateHandleMethod(writer, method);
             // end class
@@ -110,16 +135,29 @@ public class JaxRsMethodGenerator {
         }
     }
 
-    private JavaWriter generateConstructor(JavaWriter writer, String handlerClassName) throws IOException {
+    private JavaWriter generateConstructor(JavaWriter writer, String handlerClassName,
+                                           String resourceClassName, JaxRsMethodInfo method) throws IOException {
         writer.emitEmptyLine();
 
         if (useDagger)
-            writer.emitAnnotation(Inject.class.getName());
+            writer.emitAnnotation(Inject.class);
 
-        return writer
-                .beginMethod(null, handlerClassName, PUBLIC, "ObjectMapper", "objectMapper")
-                .emitStatement("this.objectMapper = objectMapper")
-                .endMethod();
+        List<String> parameters = new ArrayList<>();
+        parameters.addAll(Arrays.asList("ObjectMapper", "objectMapper"));
+        if (useMetrics)
+            parameters.addAll(Arrays.asList("MetricRegistry", "registry"));
+
+        writer
+                .beginMethod(null, handlerClassName, PUBLIC, parameters.toArray(new String[parameters.size()]))
+                .emitStatement("this.objectMapper = objectMapper");
+
+        if (useMetrics) {
+//            writer.emitStatement("this.registry = registry");
+            writer.emitStatement("this.timer = registry.timer(MetricRegistry.name(%s, \"%s\"))",
+                    stringLiteral(resourceClassName), method.getMethodName());
+        }
+
+        return writer.endMethod();
     }
 
     private JavaWriter generateMatchesMethod(JavaWriter writer, JaxRsMethodInfo methodInfo)
@@ -147,10 +185,21 @@ public class JaxRsMethodGenerator {
 
     private JavaWriter generateHandleMethod(JavaWriter writer, JaxRsMethodInfo methodInfo)
             throws IOException {
+        writer.emitEmptyLine();
+
+        if (useMetrics)
+            writer.emitAnnotation("Timed");         // the annotation is only for "documentation" purpose
+
         writer
-                .emitEmptyLine()
                 .emitAnnotation(Override.class)
                 .beginMethod("ApiResponse", "handle", PUBLIC, "ApiRequest", "request");
+
+        if (useMetrics) {
+            // initialize Timer
+            writer
+                    .emitStatement("final Timer.Context context = timer.time()")
+                    .beginControlFlow("try");
+        }
 
         // analyze @PathParam annotations
         Map<String, String> parametersMap = analyzer.analyzePathParamAnnotations(methodInfo);
@@ -237,6 +286,14 @@ public class JaxRsMethodGenerator {
                                 "Unpooled.copiedBuffer(e.toString().getBytes()), MediaType.TEXT_PLAIN)")
                     .endControlFlow()
                 .endControlFlow();
+
+        if (useMetrics) {
+            // end Timer measurement
+            writer
+                    .nextControlFlow("finally")
+                    .emitStatement("context.stop()")
+                    .endControlFlow();
+        }
 
         return writer.endMethod();
     }
