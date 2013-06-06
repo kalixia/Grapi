@@ -11,14 +11,17 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.validation.executable.ExecutableValidator;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.squareup.java.JavaWriter.stringLiteral;
 import static java.lang.reflect.Modifier.FINAL;
@@ -84,7 +87,10 @@ public class JaxRsMethodGenerator {
                     .emitImports("org.slf4j.LoggerFactory")
                     .emitImports("javax.ws.rs.core.MediaType")
                     .emitImports(Validator.class.getName())
-                    .emitImports("java.util.Map");
+                    .emitImports(ConstraintViolation.class.getName())
+                    .emitImports(Map.class.getName())
+                    .emitImports(Set.class.getName())
+                    .emitImports(Iterator.class.getName());
 
             if (useDagger)
                 writer.emitImports(Inject.class.getName());
@@ -216,6 +222,7 @@ public class JaxRsMethodGenerator {
 
         // check if JAX-RS resource method has parameters; if so extract them from URI
         if (methodInfo.hasParameters()) {
+            writer.emitEndOfLineComment("Extract parameters from URI");
             writer.emitStatement("Map<String, String> parameters = UriTemplateUtils.extractParameters(URI_TEMPLATE, request.uri())");
             // extract each parameter
             for (JaxRsParamInfo parameter : methodInfo.getParameters()) {
@@ -244,11 +251,29 @@ public class JaxRsMethodGenerator {
                             type, parameter.getName(), type, uriTemplateParameter);
                 }
 
-                writer.emitStatement("validator.validate(%s, javax.validation.constraints.NotNull.class)", parameter.getName());
+                if ("java.lang.String".equals(parameter.getType().toString())) {
+                    writer.emitEndOfLineComment("Validate parameter %s", parameter.getName());
+                    writer.emitStatement("Set<ConstraintViolation<%s>> %sViolations = " +
+                            "validator.validate(%s, javax.validation.constraints.Min.class)",
+                            parameter.getType(), parameter.getName(), parameter.getName());
+                    writer
+                            .beginControlFlow(String.format("if (%sViolations.size() > 0)", parameter.getName()))
+                            .emitStatement("Iterator<ConstraintViolation<%s>> iterator = %sViolations.iterator()",
+                                    parameter.getType(), parameter.getName())
+                            .emitStatement("StringBuilder builder = new StringBuilder()")
+                            .beginControlFlow("while (iterator.hasNext())")
+                            .emitStatement("builder.append(iterator.next().getMessage()).append('\\n')")
+                            .endControlFlow()
+                            .emitStatement(
+                                    "return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST," +
+                                            " Unpooled.copiedBuffer(builder.toString().getBytes()), MediaType.TEXT_PLAIN)")
+                            .endControlFlow();
+                }
             }
         }
 
         // call JAX-RS resource method
+        writer.emitEndOfLineComment("Call JAX-RS resource");
         if (methodInfo.hasParameters()) {
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < methodInfo.getParameters().size(); i++) {
@@ -269,6 +294,7 @@ public class JaxRsMethodGenerator {
             writer.emitStatement("delegate.%s()", methodInfo.getMethodName());
         }
 
+        writer.emitEndOfLineComment("Build API response object");
         String produces = methodInfo.getProduces()[0];
         if (useRxJava && methodInfo.hasReturnType() && methodInfo.getReturnType().startsWith("rx.Observable")) {
             writer.emitStatement("return new ObservableApiResponse(request.id(), HttpResponseStatus.OK, result, %s)",
