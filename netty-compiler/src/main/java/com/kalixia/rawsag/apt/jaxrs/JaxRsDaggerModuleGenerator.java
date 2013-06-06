@@ -8,6 +8,9 @@ import javax.annotation.processing.Messager;
 import javax.inject.Singleton;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
@@ -46,7 +49,10 @@ public class JaxRsDaggerModuleGenerator {
                     .emitPackage(destPackage.toString())
                     .emitImports("dagger.Module")
                     .emitImports("dagger.Provides")
-                    .emitImports("com.fasterxml.jackson.databind.ObjectMapper");
+                    .emitImports("com.fasterxml.jackson.databind.ObjectMapper")
+                    .emitImports(Validator.class.getName())
+                    .emitImports(Validation.class.getName())
+                    .emitImports(ValidatorFactory.class.getName());
 
             if (useMetrics) {
                 writer.emitImports("com.codahale.metrics.MetricRegistry");
@@ -63,6 +69,8 @@ public class JaxRsDaggerModuleGenerator {
                     .beginType(daggerModuleClassName, "class", PUBLIC);
 
             generateProvideObjectMapperMethod(writer);
+            generateValidationFactoryMethod(writer);
+            generateValidatorMethod(writer);
             if (useMetrics)
                 generateProvideMetricRegistryMethod(writer);
 
@@ -87,6 +95,24 @@ public class JaxRsDaggerModuleGenerator {
                 .emitAnnotation("Provides").emitAnnotation("Singleton")
                 .beginMethod("ObjectMapper", "provideObjectMapper", 0)
                 .emitStatement("return new ObjectMapper()")
+                .endMethod();
+    }
+
+    private JavaWriter generateValidationFactoryMethod(JavaWriter writer) throws IOException {
+        return writer
+                .emitEmptyLine()
+                .emitAnnotation("Provides").emitAnnotation("Singleton")
+                .beginMethod("ValidatorFactory", "provideValidationFactory", 0)
+                .emitStatement("return Validation.buildDefaultValidatorFactory()")
+                .endMethod();
+    }
+
+    private JavaWriter generateValidatorMethod(JavaWriter writer) throws IOException {
+        return writer
+                .emitEmptyLine()
+                .emitAnnotation("Provides").emitAnnotation("Singleton")
+                .beginMethod("Validator", "provideValidator", 0, "ValidatorFactory", "factory")
+                .emitStatement("return factory.getValidator()")
                 .endMethod();
     }
 

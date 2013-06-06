@@ -8,9 +8,11 @@ import javax.annotation.processing.Messager;
 import javax.inject.Inject;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import javax.validation.Validator;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +68,7 @@ public class JaxRsModuleGenerator {
                     .emitImports("java.util.List")
                     .emitImports("java.util.Arrays")
                     .emitImports("javax.ws.rs.core.MediaType")
+                    .emitImports(Validator.class.getName())
                     .emitImports(Generated.class.getName())
                     .emitEmptyLine()
                             // begin class
@@ -101,12 +104,13 @@ public class JaxRsModuleGenerator {
         writer.emitEmptyLine();
 
         if (!useDagger) {
-            writer.beginMethod(null, handlerClassName, PUBLIC, "ObjectMapper", "objectMapper");
+            writer.beginMethod(null, handlerClassName, PUBLIC,
+                    "ObjectMapper", "objectMapper", "Validator", "validator");
         } else {
             writer.emitAnnotation(Inject.class.getName());
             List<String> args = new ArrayList<>();
-            args.add("ObjectMapper");
-            args.add("objectMapper");
+            args.addAll(Arrays.asList("ObjectMapper", "objectMapper"));
+            args.addAll(Arrays.asList("Validator", "validator"));
             Iterator<String> iterator = generatedHandlers.iterator();
             for (int i = 1; i <= generatedHandlers.size(); i++) {
                 args.add(iterator.next());
@@ -121,7 +125,7 @@ public class JaxRsModuleGenerator {
             if (useDagger)
                 builder.append(String.format("handler%d", i + 1));
             else
-                builder.append(String.format("new %s(objectMapper)", iterator.next()));
+                builder.append(String.format("new %s(objectMapper, validator)", iterator.next()));
             if (i + 1 < generatedHandlers.size())
                 builder.append(",\n");
         }

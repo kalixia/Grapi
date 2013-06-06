@@ -11,6 +11,8 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import javax.validation.Validator;
+import javax.validation.executable.ExecutableValidator;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -81,6 +83,7 @@ public class JaxRsMethodGenerator {
                     .emitImports("org.slf4j.Logger")
                     .emitImports("org.slf4j.LoggerFactory")
                     .emitImports("javax.ws.rs.core.MediaType")
+                    .emitImports(Validator.class.getName())
                     .emitImports("java.util.Map");
 
             if (useDagger)
@@ -106,7 +109,10 @@ public class JaxRsMethodGenerator {
             }
             writer.emitEmptyLine();
 
-            writer.emitField("ObjectMapper", "objectMapper", PRIVATE | FINAL);
+            writer
+                    .emitField("ObjectMapper", "objectMapper", PRIVATE | FINAL)
+                    .emitField("Validator", "validator", PRIVATE | FINAL);
+
             if (useMetrics) {
                 writer.emitField("Timer", "timer", PRIVATE | FINAL);
             }
@@ -144,12 +150,14 @@ public class JaxRsMethodGenerator {
 
         List<String> parameters = new ArrayList<>();
         parameters.addAll(Arrays.asList("ObjectMapper", "objectMapper"));
+        parameters.addAll(Arrays.asList("Validator", "validator"));
         if (useMetrics)
             parameters.addAll(Arrays.asList("MetricRegistry", "registry"));
 
         writer
                 .beginMethod(null, handlerClassName, PUBLIC, parameters.toArray(new String[parameters.size()]))
-                .emitStatement("this.objectMapper = objectMapper");
+                .emitStatement("this.objectMapper = objectMapper")
+                .emitStatement("this.validator = validator");
 
         if (useMetrics) {
 //            writer.emitStatement("this.registry = registry");
@@ -235,6 +243,8 @@ public class JaxRsMethodGenerator {
                     writer.emitStatement("%s %s = Converters.fromString(%s.class, parameters.get(\"%s\"))",
                             type, parameter.getName(), type, uriTemplateParameter);
                 }
+
+                writer.emitStatement("validator.validate(%s, javax.validation.constraints.NotNull.class)", parameter.getName());
             }
         }
 

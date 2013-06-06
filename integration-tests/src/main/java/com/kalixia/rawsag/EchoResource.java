@@ -1,5 +1,6 @@
 package com.kalixia.rawsag;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -12,7 +13,7 @@ public class EchoResource {
 
     @Path("{message}")
     @GET
-    public String echo(@PathParam("message") String message) {
+    public String echo(@PathParam("message") @NotNull String message) {
         return message;
     }
 
