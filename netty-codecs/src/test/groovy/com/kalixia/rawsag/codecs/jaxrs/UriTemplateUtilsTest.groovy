@@ -1,6 +1,5 @@
 package com.kalixia.rawsag.codecs.jaxrs
 
-import com.kalixia.rawsag.codecs.jaxrs.UriTemplateUtils
 import spock.lang.Unroll
 
 class UriTemplateUtilsTest extends spock.lang.Specification {

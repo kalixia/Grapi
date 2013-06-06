@@ -11,14 +11,16 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 
 import static com.squareup.java.JavaWriter.stringLiteral;
+import static java.lang.reflect.Modifier.FINAL;
 import static java.lang.reflect.Modifier.PRIVATE;
 import static java.lang.reflect.Modifier.PROTECTED;
 import static java.lang.reflect.Modifier.PUBLIC;
-import static java.lang.reflect.Modifier.FINAL;
 import static java.lang.reflect.Modifier.STATIC;
 
 public class JaxRsModuleGenerator {
@@ -33,7 +35,7 @@ public class JaxRsModuleGenerator {
         this.useDagger = options.containsKey("dagger") && "true".equals(options.get("dagger"));
     }
 
-    public void generateModuleClass(String destPackage, List<String> generatedHandlers) {
+    public void generateModuleClass(String destPackage, SortedSet<String> generatedHandlers) {
         Writer handlerWriter = null;
         try {
             // TODO: only uppercase the first character
@@ -94,7 +96,7 @@ public class JaxRsModuleGenerator {
         }
     }
 
-    private JavaWriter generateConstructor(JavaWriter writer, String handlerClassName, List<String> generatedHandlers)
+    private JavaWriter generateConstructor(JavaWriter writer, String handlerClassName, SortedSet<String> generatedHandlers)
             throws IOException {
         writer.emitEmptyLine();
 
@@ -105,19 +107,21 @@ public class JaxRsModuleGenerator {
             List<String> args = new ArrayList<>();
             args.add("ObjectMapper");
             args.add("objectMapper");
+            Iterator<String> iterator = generatedHandlers.iterator();
             for (int i = 1; i <= generatedHandlers.size(); i++) {
-                args.add(generatedHandlers.get(i - 1));
+                args.add(iterator.next());
                 args.add(String.format("handler%d", i));
             }
             writer.beginMethod(null, handlerClassName, PUBLIC, args.toArray(new String[args.size()]));
         }
 
         StringBuilder builder = new StringBuilder();
+        Iterator<String> iterator = generatedHandlers.iterator();
         for (int i = 0; i < generatedHandlers.size(); i++) {
             if (useDagger)
                 builder.append(String.format("handler%d", i + 1));
             else
-                builder.append(String.format("new %s(objectMapper)", generatedHandlers.get(i)));
+                builder.append(String.format("new %s(objectMapper)", iterator.next()));
             if (i + 1 < generatedHandlers.size())
                 builder.append(",\n");
         }

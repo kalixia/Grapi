@@ -14,17 +14,16 @@ import java.util.List;
 class UriTemplatePrecedenceComparator implements Comparator<String>, Serializable {
     @Override
     public int compare(String uriTemplate1, String uriTemplate2) {
-
         // sort by the number of literal characters contained within the expression
-        if (uriTemplate1.length() > uriTemplate2.length()) {
-            return -1;
+        if (uriTemplate1.length() != uriTemplate2.length()) {
+            return Integer.compare(uriTemplate1.length(), uriTemplate2.length());
         }
 
         // sort by the number of template expressions within the expression
         List<String> expressions1 = UriTemplateUtils.extractParametersNames(uriTemplate1);
         List<String> expressions2 = UriTemplateUtils.extractParametersNames(uriTemplate2);
-        if (expressions1.size() > expressions2.size()) {
-            return -1;
+        if (expressions1.size() != expressions2.size()) {
+            return Integer.compare(expressions1.size(), expressions2.size());
         }
 
         // sort by the number of regular expressions contained within the expression

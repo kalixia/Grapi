@@ -15,15 +15,17 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+import javax.tools.Diagnostic;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 @SupportedAnnotationTypes({ "javax.ws.rs.*" })
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
@@ -36,7 +38,7 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
     private JaxRsModuleGenerator moduleGenerator;
     private JaxRsDaggerModuleGenerator daggerGenerator;
     private SortedMap<String,String> uriTemplateToHandlerName;
-    private List<String> generatedHandlers;
+    private SortedSet<String> generatedHandlers;
     public static final String GENERATOR_NAME = "netty-rest";
 
     @Override
@@ -50,7 +52,7 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
         moduleGenerator = new JaxRsModuleGenerator(filer, messager, options);
         daggerGenerator = new JaxRsDaggerModuleGenerator(filer, messager, options);
         uriTemplateToHandlerName = new TreeMap<>(new UriTemplatePrecedenceComparator());
-        generatedHandlers = new ArrayList<>();
+        generatedHandlers = new TreeSet<>();
     }
 
     @Override
@@ -99,11 +101,13 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
 
         // TODO: use package from APT processor options
         if (roundEnv.processingOver() && generatedHandlers.size() > 0) {
-            String firstHandlerName = generatedHandlers.get(0);
+            String firstHandlerName = generatedHandlers.first();
             String packageName = firstHandlerName.substring(0, firstHandlerName.lastIndexOf('.'));
-//            System.out.printf("Package name %s%n", packageName);
-            moduleGenerator.generateModuleClass(packageName, generatedHandlers);
 
+            messager.printMessage(Diagnostic.Kind.MANDATORY_WARNING,
+                    "RaWSAG: generated " + generatedHandlers.size() + " handlers");
+
+            moduleGenerator.generateModuleClass(packageName, generatedHandlers);
             daggerGenerator.generateDaggerModule(packageName, generatedHandlers);
         }
 

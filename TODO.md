@@ -1,6 +1,7 @@
 TODO:
 -----
 
+* add support for javax.validation
 * fix support for RxJava
 * add support for Response JAX-RS instances
 * add support for @Consumes

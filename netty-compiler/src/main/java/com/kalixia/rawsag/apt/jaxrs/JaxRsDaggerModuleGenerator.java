@@ -10,9 +10,8 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 
 import static com.squareup.java.JavaWriter.stringLiteral;
 import static java.lang.reflect.Modifier.PUBLIC;
@@ -33,7 +32,7 @@ public class JaxRsDaggerModuleGenerator {
                 && "true".equals(options.get(Options.METRICS.getValue()));
     }
 
-    public void generateDaggerModule(String destPackage, List<String> generatedHandlers) {
+    public void generateDaggerModule(String destPackage, SortedSet<String> generatedHandlers) {
         if (!useDagger)
             return;
         Writer handlerWriter = null;
