@@ -3,6 +3,7 @@ package com.kalixia.rawsag.codecs.rest;
 import com.kalixia.rawsag.ApiRequest;
 import com.kalixia.rawsag.ApiResponse;
 import com.kalixia.rawsag.MDCLogging;
+import io.netty.buffer.BufUtil;
 import io.netty.buffer.MessageBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -44,7 +45,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         InetSocketAddress clientAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         ApiRequest apiRequest = new ApiRequest(requestID,
                 request.getUri(), request.getMethod(),
-                request.content(), contentType,
+                BufUtil.retain(request.content()), contentType,
                 clientAddress.getHostName());
         LOGGER.debug("About to handle request {}", request);
         out.add(apiRequest);

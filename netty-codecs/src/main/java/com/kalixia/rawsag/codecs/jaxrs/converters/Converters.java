@@ -1,5 +1,6 @@
 package com.kalixia.rawsag.codecs.jaxrs.converters;
 
+import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,11 @@ public class Converters {
             throw new ConverterNotFoundException(clazz);
         }
         return converter.fromString(value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T fromByteBuf(Class<T> clazz, ByteBuf buffer) throws ConverterNotFoundException {
+        return fromString(clazz, buffer.toString());
     }
 
     @SuppressWarnings("unchecked")

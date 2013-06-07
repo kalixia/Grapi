@@ -1,7 +1,12 @@
 package com.kalixia.rawsag.apt.jaxrs;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kalixia.rawsag.codecs.jaxrs.UriTemplateUtils;
 import com.squareup.java.JavaWriter;
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
 
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
@@ -16,6 +21,7 @@ import javax.validation.Validator;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -70,12 +76,13 @@ public class JaxRsMethodGenerator {
             writer
                     .emitImports("com.kalixia.rawsag.codecs.jaxrs.GeneratedJaxRsMethodHandler")
                     .emitImports("com.kalixia.rawsag.codecs.jaxrs.UriTemplateUtils")
-                    .emitImports("com.kalixia.rawsag.codecs.jaxrs.converters.Converters")
-                    .emitImports("com.fasterxml.jackson.databind.ObjectMapper")
+                    .emitImports(ObjectMapper.class.getName())
+                    .emitImports(JsonMappingException.class.getName())
 //                        .emitImports("io.netty.channel.ChannelHandler.Sharable")
-                    .emitImports("io.netty.buffer.Unpooled")
-                    .emitImports("io.netty.handler.codec.http.HttpMethod")
-                    .emitImports("io.netty.handler.codec.http.HttpResponseStatus");
+                    .emitImports(Unpooled.class.getName())
+                    .emitImports(Charset.class.getName())
+                    .emitImports(HttpMethod.class.getName())
+                    .emitImports(HttpResponseStatus.class.getName());
             if (useMetrics) {
                 writer
                         .emitImports("com.codahale.metrics.Timer")
@@ -255,61 +262,66 @@ public class JaxRsMethodGenerator {
             // extract each parameter
             for (JaxRsParamInfo parameter : methodInfo.getParameters()) {
                 String uriTemplateParameter = parametersMap.get(parameter.getName());
+                String parameterValueSource;
                 if (uriTemplateParameter == null) {
-                    messager.printMessage(Diagnostic.Kind.ERROR,
-                            String.format("Missing binding to parameter '%s'", parameter.getName()),
-                            parameter.getElement());
+                    // consider this is actually content to be converted to an object
+                    parameterValueSource = "request.content().toString(Charset.defaultCharset())";
+                } else {
+                    // otherwise this is extracted parameterValueSource URI
+                    parameterValueSource = String.format("parameters.get(\"%s\")", uriTemplateParameter);
                 }
 
                 TypeMirror type = parameter.getType();
                 if (String.class.getName().equals(type.toString())) {
-                    writer.emitStatement("String %s = parameters.get(\"%s\")",
-                            parameter.getName(), uriTemplateParameter);
+                    writer.emitStatement("String %s = %s",
+                            parameter.getName(), parameterValueSource);
                 } else if (type.toString().startsWith("java.lang")) {
                     String shortName = type.toString().substring(type.toString().lastIndexOf('.') + 1);
-                    writer.emitStatement("%s %s = %s.parse%s(parameters.get(\"%s\"))",
-                            shortName, parameter.getName(), shortName, shortName, uriTemplateParameter);
+                    writer.emitStatement("%s %s = %s.parse%s(%s)",
+                            shortName, parameter.getName(), shortName, shortName, parameterValueSource);
                 } else if (type.getKind().isPrimitive()) {
                     char firstChar = type.toString().charAt(0);
                     String shortName = Character.toUpperCase(firstChar) + type.toString().substring(1);
-                    writer.emitStatement("%s %s = %s.parse%s(parameters.get(\"%s\"))",
-                            type, parameter.getName(), shortName, shortName, uriTemplateParameter);
+                    writer.emitStatement("%s %s = %s.parse%s(%s)",
+                            type, parameter.getName(), shortName, shortName, parameterValueSource);
                 } else {
-                    writer.emitStatement("%s %s = Converters.fromString(%s.class, parameters.get(\"%s\"))",
-                            type, parameter.getName(), type, uriTemplateParameter);
+                    writer.emitStatement("%s %s = objectMapper.readValue(%s, %s.class)",
+                            type, parameter.getName(), parameterValueSource, type);
                 }
             }
         }
 
         // validate parameters
-        StringBuilder builder = new StringBuilder();
-        Iterator<JaxRsParamInfo> iterator = methodInfo.getParameters().iterator();
-        while (iterator.hasNext()) {
-            JaxRsParamInfo param = iterator.next();
-            builder.append(param.getName());
-            if (iterator.hasNext())
-                builder.append(", ");
+        if (methodInfo.hasParameters()) {
+            StringBuilder builder = new StringBuilder();
+            Iterator<JaxRsParamInfo> iterator = methodInfo.getParameters().iterator();
+            while (iterator.hasNext()) {
+                JaxRsParamInfo param = iterator.next();
+                builder.append(param.getName());
+                if (iterator.hasNext())
+                    builder.append(", ");
+            }
+            writer.emitEndOfLineComment("Validate parameters");
+            writer.emitStatement("Set<ConstraintViolation<%s>> violations = validator.forExecutables().validateParameters(delegate,%n" +
+                    "delegateMethod, new Object[] { %s })", resourceClassName, builder.toString());
+            writer
+                    .beginControlFlow("if (!violations.isEmpty())")
+                    .emitStatement("Iterator<ConstraintViolation<%s>> iterator = violations.iterator()", resourceClassName)
+                    .emitStatement("StringBuilder builder = new StringBuilder()")
+                    .beginControlFlow("while (iterator.hasNext())")
+                    .emitStatement("ConstraintViolation<%s> violation = iterator.next()", resourceClassName)
+                    .emitStatement("builder.append(\"Parameter \").append(violation.getMessage()).append('\\n')")
+                    .endControlFlow()
+                    .emitStatement(
+                            "return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST," +
+                                    " Unpooled.copiedBuffer(builder.toString().getBytes()), MediaType.TEXT_PLAIN)")
+                    .endControlFlow();
         }
-        writer.emitEndOfLineComment("Validate parameters");
-        writer.emitStatement("Set<ConstraintViolation<%s>> violations = validator.forExecutables().validateParameters(delegate,%n" +
-                "delegateMethod, new Object[] { %s })", resourceClassName, builder.toString());
-        writer
-                .beginControlFlow("if (!violations.isEmpty())")
-                .emitStatement("Iterator<ConstraintViolation<%s>> iterator = violations.iterator()", resourceClassName)
-                .emitStatement("StringBuilder builder = new StringBuilder()")
-                .beginControlFlow("while (iterator.hasNext())")
-                .emitStatement("ConstraintViolation<%s> violation = iterator.next()", resourceClassName)
-                .emitStatement("builder.append(\"Parameter \").append(violation.getMessage()).append('\\n')")
-                .endControlFlow()
-                .emitStatement(
-                        "return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST," +
-                                " Unpooled.copiedBuffer(builder.toString().getBytes()), MediaType.TEXT_PLAIN)")
-                .endControlFlow();
 
         // call JAX-RS resource method
         writer.emitEndOfLineComment("Call JAX-RS resource");
         if (methodInfo.hasParameters()) {
-            builder = new StringBuilder();
+            StringBuilder builder = new StringBuilder();
             for (int i = 0; i < methodInfo.getParameters().size(); i++) {
                 JaxRsParamInfo paramInfo = methodInfo.getParameters().get(i);
                 builder.append(paramInfo.getName());
@@ -332,9 +344,10 @@ public class JaxRsMethodGenerator {
         if (methodInfo.hasReturnType()) {
             writer.emitEndOfLineComment("Validate result returned");
             writer
-                    .emitStatement("violations = validator.forExecutables().validateReturnValue(delegate, delegateMethod, result)")
-                    .beginControlFlow("if (!violations.isEmpty())")
-                                    .emitStatement("Iterator<ConstraintViolation<%s>> iterator = violations.iterator()", resourceClassName)
+                    .emitStatement("Set<ConstraintViolation<%s>> resultViolations = validator.forExecutables().validateReturnValue(delegate,%n" +
+                            "delegateMethod, result)", resourceClassName)
+                    .beginControlFlow("if (!resultViolations.isEmpty())")
+                                    .emitStatement("Iterator<ConstraintViolation<%s>> iterator = resultViolations.iterator()", resourceClassName)
                                     .emitStatement("StringBuilder builder = new StringBuilder()")
                                     .beginControlFlow("while (iterator.hasNext())")
                                     .emitStatement("ConstraintViolation<%s> violation = iterator.next()", resourceClassName)
@@ -360,8 +373,11 @@ public class JaxRsMethodGenerator {
                     "Unpooled.EMPTY_BUFFER, %s)", stringLiteral(produces));
         }
 
+        if (methodInfo.hasReturnType() || methodInfo.hasParameters())
+            writer.nextControlFlow("catch (IllegalArgumentException|JsonMappingException e)");
+        else
+            writer.nextControlFlow("catch (IllegalArgumentException e)");
         writer
-                .nextControlFlow("catch (IllegalArgumentException e)")
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST, " +
                             "Unpooled.copiedBuffer(e.getMessage().getBytes()), MediaType.TEXT_PLAIN)")
                 .nextControlFlow("catch (Exception e)")

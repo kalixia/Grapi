@@ -1,5 +1,7 @@
 package com.kalixia.rawsag.apt.jaxrs;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.java.JavaWriter;
 
 import javax.annotation.Generated;
@@ -49,7 +51,8 @@ public class JaxRsDaggerModuleGenerator {
                     .emitPackage(destPackage.toString())
                     .emitImports("dagger.Module")
                     .emitImports("dagger.Provides")
-                    .emitImports("com.fasterxml.jackson.databind.ObjectMapper")
+                    .emitImports(ObjectMapper.class.getName())
+                    .emitImports(JsonParser.class.getName())
                     .emitImports(Validator.class.getName())
                     .emitImports(Validation.class.getName())
                     .emitImports(ValidatorFactory.class.getName());
@@ -94,7 +97,10 @@ public class JaxRsDaggerModuleGenerator {
                 .emitEmptyLine()
                 .emitAnnotation("Provides").emitAnnotation("Singleton")
                 .beginMethod("ObjectMapper", "provideObjectMapper", 0)
-                .emitStatement("return new ObjectMapper()")
+                .emitStatement("ObjectMapper objectMapper = new ObjectMapper()")
+                .emitStatement("objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)")
+                .emitStatement("objectMapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)")
+                .emitStatement("return objectMapper")
                 .endMethod();
     }
 

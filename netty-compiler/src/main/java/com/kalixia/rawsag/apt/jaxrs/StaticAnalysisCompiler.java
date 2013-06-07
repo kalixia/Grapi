@@ -39,7 +39,7 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
     private JaxRsDaggerModuleGenerator daggerGenerator;
     private SortedMap<String,String> uriTemplateToHandlerName;
     private SortedSet<String> generatedHandlers;
-    public static final String GENERATOR_NAME = "netty-rest";
+    public static final String GENERATOR_NAME = "RaWSAG";
 
     @Override
     public void init(ProcessingEnvironment environment) {

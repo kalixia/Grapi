@@ -1,6 +1,7 @@
 package com.kalixia.rawsag;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -17,12 +18,10 @@ public class ObjectsResource {
         return id;
     }
 
-    /*
     @POST
     public void addTest(Test test) {
         // do nothing with it
     }
-    */
 
     public static class Test {
         private String name;
