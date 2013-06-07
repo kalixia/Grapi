@@ -1,10 +1,9 @@
-package com.kalixia.rawsag.apt.jaxrs;
+package com.kalixia.rawsag.apt.jaxrs.model;
 
-import com.kalixia.rawsag.apt.jaxrs.model.JaxRsMethodInfo;
 import io.netty.handler.codec.http.HttpMethod;
 import java.util.Comparator;
 
-class JaxRsMethodInfoComparator implements Comparator<JaxRsMethodInfo> {
+public class JaxRsMethodInfoComparator implements Comparator<JaxRsMethodInfo> {
     private final UriTemplatePrecedenceComparator templateComparator = new UriTemplatePrecedenceComparator();
 
     @Override

@@ -1,4 +1,4 @@
-package com.kalixia.rawsag.apt.jaxrs;
+package com.kalixia.rawsag.apt.jaxrs.model;
 
 import com.kalixia.rawsag.codecs.jaxrs.UriTemplateUtils;
 

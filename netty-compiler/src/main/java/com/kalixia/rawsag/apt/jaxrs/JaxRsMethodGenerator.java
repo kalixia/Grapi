@@ -19,6 +19,9 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.Writer;
@@ -94,9 +97,14 @@ public class JaxRsMethodGenerator {
             writer
                     .emitImports("org.slf4j.Logger")
                     .emitImports("org.slf4j.LoggerFactory")
-                    .emitImports("javax.ws.rs.core.MediaType")
+                    // JAX-RS classes
+                    .emitImports(MediaType.class.getName())
+                    .emitImports(MultivaluedMap.class.getName())
+                    .emitImports(MultivaluedHashMap.class.getName())
+                    // Bean Validation classes
                     .emitImports(Validator.class.getName())
                     .emitImports(ConstraintViolation.class.getName())
+                    // JDK classes
                     .emitImports(Map.class.getName())
                     .emitImports(Set.class.getName())
                     .emitImports(Iterator.class.getName())
@@ -369,13 +377,13 @@ public class JaxRsMethodGenerator {
             writer.beginControlFlow("if (result.getEntity() != null)")
                     .emitStatement("byte[] content = objectMapper.writeValueAsBytes(result.getEntity())")
                     .emitStatement("return new ApiResponse(request.id(), " +
-                            "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.copiedBuffer(content), %s)",
-                            stringLiteral(produces))
-                .nextControlFlow("else")
+                            "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.copiedBuffer(content), %s, " +
+                            "result.getStringHeaders())", stringLiteral(produces))
+                    .nextControlFlow("else")
                     .emitStatement("return new ApiResponse(request.id(), " +
-                            "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.EMPTY_BUFFER, %s)",
-                            stringLiteral(produces))
-                .endControlFlow();
+                            "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.EMPTY_BUFFER, %s, " +
+                            "result.getStringHeaders())", stringLiteral(produces))
+                    .endControlFlow();
         } else if (methodInfo.hasReturnType()) {            // convert result only if there is one
             writer.emitStatement("byte[] content = objectMapper.writeValueAsBytes(result)")
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.OK, " +

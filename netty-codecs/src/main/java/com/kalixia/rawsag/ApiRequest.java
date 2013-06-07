@@ -3,6 +3,7 @@ package com.kalixia.rawsag;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
 
+import javax.ws.rs.core.MultivaluedMap;
 import java.util.UUID;
 
 /**
@@ -17,8 +18,9 @@ public class ApiRequest extends ApiObject {
     private final HttpMethod method;
     private final String clientAddress;
 
-    public ApiRequest(UUID id, String uri, HttpMethod method, ByteBuf content, String contentType, String clientAddress) {
-        super(id, content, contentType);
+    public ApiRequest(UUID id, String uri, HttpMethod method, ByteBuf content, String contentType,
+                      MultivaluedMap<String, String> headers, String clientAddress) {
+        super(id, content, contentType, headers);
         this.uri = uri;
         this.method = method;
         this.clientAddress = clientAddress;
@@ -42,7 +44,7 @@ public class ApiRequest extends ApiObject {
         sb.append("{id=").append(id());
         sb.append(", path='").append(uri()).append('\'');
         sb.append(", method=").append(method());
-        sb.append(", content=").append(content());
+        sb.append(", headers=").append(method());
         sb.append(", clientAddress=").append(clientAddress());
         sb.append('}');
         return sb.toString();

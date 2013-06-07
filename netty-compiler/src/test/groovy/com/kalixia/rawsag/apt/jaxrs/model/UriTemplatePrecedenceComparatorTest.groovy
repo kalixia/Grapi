@@ -1,5 +1,6 @@
-package com.kalixia.rawsag.apt.jaxrs
+package com.kalixia.rawsag.apt.jaxrs.model
 
+import com.kalixia.rawsag.apt.jaxrs.model.UriTemplatePrecedenceComparator
 import spock.lang.Unroll
 
 class UriTemplatePrecedenceComparatorTest extends spock.lang.Specification {

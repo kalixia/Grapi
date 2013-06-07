@@ -4,13 +4,15 @@ import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import rx.Observable;
 
+import javax.ws.rs.core.MultivaluedMap;
 import java.util.UUID;
 
 public class ObservableApiResponse<T> extends ApiResponse {
     private final Observable<T> observable;
 
-    public ObservableApiResponse(UUID id, HttpResponseStatus status, Observable<T> observable, String contentType) {
-        super(id, status, Unpooled.EMPTY_BUFFER, contentType);
+    public ObservableApiResponse(UUID id, HttpResponseStatus status, Observable<T> observable, String contentType,
+                                 MultivaluedMap<String, String> headers) {
+        super(id, status, Unpooled.EMPTY_BUFFER, contentType, headers);
         this.observable = observable;
     }
 

@@ -2,17 +2,20 @@ package com.kalixia.rawsag;
 
 import io.netty.buffer.ByteBuf;
 
+import javax.ws.rs.core.MultivaluedMap;
 import java.util.UUID;
 
 public class ApiObject {
     private final UUID id;
     private final ByteBuf content;
     private final String contentType;
+    private final MultivaluedMap<String, String> headers;
 
-    public ApiObject(UUID id, ByteBuf content, String contentType) {
+    public ApiObject(UUID id, ByteBuf content, String contentType, MultivaluedMap<String, String> headers) {
         this.id = id;
         this.content = content;
         this.contentType = contentType;
+        this.headers = headers;
     }
 
     public UUID id() {
@@ -25,5 +28,9 @@ public class ApiObject {
 
     public String contentType() {
         return contentType;
+    }
+
+    public MultivaluedMap<String, String> headers() {
+        return headers;
     }
 }

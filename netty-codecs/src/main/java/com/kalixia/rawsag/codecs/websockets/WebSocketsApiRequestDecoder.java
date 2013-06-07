@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
@@ -46,9 +48,11 @@ public class WebSocketsApiRequestDecoder extends MessageToMessageDecoder<TextWeb
         UUID requestID = wsRequest.getId() != null ? wsRequest.getId() : UUID.randomUUID();
         MDC.put(MDCLogging.MDC_REQUEST_ID, requestID.toString());
         InetSocketAddress clientAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        // TODO: find a way to expose headers
+        MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
         out.add(new ApiRequest(requestID, wsRequest.getPath(),
                 HttpMethod.valueOf(wsRequest.getMethod()), content, MediaType.APPLICATION_JSON,
-                clientAddress.getHostName()));
+                headers, clientAddress.getHostName()));
     }
 
     @Override
