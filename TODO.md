@@ -1,7 +1,6 @@
 TODO:
 -----
 
-* add support for Response JAX-RS instances
 * add support for UriInfo injection and UriBuilder
 * add support for @Consumes
 * fix support for RxJava
