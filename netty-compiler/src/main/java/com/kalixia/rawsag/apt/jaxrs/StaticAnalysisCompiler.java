@@ -37,7 +37,7 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
     private JaxRsMethodGenerator methodGenerator;
     private JaxRsModuleGenerator moduleGenerator;
     private JaxRsDaggerModuleGenerator daggerGenerator;
-    private SortedMap<String,String> uriTemplateToHandlerName;
+    private SortedMap<JaxRsMethodInfo,String> methodToHandlerName;
     private SortedSet<String> generatedHandlers;
     public static final String GENERATOR_NAME = "RaWSAG";
 
@@ -51,7 +51,7 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
         methodGenerator = new JaxRsMethodGenerator(filer, messager, options);
         moduleGenerator = new JaxRsModuleGenerator(filer, messager, options);
         daggerGenerator = new JaxRsDaggerModuleGenerator(filer, messager, options);
-        uriTemplateToHandlerName = new TreeMap<>(new UriTemplatePrecedenceComparator());
+        methodToHandlerName = new TreeMap<>(new JaxRsMethodInfoComparator());
         generatedHandlers = new TreeSet<>();
     }
 
@@ -93,11 +93,11 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
                     produces = new String[] { MediaType.TEXT_PLAIN };
                 JaxRsMethodInfo methodInfo = new JaxRsMethodInfo(elem, verb, uriTemplate, methodName, returnType, parameters, produces);
                 String generatedHandler = methodGenerator.generateHandlerClass(resourceClassName, resourcePackage, uriTemplate, methodInfo);
-                uriTemplateToHandlerName.put(uriTemplate, generatedHandler);
+                methodToHandlerName.put(methodInfo, generatedHandler);
             }
         }
 
-        generatedHandlers.addAll(uriTemplateToHandlerName.values());
+        generatedHandlers.addAll(methodToHandlerName.values());
 
         // TODO: use package from APT processor options
         if (roundEnv.processingOver() && generatedHandlers.size() > 0) {

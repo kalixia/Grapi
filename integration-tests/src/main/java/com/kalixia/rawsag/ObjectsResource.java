@@ -6,11 +6,18 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @Path("/objects")
 @Produces(MediaType.APPLICATION_JSON)
 public class ObjectsResource {
+
+    @GET
+    public List<Test> getAllTests() {
+        return Collections.emptyList();
+    }
 
     @GET
     @Path("{id}")
