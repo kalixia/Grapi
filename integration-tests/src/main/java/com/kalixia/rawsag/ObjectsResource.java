@@ -17,4 +17,22 @@ public class ObjectsResource {
         return id;
     }
 
+    /*
+    @POST
+    public void addTest(Test test) {
+        // do nothing with it
+    }
+    */
+
+    public static class Test {
+        private String name;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
 }

@@ -13,11 +13,12 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
-import javax.validation.executable.ExecutableValidator;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +91,8 @@ public class JaxRsMethodGenerator {
                     .emitImports(ConstraintViolation.class.getName())
                     .emitImports(Map.class.getName())
                     .emitImports(Set.class.getName())
-                    .emitImports(Iterator.class.getName());
+                    .emitImports(Iterator.class.getName())
+                    .emitImports(Method.class.getName());
 
             if (useDagger)
                 writer.emitImports(Inject.class.getName());
@@ -105,19 +107,14 @@ public class JaxRsMethodGenerator {
 //                        .emitAnnotation("Sharable")
                     .beginType(handlerClassName, "class", PUBLIC | FINAL, null, "GeneratedJaxRsMethodHandler")
                             // add delegate to underlying JAX-RS resource
-                    .emitJavadoc("Delegate for the JAX-RS resource");
-
-            if (useDagger) {
-                writer.emitAnnotation(Inject.class.getName()).emitField(resourceClassName, "delegate", 0);
-            } else {
-                writer.emitField(resourceClassName, "delegate", PRIVATE,
-                        String.format("new %s()", resourceClassName));
-            }
-            writer.emitEmptyLine();
+                    .emitJavadoc("Delegate for the JAX-RS resource")
+                    .emitField(resourceClassName, "delegate", PRIVATE | FINAL)
+                    .emitEmptyLine();
 
             writer
                     .emitField("ObjectMapper", "objectMapper", PRIVATE | FINAL)
-                    .emitField("Validator", "validator", PRIVATE | FINAL);
+                    .emitField("Validator", "validator", PRIVATE | FINAL)
+                    .emitField("Method", "delegateMethod", PRIVATE | FINAL);
 
             if (useMetrics) {
                 writer.emitField("Timer", "timer", PRIVATE | FINAL);
@@ -129,7 +126,7 @@ public class JaxRsMethodGenerator {
 
             generateConstructor(writer, handlerClassName, resourceClassName, method);
             generateMatchesMethod(writer, method);
-            generateHandleMethod(writer, method);
+            generateHandleMethod(writer, method, resourceClassName);
             // end class
             writer.endType();
 
@@ -155,15 +152,46 @@ public class JaxRsMethodGenerator {
             writer.emitAnnotation(Inject.class);
 
         List<String> parameters = new ArrayList<>();
+        if (useDagger)
+            parameters.addAll(Arrays.asList(resourceClassName, "delegate"));
         parameters.addAll(Arrays.asList("ObjectMapper", "objectMapper"));
         parameters.addAll(Arrays.asList("Validator", "validator"));
         if (useMetrics)
             parameters.addAll(Arrays.asList("MetricRegistry", "registry"));
 
+        writer.beginMethod(null, handlerClassName, PUBLIC, parameters.toArray(new String[parameters.size()]));
+
+        if (useDagger)
+            writer.emitStatement("this.delegate = delegate");
+        else
+            writer.emitStatement("this.delegate = new %s()", resourceClassName);
+
         writer
-                .beginMethod(null, handlerClassName, PUBLIC, parameters.toArray(new String[parameters.size()]))
                 .emitStatement("this.objectMapper = objectMapper")
                 .emitStatement("this.validator = validator");
+
+        // create reflection method used by the validation API
+        writer.beginControlFlow("try");
+        if (method.hasParameters()) {
+            StringBuilder builder = new StringBuilder();
+            Iterator<JaxRsParamInfo> paramIterator = method.getParameters().iterator();
+            while (paramIterator.hasNext()) {
+                JaxRsParamInfo param = paramIterator.next();
+                builder.append(param.getType().toString()).append(".class");
+                if (paramIterator.hasNext())
+                    builder.append(", ");
+            }
+            writer.emitStatement("this.delegateMethod = delegate.getClass().getMethod(%s, %s)",
+                    stringLiteral(method.getMethodName()), builder.toString());
+        } else {
+            writer.emitStatement("this.delegateMethod = delegate.getClass().getMethod(%s)",
+                            stringLiteral(method.getMethodName()));
+        }
+        writer
+                .nextControlFlow("catch (NoSuchMethodException e)")
+                .emitEndOfLineComment("should not happen as RaWSAG scanned the source code!")
+                .emitStatement("throw new RuntimeException(%s)", stringLiteral("Can't find method through reflection"))
+                .endControlFlow();
 
         if (useMetrics) {
 //            writer.emitStatement("this.registry = registry");
@@ -197,7 +225,7 @@ public class JaxRsMethodGenerator {
         return writer.endMethod();
     }
 
-    private JavaWriter generateHandleMethod(JavaWriter writer, JaxRsMethodInfo methodInfo)
+    private JavaWriter generateHandleMethod(JavaWriter writer, JaxRsMethodInfo methodInfo, String resourceClassName)
             throws IOException {
         writer.emitEmptyLine();
 
@@ -250,32 +278,38 @@ public class JaxRsMethodGenerator {
                     writer.emitStatement("%s %s = Converters.fromString(%s.class, parameters.get(\"%s\"))",
                             type, parameter.getName(), type, uriTemplateParameter);
                 }
-
-                if ("java.lang.String".equals(parameter.getType().toString())) {
-                    writer.emitEndOfLineComment("Validate parameter %s", parameter.getName());
-                    writer.emitStatement("Set<ConstraintViolation<%s>> %sViolations = " +
-                            "validator.validate(%s, javax.validation.constraints.Min.class)",
-                            parameter.getType(), parameter.getName(), parameter.getName());
-                    writer
-                            .beginControlFlow(String.format("if (%sViolations.size() > 0)", parameter.getName()))
-                            .emitStatement("Iterator<ConstraintViolation<%s>> iterator = %sViolations.iterator()",
-                                    parameter.getType(), parameter.getName())
-                            .emitStatement("StringBuilder builder = new StringBuilder()")
-                            .beginControlFlow("while (iterator.hasNext())")
-                            .emitStatement("builder.append(iterator.next().getMessage()).append('\\n')")
-                            .endControlFlow()
-                            .emitStatement(
-                                    "return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST," +
-                                            " Unpooled.copiedBuffer(builder.toString().getBytes()), MediaType.TEXT_PLAIN)")
-                            .endControlFlow();
-                }
             }
         }
+
+        // validate parameters
+        StringBuilder builder = new StringBuilder();
+        Iterator<JaxRsParamInfo> iterator = methodInfo.getParameters().iterator();
+        while (iterator.hasNext()) {
+            JaxRsParamInfo param = iterator.next();
+            builder.append(param.getName());
+            if (iterator.hasNext())
+                builder.append(", ");
+        }
+        writer.emitEndOfLineComment("Validate parameters");
+        writer.emitStatement("Set<ConstraintViolation<%s>> violations = validator.forExecutables().validateParameters(delegate,%n" +
+                "delegateMethod, new Object[] { %s })", resourceClassName, builder.toString());
+        writer
+                .beginControlFlow("if (!violations.isEmpty())")
+                .emitStatement("Iterator<ConstraintViolation<%s>> iterator = violations.iterator()", resourceClassName)
+                .emitStatement("StringBuilder builder = new StringBuilder()")
+                .beginControlFlow("while (iterator.hasNext())")
+                .emitStatement("ConstraintViolation<%s> violation = iterator.next()", resourceClassName)
+                .emitStatement("builder.append(\"Parameter \").append(violation.getMessage()).append('\\n')")
+                .endControlFlow()
+                .emitStatement(
+                        "return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST," +
+                                " Unpooled.copiedBuffer(builder.toString().getBytes()), MediaType.TEXT_PLAIN)")
+                .endControlFlow();
 
         // call JAX-RS resource method
         writer.emitEndOfLineComment("Call JAX-RS resource");
         if (methodInfo.hasParameters()) {
-            StringBuilder builder = new StringBuilder();
+            builder = new StringBuilder();
             for (int i = 0; i < methodInfo.getParameters().size(); i++) {
                 JaxRsParamInfo paramInfo = methodInfo.getParameters().get(i);
                 builder.append(paramInfo.getName());
@@ -292,6 +326,24 @@ public class JaxRsMethodGenerator {
             writer.emitStatement("%s result = delegate.%s()", methodInfo.getReturnType(), methodInfo.getMethodName());
         } else {
             writer.emitStatement("delegate.%s()", methodInfo.getMethodName());
+        }
+
+        // validate result
+        if (methodInfo.hasReturnType()) {
+            writer.emitEndOfLineComment("Validate result returned");
+            writer
+                    .emitStatement("violations = validator.forExecutables().validateReturnValue(delegate, delegateMethod, result)")
+                    .beginControlFlow("if (!violations.isEmpty())")
+                                    .emitStatement("Iterator<ConstraintViolation<%s>> iterator = violations.iterator()", resourceClassName)
+                                    .emitStatement("StringBuilder builder = new StringBuilder()")
+                                    .beginControlFlow("while (iterator.hasNext())")
+                                    .emitStatement("ConstraintViolation<%s> violation = iterator.next()", resourceClassName)
+                                    .emitStatement("builder.append(\"Result \").append(violation.getMessage()).append('\\n')")
+                                    .endControlFlow()
+                                    .emitStatement(
+                                            "return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST," +
+                                                    " Unpooled.copiedBuffer(builder.toString().getBytes()), MediaType.TEXT_PLAIN)")
+                                    .endControlFlow();
         }
 
         writer.emitEndOfLineComment("Build API response object");

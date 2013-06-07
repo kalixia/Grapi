@@ -36,6 +36,7 @@ The project is in early stages. It's being successfully used and tested on other
 | CORS             | A Cross-Origin Resource Sharing (CORS) handler is available if needed
 | Dagger           | Generate a Dagger module simplifying even more the use of the generated code
 | Metrics          | Expose your JAX-RS resource calls as [Metrics](http://metrics.codahale.com)
+| JSR-349 (Bean Validation 1.1) | If your JAX-RS resources are annotated with Bean Validation annotations, the handlers to check the parameters and result
 
 
 ### Current Limitations

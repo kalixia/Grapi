@@ -1,8 +1,8 @@
 dependencies {
     compile project(':netty-codecs')
     compile project(':netty-compiler')
-    compile 'com.squareup.dagger:dagger:1.0.0'
-    compile 'com.squareup.dagger:dagger-compiler:1.0.0'
+    compile 'com.squareup.dagger:dagger:1.0.1'
+    compile 'com.squareup.dagger:dagger-compiler:1.0.1'
     compile 'com.codahale.metrics:metrics-core:3.0.0-RC1'
     compile 'com.codahale.metrics:metrics-annotation:3.0.0-RC1'
     compile 'com.netflix.rxjava:rxjava-core:0.9.0'
