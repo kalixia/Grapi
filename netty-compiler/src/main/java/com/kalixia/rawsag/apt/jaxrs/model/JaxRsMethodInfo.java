@@ -1,9 +1,9 @@
-package com.kalixia.rawsag.apt.jaxrs;
+package com.kalixia.rawsag.apt.jaxrs.model;
 
 import javax.lang.model.element.Element;
 import java.util.List;
 
-class JaxRsMethodInfo {
+public class JaxRsMethodInfo {
     private final Element element;
     private final String verb;
     private final String uriTemplate;
@@ -12,7 +12,7 @@ class JaxRsMethodInfo {
     private final List<JaxRsParamInfo> parameters;
     private final String[] produces;
 
-    JaxRsMethodInfo(Element element, String verb, String uriTemplate, String methodName, String returnType,
+    public JaxRsMethodInfo(Element element, String verb, String uriTemplate, String methodName, String returnType,
                     List<JaxRsParamInfo> parameters, String[] produces) {
         this.element = element;
         this.verb = verb;
@@ -23,39 +23,39 @@ class JaxRsMethodInfo {
         this.produces = produces;
     }
 
-    Element getElement() {
+    public Element getElement() {
         return element;
     }
 
-    String getVerb() {
+    public String getVerb() {
         return verb;
     }
 
-    String getUriTemplate() {
+    public String getUriTemplate() {
         return uriTemplate;
     }
 
-    String getMethodName() {
+    public String getMethodName() {
         return methodName;
     }
 
-    String getReturnType() {
+    public String getReturnType() {
         return returnType;
     }
 
-    boolean hasReturnType() {
+    public boolean hasReturnType() {
         return !"void".equals(returnType);
     }
 
-    List<JaxRsParamInfo> getParameters() {
+    public List<JaxRsParamInfo> getParameters() {
         return parameters;
     }
 
-    boolean hasParameters() {
+    public boolean hasParameters() {
         return getParameters().size() > 0;
     }
 
-    String[] getProduces() {
+    public String[] getProduces() {
         return produces;
     }
 

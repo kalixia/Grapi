@@ -46,6 +46,7 @@ missing features:
 
 * the WS stack is highly experimental at the moment
 * no support for Response JAX-RS instances
+* no support for UriInfo injection and UriBuilder
 * no support for @Consumes
 * no support for @QueryParam
 * no support for @HeaderParam

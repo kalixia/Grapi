@@ -4,6 +4,7 @@ import org.glassfish.jersey.uri.UriTemplate;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,20 +20,6 @@ public class UriTemplateUtils {
         uriTemplatesCache.put(uriTemplate, template);
     }
 
-    /**
-     * Extract parameters from URI, given a URI template.
-     * @param uriTemplate
-     * @return
-     * @deprecated
-     */
-    public static Pattern extractRegexPattern(String uriTemplate) {
-        // strip last '/' if present
-        if (uriTemplate.endsWith("/"))
-            uriTemplate = uriTemplate.substring(0, uriTemplate.length() - 1);
-
-        return Pattern.compile('^' + uriTemplatePattern.matcher(uriTemplate).replaceAll("(.*)") + "/?$");
-    }
-
     public static boolean hasParameters(String uriTemplate) {
         UriTemplate template = createUriTemplateOrGetFromCache(uriTemplate);
         return template.getNumberOfTemplateVariables() > 0;
@@ -41,6 +28,8 @@ public class UriTemplateUtils {
     public static Map<String, String> extractParameters(String uriTemplate, String uri) {
         UriTemplate template = createUriTemplateOrGetFromCache(uriTemplate);
         Map<String, String> parametersMap = new HashMap<>();
+        if (uri.endsWith("/"))
+            uri = uri.substring(0, uri.length() - 1);
         boolean match = template.match(uri, parametersMap);
         if (!match) {
             return Collections.emptyMap();
@@ -57,6 +46,16 @@ public class UriTemplateUtils {
     public static int getNumberOfExplicitRegexes(String uriTemplate) {
         UriTemplate template = createUriTemplateOrGetFromCache(uriTemplate);
         return template.getNumberOfExplicitRegexes();
+    }
+
+    public static String createURI(String uriTemplate, Map<String, String> parameters) {
+        UriTemplate template = createUriTemplateOrGetFromCache(uriTemplate);
+        return template.createURI(parameters);
+    }
+
+    public static String createURI(String uriTemplate, String... parameters) {
+        UriTemplate template = createUriTemplateOrGetFromCache(uriTemplate);
+        return template.createURI(parameters);
     }
 
     private static UriTemplate createUriTemplateOrGetFromCache(String uriTemplate) {

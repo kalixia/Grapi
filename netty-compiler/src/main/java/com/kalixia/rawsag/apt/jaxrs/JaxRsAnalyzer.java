@@ -1,5 +1,7 @@
 package com.kalixia.rawsag.apt.jaxrs;
 
+import com.kalixia.rawsag.apt.jaxrs.model.JaxRsMethodInfo;
+import com.kalixia.rawsag.apt.jaxrs.model.JaxRsParamInfo;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;

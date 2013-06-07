@@ -1,9 +1,10 @@
 TODO:
 -----
 
-* fix support for RxJava
 * add support for Response JAX-RS instances
+* add support for UriInfo injection and UriBuilder
 * add support for @Consumes
+* fix support for RxJava
 * add support for @QueryParam
 * add support for @HeaderParam
 * add support for @CookieParam

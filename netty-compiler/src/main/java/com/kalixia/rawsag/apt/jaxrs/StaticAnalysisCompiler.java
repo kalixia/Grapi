@@ -1,5 +1,7 @@
 package com.kalixia.rawsag.apt.jaxrs;
 
+import com.kalixia.rawsag.apt.jaxrs.model.JaxRsMethodInfo;
+import com.kalixia.rawsag.apt.jaxrs.model.JaxRsParamInfo;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;

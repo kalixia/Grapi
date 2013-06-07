@@ -2,12 +2,13 @@ package com.kalixia.rawsag.apt.jaxrs;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kalixia.rawsag.apt.jaxrs.model.JaxRsMethodInfo;
+import com.kalixia.rawsag.apt.jaxrs.model.JaxRsParamInfo;
 import com.kalixia.rawsag.codecs.jaxrs.UriTemplateUtils;
 import com.squareup.java.JavaWriter;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
-
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -18,13 +19,13 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -364,6 +365,17 @@ public class JaxRsMethodGenerator {
         if (useRxJava && methodInfo.hasReturnType() && methodInfo.getReturnType().startsWith("rx.Observable")) {
             writer.emitStatement("return new ObservableApiResponse(request.id(), HttpResponseStatus.OK, result, %s)",
                     stringLiteral(produces));
+        } else if (methodInfo.hasReturnType() && methodInfo.getReturnType().equals(Response.class.getName())) {
+            writer.beginControlFlow("if (result.getEntity() != null)")
+                    .emitStatement("byte[] content = objectMapper.writeValueAsBytes(result.getEntity())")
+                    .emitStatement("return new ApiResponse(request.id(), " +
+                            "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.copiedBuffer(content), %s)",
+                            stringLiteral(produces))
+                .nextControlFlow("else")
+                    .emitStatement("return new ApiResponse(request.id(), " +
+                            "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.EMPTY_BUFFER, %s)",
+                            stringLiteral(produces))
+                .endControlFlow();
         } else if (methodInfo.hasReturnType()) {            // convert result only if there is one
             writer.emitStatement("byte[] content = objectMapper.writeValueAsBytes(result)")
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.OK, " +

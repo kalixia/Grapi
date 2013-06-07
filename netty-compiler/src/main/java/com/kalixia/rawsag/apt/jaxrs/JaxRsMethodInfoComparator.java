@@ -1,5 +1,6 @@
 package com.kalixia.rawsag.apt.jaxrs;
 
+import com.kalixia.rawsag.apt.jaxrs.model.JaxRsMethodInfo;
 import io.netty.handler.codec.http.HttpMethod;
 import java.util.Comparator;
 

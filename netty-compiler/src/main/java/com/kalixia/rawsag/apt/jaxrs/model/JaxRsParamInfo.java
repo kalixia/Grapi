@@ -1,30 +1,28 @@
-package com.kalixia.rawsag.apt.jaxrs;
+package com.kalixia.rawsag.apt.jaxrs.model;
 
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
-import java.util.List;
 
-class JaxRsParamInfo {
+public class JaxRsParamInfo {
     private final String name;
     private final TypeMirror type;
     private final VariableElement element;
 
-    JaxRsParamInfo(String name, TypeMirror type, VariableElement element) {
+    public JaxRsParamInfo(String name, TypeMirror type, VariableElement element) {
         this.name = name;
         this.type = type;
         this.element = element;
     }
 
-    String getName() {
+    public String getName() {
         return name;
     }
 
-    TypeMirror getType() {
+    public TypeMirror getType() {
         return type;
     }
 
-    VariableElement getElement() {
+    public VariableElement getElement() {
         return element;
     }
 

@@ -5,32 +5,6 @@ import spock.lang.Unroll
 class UriTemplateUtilsTest extends spock.lang.Specification {
 
     @Unroll
-    def "uri template #uri_template is properly compiled to regex pattern"() {
-        expect:
-        UriTemplateUtils.extractRegexPattern(uri_template).toString() == pattern
-
-        where:
-        uri_template                    | pattern
-        "/devices"                      | "^/devices/?\$"
-        "/devices/"                     | "^/devices/?\$"
-        "/devices/{id}"                 | "^/devices/(.*)/?\$"
-        "/devices/{id}/temperature"     | "^/devices/(.*)/temperature/?\$"
-    }
-
-    @Unroll
-    def "template #uri_templates matches uri #uri"() {
-        given:
-        def pattern = UriTemplateUtils.extractRegexPattern(uri_template)
-
-        expect:
-        pattern.matcher(uri).matches()
-
-        where:
-        uri_template      | uri
-        "/echo/{message}" | "/echo/test"
-    }
-
-    @Unroll
     def "test of parameters in uri template #uri_template"() {
         expect:
         UriTemplateUtils.hasParameters(uri_template) == result
@@ -53,8 +27,32 @@ class UriTemplateUtilsTest extends spock.lang.Specification {
         where:
         uri                                | uri_template                     || parametersMap
         "/hello"                           | "/hello"                         || []
-        "/echo/test"                       | "/echo/{message}"                || [ message: "test" ]
-        "/users/johndoe/devices/my_device" | "/users/{user}/devices/{device}" || [ user: 'johndoe', device: 'my_device' ]
+        "/echo/test"                       | "/echo/{message}"                || [message: "test"]
+        "/users/johndoe/devices/my_device" | "/users/{user}/devices/{device}" || [user: 'johndoe', device: 'my_device']
+        "/jeje/devices/"                   | "/{username}/devices"            || [username: 'jeje']
     }
+
+    @Unroll
+    def "build uri #uri from #uri_template and parameters map"() {
+        expect:
+        uri == UriTemplateUtils.createURI(uri_template, uri_parameters)
+
+        where:
+        uri_template                     | uri_parameters                       || uri
+        "/{username}/devices"            | [username: 'jeje']                   || "/jeje/devices"
+        "/{username}/devices/{deviceID}" | [username: 'jeje', deviceID: '1234'] || "/jeje/devices/1234"
+    }
+
+    @Unroll
+    def "build uri #uri from #uri_template and parameters list"() {
+        expect:
+        uri == UriTemplateUtils.createURI(uri_template, uri_parameters)
+
+        where:
+        uri_template                     | uri_parameters               || uri
+        "/{username}/devices"            | ['jeje'] as String[]         || "/jeje/devices"
+        "/{username}/devices/{deviceID}" | ['jeje', '1234'] as String[] || "/jeje/devices/1234"
+    }
+
 
 }
