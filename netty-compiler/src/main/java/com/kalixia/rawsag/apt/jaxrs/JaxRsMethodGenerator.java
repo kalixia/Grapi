@@ -19,6 +19,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -98,7 +99,9 @@ public class JaxRsMethodGenerator {
                     .emitImports("org.slf4j.Logger")
                     .emitImports("org.slf4j.LoggerFactory")
                     // JAX-RS classes
+                    .emitImports(Response.class.getName())
                     .emitImports(MediaType.class.getName())
+                    .emitImports(WebApplicationException.class.getName())
                     .emitImports(MultivaluedMap.class.getName())
                     .emitImports(MultivaluedHashMap.class.getName())
                     // Bean Validation classes
@@ -400,6 +403,10 @@ public class JaxRsMethodGenerator {
         writer
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST, " +
                             "Unpooled.copiedBuffer(e.getMessage().getBytes()), MediaType.TEXT_PLAIN)")
+                .nextControlFlow("catch (WebApplicationException e)")
+                    .emitStatement("Response response = e.getResponse()")
+                    .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.valueOf(response.getStatus()), " +
+                                            "Unpooled.copiedBuffer(e.getMessage().getBytes()), MediaType.TEXT_PLAIN)")
                 .nextControlFlow("catch (Exception e)")
                     .emitStatement("e.printStackTrace()")
                     .beginControlFlow("if (e.getMessage() != null)")
