@@ -1,23 +1,23 @@
-# RaWSAG: REST and WebSockets APIs Generator
+# Grapi: Generated REST API
 
-RaWSAG is a Java source code generator based on APT (Javac plugin).
+Grapi is a Java source code generator based on APT (Javac plugin).
 
-RaWSAG analyzes your JAX-RS source code and generate some code in order to expose your JAX-RS resources through
+Grapi analyzes your JAX-RS source code and generate some code in order to expose your JAX-RS resources through
 [Netty](http://netty.io) 4.
 
 
 ## Introduction
 
-Basically RaWSAG generates some optimized Java code for ease of use of JAX-RS resources through Netty.
+Basically Grapi generates some optimized Java code for ease of use of JAX-RS resources through Netty.
 
 There is no runtime dependency on any JAX-RS provider (*actually only a small one on Jersey UriTemplate class
-which will be removed later on*) and RaWSAG is not a JAX-RS provider.
+which will be removed later on*) and Grapi is not a JAX-RS provider.
 
-RaWSAG avoids the introspection *crap* and generates Java source code which will work according to the JAX-RS resources.
+Grapi avoids the introspection *crap* and generates Java source code which will work according to the JAX-RS resources.
 When some JAX-RS features aren't used, some Java code is dropped from the generated source code in order to both reduce
 complexity of the generated source code and improve the performance and maintenance of code.
 
-Additionally, RaWSAG can generate a [Dagger](https://github.com/square/dagger) module in order to simplify even more
+Additionally, Grapi can generate a [Dagger](https://github.com/square/dagger) module in order to simplify even more
 the use of the generated code and also use [Metrics](http://metrics.codahale.com) in order to measure various timings
 about your JAX-RS resources.
 
@@ -68,13 +68,13 @@ First, you need to build the project as it is not *yet* available via a Maven re
 Then you simply need to add two dependencies to your project/module (where your JAX-RS source code is located):
 ```xml
 <dependency>
-    <groupId>com.kalixia.rawsag</groupId>
+    <groupId>com.kalixia.grapi</groupId>
     <artifactId>netty-codecs</artifactId>
     <version>0.1-SNAPSHOT</version>
 </dependency>
 
 <dependency>
-    <groupId>com.kalixia.rawsag</groupId>
+    <groupId>com.kalixia.grapi</groupId>
     <artifactId>netty-compiler</artifactId>
     <version>0.1-SNAPSHOT</version>
 </dependency>
@@ -167,7 +167,7 @@ public class ApiServerChannelInitializer extends ChannelInitializer<SocketChanne
 
 ### Dagger
 
-RaWSAG will generate a class named ```GeneratedJaxRsDaggerModule ```. You have two different ways to use this module:
+Grapi will generate a class named ```GeneratedJaxRsDaggerModule ```. You have two different ways to use this module:
 
 1. reference the generated Dagger module from another module of your own,
 2. create the ``` ObjectGraph ``` with this module (and eventually other ones too).

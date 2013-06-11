@@ -6,7 +6,7 @@ ext.sourceCompatibility = JavaVersion.VERSION_1_7
 apply from: file('gradle/idea.gradle')
 
 subprojects {
-    group = 'com.kalixia.rawsag'
+    group = 'com.kalixia.grapi'
     version = '0.1-SNAPSHOT'
 
     repositories {

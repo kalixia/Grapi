@@ -17,7 +17,7 @@ idea {
             annotationProcessing.@useClasspath = true
             annotationProcessing.appendNode(
                     'processor', [
-                    name: 'com.kalixia.rawsag.apt.jaxrs.StaticAnalysisCompiler',
+                    name: 'com.kalixia.grapi.apt.jaxrs.StaticAnalysisCompiler',
                     options: ''
             ])
             annotationProcessing.appendNode(

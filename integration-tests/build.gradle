@@ -23,7 +23,7 @@ compileJava {
             source: project.sourceCompatibility
     ]
     options.compilerArgs = [
-            '-processor', 'com.kalixia.rawsag.apt.jaxrs.StaticAnalysisCompiler',
+            '-processor', 'com.kalixia.grapi.apt.jaxrs.StaticAnalysisCompiler',
             '-s', "${destinationDir.absolutePath}".toString()
     ]
     Map antOptions = otherArgs + options.optionMap()
