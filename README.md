@@ -26,6 +26,10 @@ about your JAX-RS resources.
 
 The project is in early stages. It's being successfully used and tested on other projects.
 
+### Build Status
+
+[![Build Status](https://buildhive.cloudbees.com/job/kalixia/job/Grapi/badge/icon)](https://buildhive.cloudbees.com/job/kalixia/job/Grapi/)
+
 ### Working Features
 
 | Feature          | Description
