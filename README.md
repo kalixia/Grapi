@@ -88,9 +88,10 @@ Then you simply need to add two dependencies to your project/module (where your 
 
 There are currently two options available:
 
-| Option | Description
-|--------|------------
-| dagger | Additionally generate a Dagger module, named ``` GeneratedJaxRsDaggerModule ```
+| Option  | Description
+|---------|------------
+| dagger  | Additionally generate a Dagger module, named ``` GeneratedJaxRsDaggerModule ```
+| metrics | Additionally use [Metrics](http://metrics.codahale.com) for tracing JAX-RS resource method calls
 
 In order to configure a Maven project, you can use something like this:
 ```xml
