@@ -1,9 +1,7 @@
 package com.kalixia.rawsag.apt.jaxrs;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.java.JavaWriter;
-
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -52,7 +50,6 @@ public class JaxRsDaggerModuleGenerator {
                     .emitImports("dagger.Module")
                     .emitImports("dagger.Provides")
                     .emitImports(ObjectMapper.class.getName())
-                    .emitImports(JsonParser.class.getName())
                     .emitImports(Validator.class.getName())
                     .emitImports(Validation.class.getName())
                     .emitImports(ValidatorFactory.class.getName());
@@ -71,7 +68,6 @@ public class JaxRsDaggerModuleGenerator {
                     .emitAnnotation(Generated.class.getSimpleName(), stringLiteral(StaticAnalysisCompiler.GENERATOR_NAME))
                     .beginType(daggerModuleClassName, "class", PUBLIC);
 
-            generateProvideObjectMapperMethod(writer);
             generateValidationFactoryMethod(writer);
             generateValidatorMethod(writer);
             if (useMetrics)
@@ -90,18 +86,6 @@ public class JaxRsDaggerModuleGenerator {
                 }
             }
         }
-    }
-
-    private JavaWriter generateProvideObjectMapperMethod(JavaWriter writer) throws IOException {
-        return writer
-                .emitEmptyLine()
-                .emitAnnotation("Provides").emitAnnotation("Singleton")
-                .beginMethod("ObjectMapper", "provideObjectMapper", 0)
-                .emitStatement("ObjectMapper objectMapper = new ObjectMapper()")
-                .emitStatement("objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)")
-                .emitStatement("objectMapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)")
-                .emitStatement("return objectMapper")
-                .endMethod();
     }
 
     private JavaWriter generateValidationFactoryMethod(JavaWriter writer) throws IOException {
