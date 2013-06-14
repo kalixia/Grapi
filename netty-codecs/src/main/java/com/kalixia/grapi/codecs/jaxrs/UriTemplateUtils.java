@@ -26,8 +26,7 @@ public class UriTemplateUtils {
     public static Map<String, String> extractParameters(String uriTemplate, String uri) {
         UriTemplate template = createUriTemplateOrGetFromCache(uriTemplate);
         Map<String, String> parametersMap = new HashMap<>();
-        if (uri.endsWith("/"))
-            uri = uri.substring(0, uri.length() - 1);
+        uri = sanitizeUri(uri);
         boolean match = template.match(uri, parametersMap);
         if (!match) {
             return Collections.emptyMap();
@@ -63,5 +62,11 @@ public class UriTemplateUtils {
             uriTemplatesCache.put(uriTemplate, template);
         }
         return template;
+    }
+
+    private static String sanitizeUri(String uri) {
+        if (uri.endsWith("/"))
+            uri = uri.substring(0, uri.length() - 1);
+        return uri.replaceAll("//", "/");
     }
 }

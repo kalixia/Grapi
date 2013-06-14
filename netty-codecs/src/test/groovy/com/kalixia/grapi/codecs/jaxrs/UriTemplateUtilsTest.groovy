@@ -30,6 +30,9 @@ class UriTemplateUtilsTest extends spock.lang.Specification {
         "/echo/test"                       | "/echo/{message}"                || [message: "test"]
         "/users/johndoe/devices/my_device" | "/users/{user}/devices/{device}" || [user: 'johndoe', device: 'my_device']
         "/jeje/devices/"                   | "/{username}/devices"            || [username: 'jeje']
+        "//jeje/devices/"                  | "/{username}/devices"            || [username: 'jeje']
+        "/jeje//devices/"                  | "/{username}/devices"            || [username: 'jeje']
+        "//jeje//devices/"                 | "/{username}/devices"            || [username: 'jeje']
     }
 
     @Unroll
