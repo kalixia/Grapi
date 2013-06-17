@@ -5,6 +5,10 @@ ext.sourceCompatibility = JavaVersion.VERSION_1_7
 
 apply from: file('gradle/idea.gradle')
 
+allprojects {
+    apply from: 'https://raw.github.com/brunodecarvalho/gradle-plugins/master/jacoco-multiproject-aggregator.gradle'
+}
+
 subprojects {
     group = 'com.kalixia.grapi'
     version = '0.1-SNAPSHOT'
@@ -48,7 +52,7 @@ subprojects {
     }
     jacocoTestReport {
         reports {
-            xml.enabled false
+            xml.enabled true
             csv.enabled false
             html.destination "${buildDir}/jacocoHtml"
         }
