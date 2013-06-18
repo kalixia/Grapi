@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kalixia.grapi.ApiRequest;
 import com.kalixia.grapi.MDCLogging;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.MessageBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.MessageList;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -34,7 +34,7 @@ public class WebSocketsApiRequestDecoder extends MessageToMessageDecoder<TextWeb
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, TextWebSocketFrame frame, MessageBuf<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, TextWebSocketFrame frame, MessageList<Object> out) throws Exception {
         WebSocketRequest wsRequest = mapper.readValue(frame.text(), WebSocketRequest.class);
 
         // extract entity, if available

@@ -3,10 +3,10 @@ package com.kalixia.grapi.codecs.rxjava;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kalixia.grapi.ObservableApiResponse;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.MessageBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.MessageList;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
@@ -42,8 +42,8 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
 
     @Override
     @SuppressWarnings("unchecked")
-    protected void encode(final ChannelHandlerContext ctx, final ObservableApiResponse<?> apiResponse, final MessageBuf<Object> out)
-            throws Exception {
+    protected void encode(final ChannelHandlerContext ctx, final ObservableApiResponse<?> apiResponse,
+                          final MessageList<Object> out) throws Exception {
         DefaultHttpResponse response = new DefaultHttpResponse(HTTP_1_1, apiResponse.status());
         HttpHeaders.setTransferEncodingChunked(response);
         response.headers().set(CONTENT_TYPE, apiResponse.contentType());

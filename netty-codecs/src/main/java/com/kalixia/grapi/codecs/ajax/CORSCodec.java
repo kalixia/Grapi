@@ -1,9 +1,9 @@
-package com.kalixia.grapi.codecs;
+package com.kalixia.grapi.codecs.ajax;
 
-import io.netty.buffer.BufUtil;
-import io.netty.buffer.MessageBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.MessageList;
 import io.netty.handler.codec.MessageToMessageCodec;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -33,7 +33,7 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
     private static final Logger LOGGER = LoggerFactory.getLogger(CORSCodec.class);
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, MessageBuf<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, MessageList<Object> out) throws Exception {
         if (request.headers().contains(ORIGIN)) {
             // preflight request?
             if (HttpMethod.OPTIONS.equals(request.getMethod())) {
@@ -44,7 +44,7 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
             ctx.channel().attr(attrOrigin).set(origin);
         }
         // otherwise simply forward to the next channel handler as-is
-        out.add(BufUtil.retain(request));
+        out.add(ByteBufUtil.retain(request));
     }
 
     private void handleCorsRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
@@ -59,14 +59,14 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, HttpResponse response, MessageBuf<Object> out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, HttpResponse response, MessageList<Object> out) throws Exception {
         String origin = ctx.channel().attr(attrOrigin).getAndRemove();
         LOGGER.debug("Origin: {}", origin);
         if (origin != null) {
             response.headers().add(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
         }
         LOGGER.debug("Response is: {}", response);
-        out.add(BufUtil.retain(response));
+        out.add(ByteBufUtil.retain(response));
     }
 
     @Override

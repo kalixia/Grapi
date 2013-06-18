@@ -1,6 +1,18 @@
 package com.kalixia.grapi.apt.jaxrs;
 
+import com.kalixia.grapi.ApiRequest;
+import com.kalixia.grapi.ApiResponse;
+import com.kalixia.grapi.MDCLogging;
+import com.kalixia.grapi.codecs.jaxrs.GeneratedJaxRsMethodHandler;
+import com.kalixia.grapi.codecs.jaxrs.JaxRsPipeline;
 import com.squareup.java.JavaWriter;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.MessageList;
+import io.netty.handler.codec.MessageToMessageDecoder;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -47,18 +59,18 @@ public class JaxRsModuleGenerator {
             writer
                     .emitPackage(destPackage.toString())
                             // add imports
-                    .emitImports("com.kalixia.grapi.ApiRequest")
-                    .emitImports("com.kalixia.grapi.ApiResponse")
-                    .emitImports("com.kalixia.grapi.MDCLogging")
-                    .emitImports("com.kalixia.grapi.codecs.jaxrs.JaxRsPipeline")
-                    .emitImports("com.kalixia.grapi.codecs.jaxrs.GeneratedJaxRsMethodHandler")
-                    .emitImports("io.netty.buffer.ByteBuf")
-                    .emitImports("io.netty.buffer.MessageBuf")
-                    .emitImports("io.netty.buffer.Unpooled")
-                    .emitImports("io.netty.channel.ChannelHandlerContext")
+                    .emitImports(ApiRequest.class.getName())
+                    .emitImports(ApiResponse.class.getName())
+                    .emitImports(MDCLogging.class.getName())
+                    .emitImports(JaxRsPipeline.class.getName())
+                    .emitImports(GeneratedJaxRsMethodHandler.class.getName())
+                    .emitImports(ByteBuf.class.getName())
+                    .emitImports(MessageList.class.getName())
+                    .emitImports(Unpooled.class.getName())
+                    .emitImports(ChannelHandlerContext.class.getName())
                     .emitImports("io.netty.channel.ChannelHandler.Sharable")
-                    .emitImports("io.netty.handler.codec.MessageToMessageDecoder")
-                    .emitImports("io.netty.handler.codec.http.HttpResponseStatus")
+                    .emitImports(MessageToMessageDecoder.class.getName())
+                    .emitImports(HttpResponseStatus.class.getName())
                     .emitImports("com.fasterxml.jackson.databind.ObjectMapper")
                     .emitImports("org.slf4j.Logger")
                     .emitImports("org.slf4j.LoggerFactory")
@@ -140,7 +152,7 @@ public class JaxRsModuleGenerator {
                 .emitEmptyLine()
                 .emitAnnotation(Override.class)
                 .beginMethod("void", "decode", PROTECTED,
-                        "ChannelHandlerContext", "ctx", "ApiRequest", "request", "MessageBuf<Object>", "out")
+                        "ChannelHandlerContext", "ctx", "ApiRequest", "request", "MessageList<Object>", "out")
                     .emitStatement("MDC.put(MDCLogging.MDC_REQUEST_ID, request.id().toString())")
                     .beginControlFlow("for (GeneratedJaxRsMethodHandler handler : handlers)")
                         .beginControlFlow("if (handler.matches(request))")

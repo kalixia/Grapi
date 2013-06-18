@@ -1,16 +1,17 @@
-package com.kalixia.grapi;
+package com.kalixia.grapi.codecs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kalixia.grapi.codecs.CORSCodec;
+import com.kalixia.grapi.MDCLogging;
+import com.kalixia.grapi.codecs.ajax.CORSCodec;
 import com.kalixia.grapi.codecs.rest.RESTCodec;
 import com.kalixia.grapi.codecs.websockets.WebSocketsApiRequestDecoder;
 import com.kalixia.grapi.codecs.websockets.WebSocketsApiResponseEncoder;
 import com.kalixia.grapi.codecs.websockets.WebSocketsServerProtocolUpdater;
-import io.netty.buffer.BufUtil;
-import io.netty.buffer.MessageBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.MessageList;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, FullHttpRequest msg, MessageBuf<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, FullHttpRequest msg, MessageList<Object> out) throws Exception {
         ChannelPipeline pipeline = ctx.pipeline();
 
         if (msg.getUri().equals("/websocket")) {
@@ -52,7 +53,8 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
             pipeline.addAfter("cors-codec", "rest-codec", restCodec);
             pipeline.remove(this);
         }
-        out.add(BufUtil.retain(msg));
+
+        out.add(ByteBufUtil.retain(msg));
     }
 
     @Override
