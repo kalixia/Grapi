@@ -106,8 +106,6 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
 
         LOGGER.debug("About to return response {}", httpResponse);
 
-        if (apiResponse.)
-
         out.add(httpResponse);
     }
 

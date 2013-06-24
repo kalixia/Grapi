@@ -8,10 +8,13 @@ import com.kalixia.grapi.codecs.jaxrs.JaxRsPipeline;
 import com.squareup.java.JavaWriter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.MessageList;
 import io.netty.handler.codec.MessageToMessageDecoder;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
@@ -67,9 +70,12 @@ public class JaxRsModuleGenerator {
                     .emitImports(ByteBuf.class.getName())
                     .emitImports(MessageList.class.getName())
                     .emitImports(Unpooled.class.getName())
+                    .emitImports(ChannelFuture.class.getName())
+                    .emitImports(ChannelFutureListener.class.getName())
                     .emitImports(ChannelHandlerContext.class.getName())
                     .emitImports("io.netty.channel.ChannelHandler.Sharable")
                     .emitImports(MessageToMessageDecoder.class.getName())
+                    .emitImports(HttpHeaders.class.getName())
                     .emitImports(HttpResponseStatus.class.getName())
                     .emitImports("com.fasterxml.jackson.databind.ObjectMapper")
                     .emitImports("org.slf4j.Logger")
@@ -95,6 +101,7 @@ public class JaxRsModuleGenerator {
             ;
             generateConstructor(writer, handlerClassName, generatedHandlers);
             generateDecodeMethod(writer);
+            generateIsKeepAliveMethod(writer);
             // end class
             writer.endType();
         } catch (IOException e) {
@@ -148,7 +155,7 @@ public class JaxRsModuleGenerator {
 
     private JavaWriter generateDecodeMethod(JavaWriter writer)
             throws IOException {
-        return writer
+        writer
                 .emitEmptyLine()
                 .emitAnnotation(Override.class)
                 .beginMethod("void", "decode", PROTECTED,
@@ -157,13 +164,13 @@ public class JaxRsModuleGenerator {
                     .beginControlFlow("for (GeneratedJaxRsMethodHandler handler : handlers)")
                         .beginControlFlow("if (handler.matches(request))")
                             .beginControlFlow("try")
-                                .emitStatement("ApiResponse response = handler.handle(request)")
-                                .emitStatement("ctx.write(response)")
+                                .emitStatement("ApiResponse response = handler.handle(request)");
+                                writeToContextAndHandleKeepAlive(writer)
                                 .emitStatement("return")
                             .nextControlFlow("catch (Exception e)")
                                 .emitStatement("LOGGER.error(\"Can't invoke JAX-RS resource\", e)")
-                                .emitStatement("ctx.write(new ApiResponse(request.id(), HttpResponseStatus.INTERNAL_SERVER_ERROR,\n" +
-                                        "ERROR_INTERNAL_ERROR, MediaType.TEXT_PLAIN))")
+                                .emitStatement("ApiResponse response = new ApiResponse(request.id(), HttpResponseStatus.INTERNAL_SERVER_ERROR, ERROR_INTERNAL_ERROR, MediaType.TEXT_PLAIN)");
+        writeToContextAndHandleKeepAlive(writer)
                                 .emitStatement("return")
                             .endControlFlow()
                         .endControlFlow()
@@ -172,9 +179,29 @@ public class JaxRsModuleGenerator {
                     .emitStatement("LOGGER.info(\"Could not locate a JAX-RS resource for path '{}' and method {}\", " +
                             "request.uri(), request.method());")
                     .emitEmptyLine()
-                    .emitStatement("ctx.write(new ApiResponse(request.id(), HttpResponseStatus.NOT_FOUND, " +
-                            "ERROR_WRONG_URL, MediaType.TEXT_PLAIN))")
+                    .emitStatement("ApiResponse response = new ApiResponse(request.id(), HttpResponseStatus.NOT_FOUND, ERROR_WRONG_URL, MediaType.TEXT_PLAIN)");
+        return writeToContextAndHandleKeepAlive(writer)
                 .endMethod();
+    }
+
+    private JavaWriter generateIsKeepAliveMethod(JavaWriter writer) throws IOException {
+        return writer
+                .emitEmptyLine()
+                .beginMethod("boolean", "isKeepAlive", PRIVATE, "ApiRequest", "request")
+                    .emitStatement("String connection = request.headers().getFirst(HttpHeaders.Names.CONNECTION)")
+                    .beginControlFlow("if (HttpHeaders.Values.CLOSE.equalsIgnoreCase(connection))")
+                        .emitStatement("return false")
+                    .endControlFlow()
+                    .emitStatement("return !HttpHeaders.Values.CLOSE.equalsIgnoreCase(connection)")
+                .endMethod();
+    }
+
+    private JavaWriter writeToContextAndHandleKeepAlive(JavaWriter writer) throws IOException {
+        return writer
+                .emitStatement("ChannelFuture future = ctx.write(response)")
+                .beginControlFlow("if (!isKeepAlive(request))")
+                .emitStatement("future.addListener(ChannelFutureListener.CLOSE)")
+                .endControlFlow();
     }
 
 }
