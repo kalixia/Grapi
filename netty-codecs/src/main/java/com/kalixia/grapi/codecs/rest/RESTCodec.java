@@ -3,19 +3,19 @@ package com.kalixia.grapi.codecs.rest;
 import com.kalixia.grapi.ApiRequest;
 import com.kalixia.grapi.ApiResponse;
 import com.kalixia.grapi.MDCLogging;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.MessageList;
 import io.netty.handler.codec.MessageToMessageCodec;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import java.net.InetSocketAddress;
@@ -42,7 +42,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
      * @throws Exception
      */
     @Override
-    protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, MessageList<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, List<Object> out) throws Exception {
         UUID requestID;
         String requestIDasString = request.headers().get("X-Api-Request-ID");
         if (requestIDasString != null && !"".equals(requestIDasString)) {
@@ -68,7 +68,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         // build ApiRequest object
         ApiRequest apiRequest = new ApiRequest(requestID,
                 request.getUri(), request.getMethod(),
-                ByteBufUtil.retain(request.content()), contentType,
+                ReferenceCountUtil.retain(request.content()), contentType,
                 headers, clientAddress.getHostName());
         LOGGER.debug("About to handle request {}", request);
         out.add(apiRequest);
@@ -82,7 +82,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
      * @throws Exception
      */
     @Override
-    protected void encode(ChannelHandlerContext ctx, ApiResponse apiResponse, MessageList<Object> out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, ApiResponse apiResponse, List<Object> out) throws Exception {
         FullHttpResponse httpResponse = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1,
                 apiResponse.status(),

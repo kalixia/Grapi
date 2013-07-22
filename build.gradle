@@ -5,13 +5,14 @@ ext.sourceCompatibility = JavaVersion.VERSION_1_7
 
 apply from: file('gradle/idea.gradle')
 
+group = 'com.kalixia.grapi'
+version = '0.1-SNAPSHOT'
+
 allprojects {
     apply from: 'https://raw.github.com/brunodecarvalho/gradle-plugins/master/jacoco-multiproject-aggregator.gradle'
 }
 
 subprojects {
-    group = 'com.kalixia.grapi'
-    version = '0.1-SNAPSHOT'
 
     repositories {
         mavenCentral()
@@ -48,7 +49,7 @@ subprojects {
     // JaCoCo
     apply plugin: 'jacoco'
     jacoco {
-        toolVersion = "0.6.2.201302030002"
+        toolVersion = "0.6.3.201306030806"
     }
     jacocoTestReport {
         reports {

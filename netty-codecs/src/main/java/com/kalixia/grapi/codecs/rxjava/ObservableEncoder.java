@@ -6,7 +6,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.MessageList;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
@@ -17,8 +16,10 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
+
 import javax.inject.Inject;
 import java.nio.charset.Charset;
+import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -43,7 +44,7 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
     @Override
     @SuppressWarnings("unchecked")
     protected void encode(final ChannelHandlerContext ctx, final ObservableApiResponse<?> apiResponse,
-                          final MessageList<Object> out) throws Exception {
+                          final List<Object> out) throws Exception {
         DefaultHttpResponse response = new DefaultHttpResponse(HTTP_1_1, apiResponse.status());
         HttpHeaders.setTransferEncodingChunked(response);
         response.headers().set(CONTENT_TYPE, apiResponse.contentType());

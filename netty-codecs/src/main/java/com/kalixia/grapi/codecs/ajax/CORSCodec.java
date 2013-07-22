@@ -1,9 +1,7 @@
 package com.kalixia.grapi.codecs.ajax;
 
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.MessageList;
 import io.netty.handler.codec.MessageToMessageCodec;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -12,8 +10,11 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.AttributeKey;
+import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.ACCESS_CONTROL_ALLOW_HEADERS;
 import static io.netty.handler.codec.http.HttpHeaders.Names.ACCESS_CONTROL_ALLOW_METHODS;
@@ -33,7 +34,7 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
     private static final Logger LOGGER = LoggerFactory.getLogger(CORSCodec.class);
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, MessageList<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, List<Object> out) throws Exception {
         if (request.headers().contains(ORIGIN)) {
             // preflight request?
             if (HttpMethod.OPTIONS.equals(request.getMethod())) {
@@ -44,7 +45,7 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
             ctx.channel().attr(attrOrigin).set(origin);
         }
         // otherwise simply forward to the next channel handler as-is
-        out.add(ByteBufUtil.retain(request));
+        out.add(ReferenceCountUtil.retain(request));
     }
 
     private void handleCorsRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
@@ -59,14 +60,14 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, HttpResponse response, MessageList<Object> out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, HttpResponse response, List<Object> out) throws Exception {
         String origin = ctx.channel().attr(attrOrigin).getAndRemove();
         LOGGER.debug("Origin: {}", origin);
         if (origin != null) {
             response.headers().add(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
         }
         LOGGER.debug("Response is: {}", response);
-        out.add(ByteBufUtil.retain(response));
+        out.add(ReferenceCountUtil.retain(response));
     }
 
     @Override

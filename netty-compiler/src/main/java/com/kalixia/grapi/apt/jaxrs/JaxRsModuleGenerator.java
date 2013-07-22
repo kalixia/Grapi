@@ -10,9 +10,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.MessageList;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -68,7 +66,6 @@ public class JaxRsModuleGenerator {
                     .emitImports(JaxRsPipeline.class.getName())
                     .emitImports(GeneratedJaxRsMethodHandler.class.getName())
                     .emitImports(ByteBuf.class.getName())
-                    .emitImports(MessageList.class.getName())
                     .emitImports(Unpooled.class.getName())
                     .emitImports(ChannelFuture.class.getName())
                     .emitImports(ChannelFutureListener.class.getName())
@@ -159,7 +156,7 @@ public class JaxRsModuleGenerator {
                 .emitEmptyLine()
                 .emitAnnotation(Override.class)
                 .beginMethod("void", "decode", PROTECTED,
-                        "ChannelHandlerContext", "ctx", "ApiRequest", "request", "MessageList<Object>", "out")
+                        "ChannelHandlerContext", "ctx", "ApiRequest", "request", "List<Object>", "out")
                     .emitStatement("MDC.put(MDCLogging.MDC_REQUEST_ID, request.id().toString())")
                     .beginControlFlow("for (GeneratedJaxRsMethodHandler handler : handlers)")
                         .beginControlFlow("if (handler.matches(request))")

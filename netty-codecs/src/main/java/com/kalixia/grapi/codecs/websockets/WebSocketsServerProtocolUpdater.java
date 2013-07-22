@@ -5,8 +5,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.MessageList;
-import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -30,11 +28,9 @@ public class WebSocketsServerProtocolUpdater extends ChannelInboundHandlerAdapte
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketsServerProtocolUpdater.class);
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageList<Object> msgs) throws Exception {
-        MessageList<FullHttpRequest> requests = msgs.cast();
-
-        for (FullHttpRequest req : requests) {
-
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if (msg instanceof FullHttpRequest) {
+            FullHttpRequest req = (FullHttpRequest) msg;
             // Handle a bad request.
             if (!req.getDecoderResult().isSuccess()) {
                 sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
@@ -56,9 +52,9 @@ public class WebSocketsServerProtocolUpdater extends ChannelInboundHandlerAdapte
             } else {
                 handshaker.handshake(ctx.channel(), req);
             }
+        } else {
+            ctx.fireChannelRead(msg);
         }
-
-        super.messageReceived(ctx, msgs);
     }
 
     private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {

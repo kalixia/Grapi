@@ -6,7 +6,6 @@ import com.kalixia.grapi.MDCLogging;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.MessageList;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -15,10 +14,12 @@ import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -34,7 +35,7 @@ public class WebSocketsApiRequestDecoder extends MessageToMessageDecoder<TextWeb
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, TextWebSocketFrame frame, MessageList<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, TextWebSocketFrame frame, List<Object> out) throws Exception {
         WebSocketRequest wsRequest = mapper.readValue(frame.text(), WebSocketRequest.class);
 
         // extract entity, if available
