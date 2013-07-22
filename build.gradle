@@ -47,23 +47,23 @@ subprojects {
     apply plugin: 'pmd'
 
     // JaCoCo
-    apply plugin: 'jacoco'
-    jacoco {
-        toolVersion = "0.6.3.201306030806"
-    }
-    jacocoTestReport {
-        reports {
-            xml.enabled true
-            csv.enabled false
-            html.destination "${buildDir}/jacocoHtml"
-        }
-    }
-    test {
-        jacoco {
-            append = false
-            destPath = file("$buildDir/jacoco/jacocoTest.exec")
-            classDumpPath = file("$buildDir/jacoco/classpathdumps")
-        }
-    }
+//    apply plugin: 'jacoco'
+//    jacoco {
+//        toolVersion = "0.6.3.201306030806"
+//    }
+//    jacocoTestReport {
+//        reports {
+//            xml.enabled true
+//            csv.enabled false
+//            html.destination "${buildDir}/jacocoHtml"
+//        }
+//    }
+//    test {
+//        jacoco {
+//            append = false
+//            destPath = file("$buildDir/jacoco/jacocoTest.exec")
+//            classDumpPath = file("$buildDir/jacoco/classpathdumps")
+//        }
+//    }
 }
 
