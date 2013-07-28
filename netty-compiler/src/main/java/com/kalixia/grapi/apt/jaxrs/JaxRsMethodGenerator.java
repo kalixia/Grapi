@@ -377,7 +377,7 @@ public class JaxRsMethodGenerator {
             writer.emitStatement("return new ObservableApiResponse(request.id(), HttpResponseStatus.OK, result, %s)",
                     stringLiteral(produces));
         } else if (methodInfo.hasReturnType() && methodInfo.getReturnType().equals(Response.class.getName())) {
-            writer.beginControlFlow("if (result.getEntity() != null)")
+            writer.beginControlFlow("if (result.hasEntity())")
                     .emitStatement("byte[] content = objectMapper.writeValueAsBytes(result.getEntity())")
                     .emitStatement("return new ApiResponse(request.id(), " +
                             "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.copiedBuffer(content), %s, " +

@@ -195,7 +195,7 @@ public class JaxRsModuleGenerator {
 
     private JavaWriter writeToContextAndHandleKeepAlive(JavaWriter writer) throws IOException {
         return writer
-                .emitStatement("ChannelFuture future = ctx.write(response)")
+                .emitStatement("ChannelFuture future = ctx.writeAndFlush(response)")
                 .beginControlFlow("if (!isKeepAlive(request))")
                 .emitStatement("future.addListener(ChannelFutureListener.CLOSE)")
                 .endControlFlow();
