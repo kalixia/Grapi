@@ -4,14 +4,6 @@ import static groovyx.net.http.ContentType.JSON
 import static groovyx.net.http.Method.GET
 import static groovyx.net.http.Method.POST
 
-apply plugin: 'maven'
-apply plugin: 'eclipse'
-
-ext.sourceCompatibility = JavaVersion.VERSION_1_7
-
-apply from: file('gradle/idea.gradle')
-//apply from: file('gradle/bintray.gradle')
-
 buildscript {
     repositories {
         mavenRepo(url: 'http://jcenter.bintray.com')
@@ -21,68 +13,7 @@ buildscript {
     }
 }
 
-allprojects {
-    group = 'com.kalixia.grapi'
-    version = '0.1'
-
-    apply from: 'https://raw.github.com/brunodecarvalho/gradle-plugins/master/jacoco-multiproject-aggregator.gradle'
-}
-
 subprojects {
-
-    repositories {
-        mavenCentral()
-    }
-
-    apply plugin: 'java'
-    apply plugin: 'groovy'
-    apply plugin: 'maven'
-
-    task sourcesJar(type: Jar) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-
-    task javadocJar(type: Jar) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-
-    artifacts {
-        archives sourcesJar
-        archives javadocJar
-    }
-
-    // FindBugs
-//    apply plugin: 'findbugs'
-//    tasks.withType(findbugs) {
-//        omitVisitors = ["MissingClass"]     // don't understand why FindBugs keeps complaining about a missing class
-//    }
-
-    // PMD
-    apply plugin: 'pmd'
-
-    // JaCoCo
-//    apply plugin: 'jacoco'
-//    jacoco {
-//        toolVersion = "0.6.3.201306030806"
-//    }
-//    jacocoTestReport {
-//        reports {
-//            xml.enabled true
-//            csv.enabled false
-//            html.destination "${buildDir}/jacocoHtml"
-//        }
-//    }
-//    test {
-//        jacoco {
-//            append = false
-//            destPath = file("$buildDir/jacoco/jacocoTest.exec")
-//            classDumpPath = file("$buildDir/jacoco/classpathdumps")
-//        }
-//    }
-
-    // Bintray integration
     task createBintrayPackage << {
         def http = getHttpBuilder()
         http.request(GET, JSON) {
@@ -100,6 +31,7 @@ subprojects {
             }
         }
     }
+
     //NOTE: Please use java 1.7 to avoid http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6459815
     uploadArchives {
         repositories {
@@ -110,6 +42,7 @@ subprojects {
             }
         }
     }
+
     uploadArchives.dependsOn createBintrayPackage
 }
 
