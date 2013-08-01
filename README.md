@@ -64,9 +64,15 @@ missing features:
 
 ## Setup
 
-First, you need to build the project as it is not *yet* available via a Maven repository:
-```
-./gradlew install
+The project is available from a [Bintray](https://bintray.com/kalixia/Grapi) repository:
+```xml
+<repository>
+    <id>grapi</id>
+    <name>Grapi</name>
+    <url>http://dl.bintray.com/kalixia/Grapi</url>
+    <releases><enabled>true</enabled></releases>
+    <snapshots><enabled>false</enabled></snapshots>
+</repository>
 ```
 
 Then you simply need to add two dependencies to your project/module (where your JAX-RS source code is located):
@@ -74,13 +80,13 @@ Then you simply need to add two dependencies to your project/module (where your 
 <dependency>
     <groupId>com.kalixia.grapi</groupId>
     <artifactId>netty-codecs</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
 </dependency>
 
 <dependency>
     <groupId>com.kalixia.grapi</groupId>
     <artifactId>netty-compiler</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
 </dependency>
 ```
 
