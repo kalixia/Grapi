@@ -88,9 +88,9 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
             }
 
             @Override
-            public void onError(Exception e) {
-                LOGGER.error("Unexpected error while processing Observable", e);
-                ctx.fireExceptionCaught(e);
+            public void onError(Throwable t) {
+                LOGGER.error("Unexpected error while processing Observable", t);
+                ctx.fireExceptionCaught(t);
             }
 
         });
