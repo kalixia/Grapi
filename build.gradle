@@ -6,6 +6,7 @@ import static groovyx.net.http.Method.POST
 
 apply plugin: 'maven'
 apply plugin: 'eclipse'
+apply plugin: 'wrapper'
 
 ext.sourceCompatibility = JavaVersion.VERSION_1_7
 
