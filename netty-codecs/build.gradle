@@ -13,8 +13,8 @@ dependencies {
     compile 'javax.el:javax.el-api:2.2.4'
     compile 'org.glassfish.web:javax.el:2.2.4'
 
-    compile 'com.netflix.rxjava:rxjava-core:0.10.0'
-    compile 'ch.qos.logback:logback-classic:1.0.10'
+    compile 'com.netflix.rxjava:rxjava-core:0.16.0'
+    compile 'ch.qos.logback:logback-classic:1.0.13'
 
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
