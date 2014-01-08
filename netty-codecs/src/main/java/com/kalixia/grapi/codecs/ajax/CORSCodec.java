@@ -30,7 +30,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.ORIGIN;
  */
 @ChannelHandler.Sharable
 public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpResponse> {
-    private static final AttributeKey<String> attrOrigin = new AttributeKey<>("corsOrigin");
+    private static final AttributeKey<String> attrOrigin = AttributeKey.valueOf("corsOrigin");
     private static final Logger LOGGER = LoggerFactory.getLogger(CORSCodec.class);
 
     @Override

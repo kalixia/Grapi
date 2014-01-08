@@ -185,11 +185,11 @@ public class JaxRsModuleGenerator {
         return writer
                 .emitEmptyLine()
                 .beginMethod("boolean", "isKeepAlive", PRIVATE, "ApiRequest", "request")
-                    .emitStatement("String connection = request.headers().getFirst(HttpHeaders.Names.CONNECTION)")
-                    .beginControlFlow("if (HttpHeaders.Values.CLOSE.equalsIgnoreCase(connection))")
+                    .emitStatement("String connection = request.headers().getFirst(HttpHeaders.Names.CONNECTION.toString())")
+                    .beginControlFlow("if (HttpHeaders.Values.CLOSE.toString().equalsIgnoreCase(connection))")
                         .emitStatement("return false")
                     .endControlFlow()
-                    .emitStatement("return !HttpHeaders.Values.CLOSE.equalsIgnoreCase(connection)")
+                    .emitStatement("return !HttpHeaders.Values.CLOSE.toString().equalsIgnoreCase(connection)")
                 .endMethod();
     }
 
