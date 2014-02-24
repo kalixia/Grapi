@@ -15,7 +15,9 @@ apply from: file('gradle/idea.gradle')
 
 buildscript {
     repositories {
-        mavenRepo(url: 'http://jcenter.bintray.com')
+        maven {
+            url 'http://jcenter.bintray.com'
+        }
     }
     dependencies {
         classpath 'org.codehaus.groovy.modules.http-builder:http-builder:0.6'

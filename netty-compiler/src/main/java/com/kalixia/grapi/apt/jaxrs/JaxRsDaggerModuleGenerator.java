@@ -1,11 +1,12 @@
 package com.kalixia.grapi.apt.jaxrs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.squareup.java.JavaWriter;
+import com.squareup.javawriter.JavaWriter;
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.inject.Singleton;
+import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.Validation;
@@ -13,11 +14,12 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.SortedSet;
 
-import static com.squareup.java.JavaWriter.stringLiteral;
-import static java.lang.reflect.Modifier.PUBLIC;
+import static com.squareup.javawriter.JavaWriter.stringLiteral;
+import static javax.lang.model.element.Modifier.PUBLIC;
 
 public class JaxRsDaggerModuleGenerator {
     private final Filer filer;
@@ -66,7 +68,7 @@ public class JaxRsDaggerModuleGenerator {
                     .emitJavadoc("Dagger module for all generated classes.")
                     .emitAnnotation("Module(library = true)")
                     .emitAnnotation(Generated.class.getSimpleName(), stringLiteral(StaticAnalysisCompiler.GENERATOR_NAME))
-                    .beginType(daggerModuleClassName, "class", PUBLIC);
+                    .beginType(daggerModuleClassName, "class", EnumSet.of(PUBLIC));
 
             generateValidationFactoryMethod(writer);
             generateValidatorMethod(writer);
@@ -92,7 +94,7 @@ public class JaxRsDaggerModuleGenerator {
         return writer
                 .emitEmptyLine()
                 .emitAnnotation("Provides").emitAnnotation("Singleton")
-                .beginMethod("ValidatorFactory", "provideValidationFactory", 0)
+                .beginMethod("ValidatorFactory", "provideValidationFactory", EnumSet.noneOf(Modifier.class))
                 .emitStatement("return Validation.buildDefaultValidatorFactory()")
                 .endMethod();
     }
@@ -101,7 +103,7 @@ public class JaxRsDaggerModuleGenerator {
         return writer
                 .emitEmptyLine()
                 .emitAnnotation("Provides").emitAnnotation("Singleton")
-                .beginMethod("Validator", "provideValidator", 0, "ValidatorFactory", "factory")
+                .beginMethod("Validator", "provideValidator", EnumSet.noneOf(Modifier.class), "ValidatorFactory", "factory")
                 .emitStatement("return factory.getValidator()")
                 .endMethod();
     }
@@ -110,7 +112,7 @@ public class JaxRsDaggerModuleGenerator {
         return writer
                 .emitEmptyLine()
                 .emitAnnotation("Provides").emitAnnotation("Singleton")
-                .beginMethod("MetricRegistry", "provideMetricRegistry", 0)
+                .beginMethod("MetricRegistry", "provideMetricRegistry", EnumSet.noneOf(Modifier.class))
                 .emitStatement("return new MetricRegistry()")
                 .endMethod();
     }

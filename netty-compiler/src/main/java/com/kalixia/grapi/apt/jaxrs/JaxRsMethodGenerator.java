@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kalixia.grapi.apt.jaxrs.model.JaxRsMethodInfo;
 import com.kalixia.grapi.apt.jaxrs.model.JaxRsParamInfo;
 import com.kalixia.grapi.codecs.jaxrs.UriTemplateUtils;
-import com.squareup.java.JavaWriter;
+import com.squareup.javawriter.JavaWriter;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -30,16 +30,17 @@ import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.squareup.java.JavaWriter.stringLiteral;
-import static java.lang.reflect.Modifier.FINAL;
-import static java.lang.reflect.Modifier.PRIVATE;
-import static java.lang.reflect.Modifier.PUBLIC;
-import static java.lang.reflect.Modifier.STATIC;
+import static com.squareup.javawriter.JavaWriter.stringLiteral;
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
 
 public class JaxRsMethodGenerator {
     private final Filer filer;
@@ -124,23 +125,23 @@ public class JaxRsMethodGenerator {
                             method.getMethodName()))
                     .emitAnnotation(Generated.class.getSimpleName(), stringLiteral(StaticAnalysisCompiler.GENERATOR_NAME))
 //                        .emitAnnotation("Sharable")
-                    .beginType(handlerClassName, "class", PUBLIC | FINAL, null, "GeneratedJaxRsMethodHandler")
+                    .beginType(handlerClassName, "class", EnumSet.of(PUBLIC, FINAL), null, "GeneratedJaxRsMethodHandler")
                             // add delegate to underlying JAX-RS resource
                     .emitJavadoc("Delegate for the JAX-RS resource")
-                    .emitField(resourceClassName, "delegate", PRIVATE | FINAL)
+                    .emitField(resourceClassName, "delegate", EnumSet.of(PRIVATE, FINAL))
                     .emitEmptyLine();
 
             writer
-                    .emitField("ObjectMapper", "objectMapper", PRIVATE | FINAL)
-                    .emitField("Validator", "validator", PRIVATE | FINAL)
-                    .emitField("Method", "delegateMethod", PRIVATE | FINAL);
+                    .emitField("ObjectMapper", "objectMapper", EnumSet.of(PRIVATE, FINAL))
+                    .emitField("Validator", "validator", EnumSet.of(PRIVATE, FINAL))
+                    .emitField("Method", "delegateMethod", EnumSet.of(PRIVATE, FINAL));
 
             if (useMetrics) {
-                writer.emitField("Timer", "timer", PRIVATE | FINAL);
+                writer.emitField("Timer", "timer", EnumSet.of(PRIVATE, FINAL));
             }
             writer
-                    .emitField("String", "URI_TEMPLATE", PRIVATE | STATIC | FINAL, stringLiteral(uriTemplate))
-                    .emitField("Logger", "LOGGER", PRIVATE | STATIC | FINAL,
+                    .emitField("String", "URI_TEMPLATE", EnumSet.of(PRIVATE, STATIC, FINAL), stringLiteral(uriTemplate))
+                    .emitField("Logger", "LOGGER", EnumSet.of(PRIVATE, STATIC, FINAL),
                             "LoggerFactory.getLogger(" + handlerClassName + ".class)");
 
             generateConstructor(writer, handlerClassName, resourceClassName, method);
@@ -178,7 +179,7 @@ public class JaxRsMethodGenerator {
         if (useMetrics)
             parameters.addAll(Arrays.asList("MetricRegistry", "registry"));
 
-        writer.beginMethod(null, handlerClassName, PUBLIC, parameters.toArray(new String[parameters.size()]));
+        writer.beginMethod(null, handlerClassName, EnumSet.of(PUBLIC), parameters.toArray(new String[parameters.size()]));
 
         if (useDagger)
             writer.emitStatement("this.delegate = delegate");
@@ -208,7 +209,7 @@ public class JaxRsMethodGenerator {
         }
         writer
                 .nextControlFlow("catch (NoSuchMethodException e)")
-                .emitEndOfLineComment("should not happen as Grapi scanned the source code!")
+                .emitSingleLineComment("should not happen as Grapi scanned the source code!")
                 .emitStatement("throw new RuntimeException(%s)", stringLiteral("Can't find method through reflection"))
                 .endControlFlow();
 
@@ -226,7 +227,7 @@ public class JaxRsMethodGenerator {
         writer
                 .emitEmptyLine()
                 .emitAnnotation(Override.class)
-                .beginMethod("boolean", "matches", PUBLIC, "ApiRequest", "request");
+                .beginMethod("boolean", "matches", EnumSet.of(PUBLIC), "ApiRequest", "request");
 
         // check against HTTP method
         writer.emitStatement("boolean verbMatches = HttpMethod.%s.equals(request.method())", methodInfo.getVerb());
@@ -253,7 +254,7 @@ public class JaxRsMethodGenerator {
 
         writer
                 .emitAnnotation(Override.class)
-                .beginMethod("ApiResponse", "handle", PUBLIC, "ApiRequest", "request");
+                .beginMethod("ApiResponse", "handle", EnumSet.of(PUBLIC), "ApiRequest", "request");
 
         if (useMetrics) {
             // initialize Timer
@@ -269,7 +270,7 @@ public class JaxRsMethodGenerator {
 
         // check if JAX-RS resource method has parameters; if so extract them from URI
         if (methodInfo.hasParameters()) {
-            writer.emitEndOfLineComment("Extract parameters from URI");
+            writer.emitSingleLineComment("Extract parameters from URI");
             writer.emitStatement("Map<String, String> parameters = UriTemplateUtils.extractParameters(URI_TEMPLATE, request.uri())");
             // extract each parameter
             for (JaxRsParamInfo parameter : methodInfo.getParameters()) {
@@ -313,7 +314,7 @@ public class JaxRsMethodGenerator {
                 if (iterator.hasNext())
                     builder.append(", ");
             }
-            writer.emitEndOfLineComment("Validate parameters");
+            writer.emitSingleLineComment("Validate parameters");
             writer.emitStatement("Set<ConstraintViolation<%s>> violations = validator.forExecutables().validateParameters(delegate,%n" +
                     "delegateMethod, new Object[] { %s })", resourceClassName, builder.toString());
             writer
@@ -331,7 +332,7 @@ public class JaxRsMethodGenerator {
         }
 
         // call JAX-RS resource method
-        writer.emitEndOfLineComment("Call JAX-RS resource");
+        writer.emitSingleLineComment("Call JAX-RS resource");
         if (methodInfo.hasParameters()) {
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < methodInfo.getParameters().size(); i++) {
@@ -354,7 +355,7 @@ public class JaxRsMethodGenerator {
 
         // validate result
         if (methodInfo.hasReturnType()) {
-            writer.emitEndOfLineComment("Validate result returned");
+            writer.emitSingleLineComment("Validate result returned");
             writer
                     .emitStatement("Set<ConstraintViolation<%s>> resultViolations = validator.forExecutables().validateReturnValue(delegate,%n" +
                             "delegateMethod, result)", resourceClassName)
@@ -371,7 +372,7 @@ public class JaxRsMethodGenerator {
                                     .endControlFlow();
         }
 
-        writer.emitEndOfLineComment("Build API response object");
+        writer.emitSingleLineComment("Build API response object");
         String produces = methodInfo.getProduces()[0];
         if (useRxJava && methodInfo.hasReturnType() && methodInfo.getReturnType().startsWith("rx.Observable")) {
             writer.emitStatement("return new ObservableApiResponse(request.id(), HttpResponseStatus.OK, result, %s)",

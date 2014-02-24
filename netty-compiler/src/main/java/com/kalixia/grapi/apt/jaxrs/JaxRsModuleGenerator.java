@@ -5,7 +5,7 @@ import com.kalixia.grapi.ApiResponse;
 import com.kalixia.grapi.MDCLogging;
 import com.kalixia.grapi.codecs.jaxrs.GeneratedJaxRsMethodHandler;
 import com.kalixia.grapi.codecs.jaxrs.JaxRsPipeline;
-import com.squareup.java.JavaWriter;
+import com.squareup.javawriter.JavaWriter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -25,17 +25,18 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
-import static com.squareup.java.JavaWriter.stringLiteral;
-import static java.lang.reflect.Modifier.FINAL;
-import static java.lang.reflect.Modifier.PRIVATE;
-import static java.lang.reflect.Modifier.PROTECTED;
-import static java.lang.reflect.Modifier.PUBLIC;
-import static java.lang.reflect.Modifier.STATIC;
+import static com.squareup.javawriter.JavaWriter.stringLiteral;
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.PROTECTED;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
 
 public class JaxRsModuleGenerator {
     private final Filer filer;
@@ -89,12 +90,12 @@ public class JaxRsModuleGenerator {
                     .emitJavadoc("Netty handler collections all JAX-RS resources.")
                     .emitAnnotation(Generated.class.getSimpleName(), stringLiteral(StaticAnalysisCompiler.GENERATOR_NAME))
                     .emitAnnotation("Sharable")
-                    .beginType(handlerClassName, "class", PUBLIC | FINAL, "MessageToMessageDecoder<ApiRequest>", "JaxRsPipeline")
-            // add set of handlers
-                    .emitField("List<? extends GeneratedJaxRsMethodHandler>", "handlers", PRIVATE | FINAL)
-                    .emitField("ByteBuf", "ERROR_WRONG_URL", PRIVATE | STATIC | FINAL, "Unpooled.copiedBuffer(\"Wrong URL\", Charset.forName(\"UTF-8\"))")
-                    .emitField("ByteBuf", "ERROR_INTERNAL_ERROR", PRIVATE | STATIC | FINAL, "Unpooled.copiedBuffer(\"Unexpected error\", Charset.forName(\"UTF-8\"))")
-                    .emitField("Logger", "LOGGER", PRIVATE | STATIC | FINAL, "LoggerFactory.getLogger(" + handlerClassName + ".class)")
+                    .beginType(handlerClassName, "class", EnumSet.of(PUBLIC, FINAL), "MessageToMessageDecoder<ApiRequest>", "JaxRsPipeline")
+                    // add set of handlers
+                    .emitField("List<? extends GeneratedJaxRsMethodHandler>", "handlers", EnumSet.of(PRIVATE, FINAL))
+                    .emitField("ByteBuf", "ERROR_WRONG_URL", EnumSet.of(PRIVATE, STATIC, FINAL), "Unpooled.copiedBuffer(\"Wrong URL\", Charset.forName(\"UTF-8\"))")
+                    .emitField("ByteBuf", "ERROR_INTERNAL_ERROR", EnumSet.of(PRIVATE, STATIC, FINAL), "Unpooled.copiedBuffer(\"Unexpected error\", Charset.forName(\"UTF-8\"))")
+                    .emitField("Logger", "LOGGER", EnumSet.of(PRIVATE, STATIC, FINAL), "LoggerFactory.getLogger(" + handlerClassName + ".class)")
             ;
             generateConstructor(writer, handlerClassName, generatedHandlers);
             generateDecodeMethod(writer);
@@ -119,7 +120,7 @@ public class JaxRsModuleGenerator {
         writer.emitEmptyLine();
 
         if (!useDagger) {
-            writer.beginMethod(null, handlerClassName, PUBLIC,
+            writer.beginMethod(null, handlerClassName, EnumSet.of(PUBLIC),
                     "ObjectMapper", "objectMapper", "Validator", "validator");
         } else {
             writer.emitAnnotation(Inject.class.getName());
@@ -131,7 +132,7 @@ public class JaxRsModuleGenerator {
                 args.add(iterator.next());
                 args.add(String.format("handler%d", i));
             }
-            writer.beginMethod(null, handlerClassName, PUBLIC, args.toArray(new String[args.size()]));
+            writer.beginMethod(null, handlerClassName, EnumSet.of(PUBLIC), args.toArray(new String[args.size()]));
         }
 
         StringBuilder builder = new StringBuilder();
@@ -155,7 +156,7 @@ public class JaxRsModuleGenerator {
         writer
                 .emitEmptyLine()
                 .emitAnnotation(Override.class)
-                .beginMethod("void", "decode", PROTECTED,
+                .beginMethod("void", "decode", EnumSet.of(PROTECTED),
                         "ChannelHandlerContext", "ctx", "ApiRequest", "request", "List<Object>", "out")
                     .emitStatement("MDC.put(MDCLogging.MDC_REQUEST_ID, request.id().toString())")
                     .beginControlFlow("for (GeneratedJaxRsMethodHandler handler : handlers)")
@@ -172,7 +173,7 @@ public class JaxRsModuleGenerator {
                             .endControlFlow()
                         .endControlFlow()
                     .endControlFlow()
-                    .emitEndOfLineComment("no matching handler found -- issue a 404 error")
+                    .emitSingleLineComment("no matching handler found -- issue a 404 error")
                     .emitStatement("LOGGER.info(\"Could not locate a JAX-RS resource for path '{}' and method {}\", " +
                             "request.uri(), request.method());")
                     .emitEmptyLine()
@@ -184,7 +185,7 @@ public class JaxRsModuleGenerator {
     private JavaWriter generateIsKeepAliveMethod(JavaWriter writer) throws IOException {
         return writer
                 .emitEmptyLine()
-                .beginMethod("boolean", "isKeepAlive", PRIVATE, "ApiRequest", "request")
+                .beginMethod("boolean", "isKeepAlive", EnumSet.of(PRIVATE), "ApiRequest", "request")
                     .emitStatement("String connection = request.headers().getFirst(HttpHeaders.Names.CONNECTION.toString())")
                     .beginControlFlow("if (HttpHeaders.Values.CLOSE.toString().equalsIgnoreCase(connection))")
                         .emitStatement("return false")
