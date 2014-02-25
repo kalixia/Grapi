@@ -1,8 +1,9 @@
 package com.kalixia.grapi.codecs.jaxrs
 
+import spock.lang.Specification
 import spock.lang.Unroll
 
-class UriTemplateUtilsTest extends spock.lang.Specification {
+class UriTemplateUtilsTest extends Specification {
 
     @Unroll
     def "test of parameters in uri template #uri_template"() {

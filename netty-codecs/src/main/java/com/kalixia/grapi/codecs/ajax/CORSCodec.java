@@ -30,26 +30,27 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.ORIGIN;
  */
 @ChannelHandler.Sharable
 public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpResponse> {
-    private static final AttributeKey<String> attrOrigin = AttributeKey.valueOf("corsOrigin");
     private static final Logger LOGGER = LoggerFactory.getLogger(CORSCodec.class);
+    public static final AttributeKey<String> ATTRIBUTE_ORIGIN = AttributeKey.valueOf("corsOrigin");
 
     @Override
     protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, List<Object> out) throws Exception {
         if (request.headers().contains(ORIGIN)) {
             // preflight request?
-            if (HttpMethod.OPTIONS.equals(request.getMethod())) {
-                handleCorsRequest(ctx, request);
+            if (HttpMethod.OPTIONS.equals(request.getMethod())
+                    && request.headers().contains(ACCESS_CONTROL_REQUEST_HEADERS)) {
+                handleCorsPreflightRequest(ctx, request);
                 return;
             }
             String origin = request.headers().get(ORIGIN);
-            ctx.channel().attr(attrOrigin).set(origin);
+            ctx.channel().attr(ATTRIBUTE_ORIGIN).set(origin);
         }
         // otherwise simply forward to the next channel handler as-is
         out.add(ReferenceCountUtil.retain(request));
     }
 
-    private void handleCorsRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
-        LOGGER.debug("Intercepted CORS request {}", request);
+    private void handleCorsPreflightRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
+        LOGGER.debug("Intercepted CORS preflight request {}", request);
         DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         // TODO: filter allowed CORS domains?
         response.headers().add(ACCESS_CONTROL_ALLOW_ORIGIN, request.headers().get(ORIGIN));
@@ -61,7 +62,7 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
 
     @Override
     protected void encode(ChannelHandlerContext ctx, HttpResponse response, List<Object> out) throws Exception {
-        String origin = ctx.channel().attr(attrOrigin).getAndRemove();
+        String origin = ctx.channel().attr(ATTRIBUTE_ORIGIN).getAndRemove();
         LOGGER.debug("Origin: {}", origin);
         if (origin != null) {
             response.headers().add(ACCESS_CONTROL_ALLOW_ORIGIN, origin);

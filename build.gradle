@@ -11,6 +11,7 @@ apply plugin: 'wrapper'
 ext.sourceCompatibility = JavaVersion.VERSION_1_7
 
 apply from: file('gradle/idea.gradle')
+apply from: file('gradle/jacoco.gradle')
 //apply from: file('gradle/bintray.gradle')
 
 buildscript {
@@ -28,7 +29,7 @@ allprojects {
     group = 'com.kalixia.grapi'
     version = '0.4-SNAPSHOT'
 
-    apply from: 'https://raw.github.com/brunodecarvalho/gradle-plugins/master/jacoco-multiproject-aggregator.gradle'
+//    apply from: 'https://raw.github.com/brunodecarvalho/gradle-plugins/master/jacoco-multiproject-aggregator.gradle'
 }
 
 subprojects {
@@ -64,26 +65,6 @@ subprojects {
 
     // PMD
     apply plugin: 'pmd'
-
-    // JaCoCo
-//    apply plugin: 'jacoco'
-//    jacoco {
-//        toolVersion = "0.6.3.201306030806"
-//    }
-//    jacocoTestReport {
-//        reports {
-//            xml.enabled true
-//            csv.enabled false
-//            html.destination "${buildDir}/jacocoHtml"
-//        }
-//    }
-//    test {
-//        jacoco {
-//            append = false
-//            destPath = file("$buildDir/jacoco/jacocoTest.exec")
-//            classDumpPath = file("$buildDir/jacoco/classpathdumps")
-//        }
-//    }
 
     // Bintray integration
     task createBintrayPackage << {

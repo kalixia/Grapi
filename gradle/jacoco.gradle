@@ -1,0 +1,28 @@
+allprojects {
+    tasks.withType(Test) {
+        systemProperties['user.dir'] = workingDir
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+    jacoco {
+        toolVersion = "0.6.2.201302030002"
+    //        toolVersion = "0.6.4.201312101107"
+    }
+    test {
+        jacoco {
+            enabled = true
+            append = false
+        }
+    }
+    jacocoTestReport {
+        dependsOn test
+        description = "Generate Jacoco coverage reports after running tests."
+        reports {
+            xml.enabled true
+            html.enabled true
+        }
+    }
+}
