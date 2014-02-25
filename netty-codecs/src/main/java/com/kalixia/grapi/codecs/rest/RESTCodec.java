@@ -19,6 +19,7 @@ import org.slf4j.MDC;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
 @ChannelHandler.Sharable
 public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiResponse> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RESTCodec.class);
+    public static final String HEADER_REQUEST_ID = "X-Api-Request-ID";
 
     /**
      * Decode a {@link FullHttpRequest} as a {@link ApiRequest}.
@@ -54,7 +56,12 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
 
         String contentType = request.headers().get(ACCEPT);
 
-        InetSocketAddress clientAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        String clientAddress;
+        SocketAddress remoteAddress = ctx.channel().remoteAddress();
+        if (remoteAddress instanceof InetSocketAddress)
+            clientAddress = ((InetSocketAddress) remoteAddress).getHostName();
+        else
+            clientAddress = remoteAddress.toString();
 
         // build headers map
         MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
@@ -69,7 +76,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         ApiRequest apiRequest = new ApiRequest(requestID,
                 request.getUri(), request.getMethod(),
                 ReferenceCountUtil.retain(request.content()), contentType,
-                headers, clientAddress.getHostName());
+                headers, clientAddress);
         LOGGER.debug("About to handle request {}", request);
         out.add(apiRequest);
     }
@@ -94,7 +101,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
 
         // insert request ID header
         if (apiResponse.id() != null) {
-            httpResponse.headers().set("X-Api-Request-ID", apiResponse.id().toString());
+            httpResponse.headers().set(HEADER_REQUEST_ID, apiResponse.id().toString());
         }
 
         // insert headers from ApiResponse object
