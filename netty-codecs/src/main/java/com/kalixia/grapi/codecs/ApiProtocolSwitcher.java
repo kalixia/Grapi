@@ -19,6 +19,7 @@ import org.slf4j.MDC;
 
 import javax.inject.Inject;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 
 /**
@@ -61,7 +62,13 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
-        MDC.put(MDCLogging.MDC_CLIENT_ADDR, ((InetSocketAddress) ctx.channel().remoteAddress()).getHostString());
+        SocketAddress remoteAddress = ctx.channel().remoteAddress();
+        String clientAddr;
+        if (remoteAddress instanceof InetSocketAddress)
+            clientAddr = ((InetSocketAddress) remoteAddress).getHostString();
+        else
+            clientAddr = remoteAddress.toString();
+        MDC.put(MDCLogging.MDC_CLIENT_ADDR, clientAddr);
     }
 
     @Override

@@ -14,6 +14,7 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap
 import spock.lang.Specification
 
+import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.MultivaluedHashMap
 import javax.ws.rs.core.MultivaluedMap
 
@@ -49,7 +50,7 @@ class RESTCodecTest extends Specification {
 
         and: "an HTTP request to a fake REST API"
         FullHttpRequest httpRequest = new DefaultFullHttpRequest(HTTP_1_1, GET, "/users/johndoe")
-        HttpHeaders.addHeader(httpRequest, HttpHeaders.Names.ACCEPT, "application/json")
+        HttpHeaders.addHeader(httpRequest, HttpHeaders.Names.ACCEPT, MediaType.APPLICATION_JSON)
         HttpHeaders.addHeader(httpRequest, HttpHeaders.newEntity(RESTCodec.HEADER_REQUEST_ID), requestID)
 
         when:
@@ -62,7 +63,7 @@ class RESTCodecTest extends Specification {
         def ApiRequest apiRequest = inbound as ApiRequest
         apiRequest.uri() == '/users/johndoe'
         apiRequest.method() == GET
-        apiRequest.contentType() == "application/json"
+        apiRequest.contentType() == MediaType.APPLICATION_JSON
         apiRequest.id() == requestID
     }
 
@@ -75,7 +76,7 @@ class RESTCodecTest extends Specification {
         def MultivaluedMap<String, String> headers = new MultivaluedHashMap<>()
         headers.put(HttpHeaders.Names.ACCEPT_LANGUAGE.toString(), ["fr"] as List<String>)
         ApiResponse apiResponse = new ApiResponse(requestID, HttpResponseStatus.OK,
-                Unpooled.EMPTY_BUFFER, "application/json", headers)
+                Unpooled.EMPTY_BUFFER, MediaType.APPLICATION_JSON, headers)
 
         when:
         channel.writeOutbound(apiResponse)
@@ -86,7 +87,7 @@ class RESTCodecTest extends Specification {
         outbound instanceof FullHttpResponse
         def FullHttpResponse httpResponse = outbound as FullHttpResponse
         httpResponse.headers().get(RESTCodec.HEADER_REQUEST_ID) == requestID.toString()
-        httpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE) == "application/json"
+        httpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE) == MediaType.APPLICATION_JSON
     }
 
 }

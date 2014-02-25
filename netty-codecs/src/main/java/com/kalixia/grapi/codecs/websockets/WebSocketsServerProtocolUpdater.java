@@ -24,7 +24,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class WebSocketsServerProtocolUpdater extends ChannelInboundHandlerAdapter {
     private WebSocketServerHandshaker handshaker;
-    private static final String WEBSOCKET_PATH = "/websocket";
+    public static final String WEBSOCKET_PATH = "/websocket";
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketsServerProtocolUpdater.class);
 
     @Override

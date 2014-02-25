@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,12 +48,18 @@ public class WebSocketsApiRequestDecoder extends MessageToMessageDecoder<TextWeb
 
         UUID requestID = wsRequest.getId() != null ? wsRequest.getId() : UUID.randomUUID();
         MDC.put(MDCLogging.MDC_REQUEST_ID, requestID.toString());
-        InetSocketAddress clientAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+
+        SocketAddress remoteAddress = ctx.channel().remoteAddress();
+        String clientAddress;
+        if (remoteAddress instanceof InetSocketAddress)
+            clientAddress = ((InetSocketAddress) remoteAddress).getHostName();
+        else
+            clientAddress = remoteAddress.toString();
         // TODO: find a way to expose headers
         MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
         out.add(new ApiRequest(requestID, wsRequest.getPath(),
                 HttpMethod.valueOf(wsRequest.getMethod()), content, MediaType.APPLICATION_JSON,
-                headers, clientAddress.getHostName()));
+                headers, clientAddress));
     }
 
     @Override
