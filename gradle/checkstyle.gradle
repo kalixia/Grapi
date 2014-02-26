@@ -1,0 +1,10 @@
+subprojects {
+    apply plugin: 'checkstyle'
+
+    checkstyle {
+        toolVersion = "5.7"
+        ignoreFailures = true
+        configFile = rootProject.file('gradle/checkstyle.xml')
+    }
+
+}

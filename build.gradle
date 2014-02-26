@@ -14,6 +14,7 @@ apply from: file('gradle/idea.gradle')
 apply from: file('gradle/jacoco.gradle')
 apply from: file('gradle/pmd.gradle')
 apply from: file('gradle/findbugs.gradle')
+apply from: file('gradle/checkstyle.gradle')
 //apply from: file('gradle/bintray.gradle')
 
 buildscript {
