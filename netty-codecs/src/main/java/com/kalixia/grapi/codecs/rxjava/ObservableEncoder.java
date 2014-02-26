@@ -25,21 +25,23 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
- * Encoder transforming RxJava's {@link Observable} into many HTTP objects, through HTTP chunks.
+ * Encoder transforming RxJava's {@link ObservableApiResponse} into many HTTP objects, through HTTP chunks.
  * <p>
  * This encoder transforms {@link Observable}s into many {@link io.netty.handler.codec.http.HttpMessage}s,
  * hence sends chunked HTTP responses.
  */
 @ChannelHandler.Sharable
 public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResponse<?>> {
-
-    @Inject
     ObjectMapper objectMapper;
 
     private static final ByteBuf LIST_BEGIN = Unpooled.wrappedBuffer("[".getBytes(Charset.defaultCharset()));
     private static final ByteBuf LIST_END   = Unpooled.wrappedBuffer("]".getBytes(Charset.defaultCharset()));
     private static final ByteBuf LIST_ITEM_SEPARATOR = Unpooled.wrappedBuffer(",".getBytes(Charset.defaultCharset()));
     private static final Logger LOGGER = LoggerFactory.getLogger(ObservableEncoder.class);
+
+    public ObservableEncoder(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     @SuppressWarnings("unchecked")
