@@ -25,6 +25,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
@@ -112,7 +113,8 @@ public class JaxRsMethodGenerator {
                     .emitImports(Map.class.getName())
                     .emitImports(Set.class.getName())
                     .emitImports(Iterator.class.getName())
-                    .emitImports(Method.class.getName());
+                    .emitImports(Method.class.getName())
+                    .emitImports(UnsupportedEncodingException.class);
 
             if (useDagger)
                 writer.emitImports(Inject.class.getName());
@@ -263,6 +265,9 @@ public class JaxRsMethodGenerator {
                     .beginControlFlow("try");
         }
 
+        writer.emitSingleLineComment("TODO: extract expected charset from the API request instead of using the default charset");
+        writer.emitStatement("Charset charset = Charset.defaultCharset()");
+
         // analyze @PathParam annotations
         Map<String, String> parametersMap = analyzer.analyzePathParamAnnotations(methodInfo);
 
@@ -327,7 +332,7 @@ public class JaxRsMethodGenerator {
                     .endControlFlow()
                     .emitStatement(
                             "return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST," +
-                                    " Unpooled.copiedBuffer(builder.toString().getBytes()), MediaType.TEXT_PLAIN)")
+                                    " Unpooled.copiedBuffer(builder.toString(), charset), MediaType.TEXT_PLAIN)")
                     .endControlFlow();
         }
 
@@ -368,7 +373,7 @@ public class JaxRsMethodGenerator {
                                     .endControlFlow()
                                     .emitStatement(
                                             "return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST," +
-                                                    " Unpooled.copiedBuffer(builder.toString().getBytes()), MediaType.TEXT_PLAIN)")
+                                                    " Unpooled.copiedBuffer(builder.toString(), charset), MediaType.TEXT_PLAIN)")
                                     .endControlFlow();
         }
 
@@ -403,19 +408,19 @@ public class JaxRsMethodGenerator {
             writer.nextControlFlow("catch (IllegalArgumentException e)");
         writer
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST, " +
-                            "Unpooled.copiedBuffer(e.getMessage().getBytes()), MediaType.TEXT_PLAIN)")
+                            "Unpooled.copiedBuffer(e.getMessage(), charset), MediaType.TEXT_PLAIN)")
                 .nextControlFlow("catch (WebApplicationException e)")
                     .emitStatement("Response response = e.getResponse()")
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.valueOf(response.getStatus()), " +
-                                            "Unpooled.copiedBuffer(e.getMessage().getBytes()), MediaType.TEXT_PLAIN)")
+                                            "Unpooled.copiedBuffer(e.getMessage(), charset), MediaType.TEXT_PLAIN)")
                 .nextControlFlow("catch (Exception e)")
                     .emitStatement("e.printStackTrace()")
                     .beginControlFlow("if (e.getMessage() != null)")
                         .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.INTERNAL_SERVER_ERROR, " +
-                                "Unpooled.copiedBuffer(e.getMessage().getBytes()), MediaType.TEXT_PLAIN)")
+                                "Unpooled.copiedBuffer(e.getMessage(), charset), MediaType.TEXT_PLAIN)")
                     .nextControlFlow("else")
                         .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.INTERNAL_SERVER_ERROR, " +
-                                "Unpooled.copiedBuffer(e.toString().getBytes()), MediaType.TEXT_PLAIN)")
+                                "Unpooled.copiedBuffer(e.toString(), charset), MediaType.TEXT_PLAIN)")
                     .endControlFlow()
                 .endControlFlow();
 

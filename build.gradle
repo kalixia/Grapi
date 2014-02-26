@@ -12,6 +12,8 @@ ext.sourceCompatibility = JavaVersion.VERSION_1_7
 
 apply from: file('gradle/idea.gradle')
 apply from: file('gradle/jacoco.gradle')
+apply from: file('gradle/pmd.gradle')
+apply from: file('gradle/findbugs.gradle')
 //apply from: file('gradle/bintray.gradle')
 
 buildscript {
@@ -56,15 +58,6 @@ subprojects {
         archives sourcesJar
         archives javadocJar
     }
-
-    // FindBugs
-//    apply plugin: 'findbugs'
-//    tasks.withType(findbugs) {
-//        omitVisitors = ["MissingClass"]     // don't understand why FindBugs keeps complaining about a missing class
-//    }
-
-    // PMD
-    apply plugin: 'pmd'
 
     // Bintray integration
     task createBintrayPackage << {
