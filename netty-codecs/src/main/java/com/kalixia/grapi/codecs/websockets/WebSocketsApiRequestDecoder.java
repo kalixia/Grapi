@@ -2,6 +2,7 @@ package com.kalixia.grapi.codecs.websockets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kalixia.grapi.ApiRequest;
+import com.kalixia.grapi.ClientAddressUtil;
 import com.kalixia.grapi.MDCLogging;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -49,17 +50,11 @@ public class WebSocketsApiRequestDecoder extends MessageToMessageDecoder<TextWeb
         UUID requestID = wsRequest.getId() != null ? wsRequest.getId() : UUID.randomUUID();
         MDC.put(MDCLogging.MDC_REQUEST_ID, requestID.toString());
 
-        SocketAddress remoteAddress = ctx.channel().remoteAddress();
-        String clientAddress;
-        if (remoteAddress instanceof InetSocketAddress)
-            clientAddress = ((InetSocketAddress) remoteAddress).getHostName();
-        else
-            clientAddress = remoteAddress.toString();
         // TODO: find a way to expose headers
         MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
         out.add(new ApiRequest(requestID, wsRequest.getPath(),
                 HttpMethod.valueOf(wsRequest.getMethod()), content, MediaType.APPLICATION_JSON,
-                headers, clientAddress));
+                headers, ClientAddressUtil.extractClientAddress(ctx.channel().remoteAddress())));
     }
 
     @Override

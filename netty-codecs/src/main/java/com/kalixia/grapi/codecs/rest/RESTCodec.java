@@ -2,6 +2,7 @@ package com.kalixia.grapi.codecs.rest;
 
 import com.kalixia.grapi.ApiRequest;
 import com.kalixia.grapi.ApiResponse;
+import com.kalixia.grapi.ClientAddressUtil;
 import com.kalixia.grapi.MDCLogging;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -56,13 +57,6 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
 
         String contentType = request.headers().get(ACCEPT);
 
-        String clientAddress;
-        SocketAddress remoteAddress = ctx.channel().remoteAddress();
-        if (remoteAddress instanceof InetSocketAddress)
-            clientAddress = ((InetSocketAddress) remoteAddress).getHostName();
-        else
-            clientAddress = remoteAddress.toString();
-
         // build headers map
         MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
         HttpHeaders nettyHeaders = request.headers();
@@ -76,7 +70,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         ApiRequest apiRequest = new ApiRequest(requestID,
                 request.getUri(), request.getMethod(),
                 ReferenceCountUtil.retain(request.content()), contentType,
-                headers, clientAddress);
+                headers, ClientAddressUtil.extractClientAddress(ctx.channel().remoteAddress()));
         LOGGER.debug("About to handle request {}", request);
         out.add(apiRequest);
     }
