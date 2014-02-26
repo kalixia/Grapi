@@ -2,8 +2,12 @@ package com.kalixia.grapi.apt.jaxrs;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kalixia.grapi.ApiRequest;
+import com.kalixia.grapi.ApiResponse;
+import com.kalixia.grapi.ObservableApiResponse;
 import com.kalixia.grapi.apt.jaxrs.model.JaxRsMethodInfo;
 import com.kalixia.grapi.apt.jaxrs.model.JaxRsParamInfo;
+import com.kalixia.grapi.codecs.jaxrs.GeneratedJaxRsMethodHandler;
 import com.kalixia.grapi.codecs.jaxrs.UriTemplateUtils;
 import com.squareup.javawriter.JavaWriter;
 import io.netty.buffer.Unpooled;
@@ -75,21 +79,21 @@ public class JaxRsMethodGenerator {
             JavaWriter writer = new JavaWriter(handlerWriter);
             writer
                     .emitPackage(resourcePackage.toString())
-                            // add imports
-                    .emitImports("com.kalixia.grapi.ApiRequest")
-                    .emitImports("com.kalixia.grapi.ApiResponse");
+                    // add imports
+                    .emitImports(ApiRequest.class)
+                    .emitImports(ApiResponse.class);
             if (useRxJava)
-                writer.emitImports("com.kalixia.grapi.ObservableApiResponse");
+                writer.emitImports(ObservableApiResponse.class);
             writer
-                    .emitImports("com.kalixia.grapi.codecs.jaxrs.GeneratedJaxRsMethodHandler")
-                    .emitImports("com.kalixia.grapi.codecs.jaxrs.UriTemplateUtils")
-                    .emitImports(ObjectMapper.class.getName())
-                    .emitImports(JsonMappingException.class.getName())
+                    .emitImports(GeneratedJaxRsMethodHandler.class)
+                    .emitImports(UriTemplateUtils.class)
+                    .emitImports(ObjectMapper.class)
+                    .emitImports(JsonMappingException.class)
 //                        .emitImports("io.netty.channel.ChannelHandler.Sharable")
-                    .emitImports(Unpooled.class.getName())
-                    .emitImports(Charset.class.getName())
-                    .emitImports(HttpMethod.class.getName())
-                    .emitImports(HttpResponseStatus.class.getName());
+                    .emitImports(Unpooled.class)
+                    .emitImports(Charset.class)
+                    .emitImports(HttpMethod.class)
+                    .emitImports(HttpResponseStatus.class);
             if (useMetrics) {
                 writer
                         .emitImports("com.codahale.metrics.Timer")
@@ -101,26 +105,26 @@ public class JaxRsMethodGenerator {
                     .emitImports("org.slf4j.Logger")
                     .emitImports("org.slf4j.LoggerFactory")
                     // JAX-RS classes
-                    .emitImports(Response.class.getName())
-                    .emitImports(MediaType.class.getName())
-                    .emitImports(WebApplicationException.class.getName())
-                    .emitImports(MultivaluedMap.class.getName())
-                    .emitImports(MultivaluedHashMap.class.getName())
+                    .emitImports(Response.class)
+                    .emitImports(MediaType.class)
+                    .emitImports(WebApplicationException.class)
+                    .emitImports(MultivaluedMap.class)
+                    .emitImports(MultivaluedHashMap.class)
                     // Bean Validation classes
-                    .emitImports(Validator.class.getName())
-                    .emitImports(ConstraintViolation.class.getName())
+                    .emitImports(Validator.class)
+                    .emitImports(ConstraintViolation.class)
                     // JDK classes
-                    .emitImports(Map.class.getName())
-                    .emitImports(Set.class.getName())
-                    .emitImports(Iterator.class.getName())
-                    .emitImports(Method.class.getName())
+                    .emitImports(Map.class)
+                    .emitImports(Set.class)
+                    .emitImports(Iterator.class)
+                    .emitImports(Method.class)
                     .emitImports(UnsupportedEncodingException.class);
 
             if (useDagger)
-                writer.emitImports(Inject.class.getName());
+                writer.emitImports(Inject.class);
 
             writer
-                    .emitImports(Generated.class.getName())
+                    .emitImports(Generated.class)
                     .emitEmptyLine()
                             // begin class
                     .emitJavadoc(String.format("Netty handler for JAX-RS resource {@link %s#%s}.", resourceClassName,

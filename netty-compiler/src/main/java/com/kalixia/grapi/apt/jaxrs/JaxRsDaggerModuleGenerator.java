@@ -48,21 +48,21 @@ public class JaxRsDaggerModuleGenerator {
             handlerWriter = handlerFile.openWriter();
             JavaWriter writer = new JavaWriter(handlerWriter);
             writer
-                    .emitPackage(destPackage.toString())
+                    .emitPackage(destPackage)
                     .emitImports("dagger.Module")
                     .emitImports("dagger.Provides")
-                    .emitImports(ObjectMapper.class.getName())
-                    .emitImports(Validator.class.getName())
-                    .emitImports(Validation.class.getName())
-                    .emitImports(ValidatorFactory.class.getName());
+                    .emitImports(ObjectMapper.class)
+                    .emitImports(Validator.class)
+                    .emitImports(Validation.class)
+                    .emitImports(ValidatorFactory.class);
 
             if (useMetrics) {
                 writer.emitImports("com.codahale.metrics.MetricRegistry");
             }
 
             writer
-                    .emitImports(Singleton.class.getName())
-                    .emitImports(Generated.class.getName())
+                    .emitImports(Singleton.class)
+                    .emitImports(Generated.class)
                     .emitEmptyLine()
                             // begin class
                     .emitJavadoc("Dagger module for all generated classes.")

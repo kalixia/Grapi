@@ -14,6 +14,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -21,8 +25,10 @@ import javax.inject.Inject;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.Validator;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -59,32 +65,32 @@ public class JaxRsModuleGenerator {
             handlerWriter = handlerFile.openWriter();
             JavaWriter writer = new JavaWriter(handlerWriter);
             writer
-                    .emitPackage(destPackage.toString())
+                    .emitPackage(destPackage)
                             // add imports
-                    .emitImports(ApiRequest.class.getName())
-                    .emitImports(ApiResponse.class.getName())
-                    .emitImports(MDCLogging.class.getName())
-                    .emitImports(JaxRsPipeline.class.getName())
-                    .emitImports(GeneratedJaxRsMethodHandler.class.getName())
-                    .emitImports(ByteBuf.class.getName())
-                    .emitImports(Unpooled.class.getName())
-                    .emitImports(ChannelFuture.class.getName())
-                    .emitImports(ChannelFutureListener.class.getName())
-                    .emitImports(ChannelHandlerContext.class.getName())
+                    .emitImports(ApiRequest.class)
+                    .emitImports(ApiResponse.class)
+                    .emitImports(MDCLogging.class)
+                    .emitImports(JaxRsPipeline.class)
+                    .emitImports(GeneratedJaxRsMethodHandler.class)
+                    .emitImports(ByteBuf.class)
+                    .emitImports(Unpooled.class)
+                    .emitImports(ChannelFuture.class)
+                    .emitImports(ChannelFutureListener.class)
+                    .emitImports(ChannelHandlerContext.class)
                     .emitImports("io.netty.channel.ChannelHandler.Sharable")
-                    .emitImports(MessageToMessageDecoder.class.getName())
-                    .emitImports(HttpHeaders.class.getName())
-                    .emitImports(HttpResponseStatus.class.getName())
+                    .emitImports(MessageToMessageDecoder.class)
+                    .emitImports(HttpHeaders.class)
+                    .emitImports(HttpResponseStatus.class)
                     .emitImports("com.fasterxml.jackson.databind.ObjectMapper")
-                    .emitImports("org.slf4j.Logger")
-                    .emitImports("org.slf4j.LoggerFactory")
-                    .emitImports("org.slf4j.MDC")
-                    .emitImports("java.nio.charset.Charset")
-                    .emitImports("java.util.List")
-                    .emitImports("java.util.Arrays")
-                    .emitImports("javax.ws.rs.core.MediaType")
-                    .emitImports(Validator.class.getName())
-                    .emitImports(Generated.class.getName())
+                    .emitImports(Logger.class)
+                    .emitImports(LoggerFactory.class)
+                    .emitImports(MDC.class)
+                    .emitImports(Charset.class)
+                    .emitImports(List.class)
+                    .emitImports(Arrays.class)
+                    .emitImports(MediaType.class)
+                    .emitImports(Validator.class)
+                    .emitImports(Generated.class)
                     .emitEmptyLine()
                             // begin class
                     .emitJavadoc("Netty handler collections all JAX-RS resources.")
