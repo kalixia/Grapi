@@ -24,6 +24,12 @@ buildscript {
         }
     }
     dependencies {
+        repositories {
+            maven {
+                url "https://oss.sonatype.org/content/repositories/snapshots/"
+            }
+        }
+        classpath 'com.jimdo.gradle:gradle-apt-plugin:0.4-SNAPSHOT'
         classpath 'org.codehaus.groovy.modules.http-builder:http-builder:0.6'
     }
 }

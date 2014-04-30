@@ -30,8 +30,10 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import static javax.tools.Diagnostic.Kind;
+
 @SupportedAnnotationTypes({ "javax.ws.rs.*" })
-@SupportedSourceVersion(SourceVersion.RELEASE_7)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions({ "dagger", "metrics" })
 public class StaticAnalysisCompiler extends AbstractProcessor {
     private Elements elementUtils;
@@ -42,6 +44,7 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
     private JaxRsDaggerModuleGenerator daggerGenerator;
     private SortedMap<JaxRsMethodInfo,String> methodToHandlerName;
     private SortedSet<String> generatedHandlers;
+    private boolean done = false;
     public static final String GENERATOR_NAME = "Grapi";
 
     @Override
@@ -103,15 +106,15 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
         generatedHandlers.addAll(methodToHandlerName.values());
 
         // TODO: use package from APT processor options
-        if (roundEnv.processingOver() && generatedHandlers.size() > 0) {
+        if (!done && generatedHandlers.size() > 0) {
             String firstHandlerName = generatedHandlers.first();
             String packageName = firstHandlerName.substring(0, firstHandlerName.lastIndexOf('.'));
 
-            messager.printMessage(Diagnostic.Kind.MANDATORY_WARNING,
-                    "Grapi: generated " + generatedHandlers.size() + " handlers");
+            messager.printMessage(Kind.MANDATORY_WARNING, "Grapi: generated " + generatedHandlers.size() + " Netty handlers");
 
             moduleGenerator.generateModuleClass(packageName, generatedHandlers);
             daggerGenerator.generateDaggerModule(packageName, generatedHandlers);
+            done = true;
         }
 
         return false;

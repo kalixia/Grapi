@@ -1,3 +1,5 @@
+apply plugin: 'apt'
+
 dependencies {
     compile project(':netty-codecs')
     compile project(':netty-compiler')
@@ -8,29 +10,13 @@ dependencies {
     compile 'com.netflix.rxjava:rxjava-core:0.16.1'
     compile 'com.netflix.rxjava:rxjava-groovy:0.16.1'
 
+    apt project(':netty-compiler')
+    apt 'com.squareup.dagger:dagger-compiler:1.2.1'
+
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
 
 compileJava {
-    def destinationDir = project.tasks.jar.destinationDir
-    project.mkdir destinationDir
-    Map otherArgs = [
-            includeAntRuntime: false,
-            destdir: destinationDir,
-            classpath: project.configurations.compile.asPath,
-            sourcepath: '',
-            target: project.targetCompatibility,
-            source: project.sourceCompatibility
-    ]
-    options.compilerArgs = [
-            '-processor', 'com.kalixia.grapi.apt.jaxrs.StaticAnalysisCompiler',
-            '-s', "${destinationDir.absolutePath}".toString()
-    ]
-    Map antOptions = otherArgs + options.optionMap()
-//    project.ant.javac(antOptions) {
-//        source.addToAntBuilder(project.ant, 'src', FileCollection.AntType.MatchingTask)
-//        options.compilerArgs.each { value ->
-//            compilerarg(value: value)
-//        }
-//    }
+    options.compilerArgs << '-Adagger=true' << '-Ametrics=true'
+//    options.compilerArgs << '-XprintProcessorInfo' << '-XprintRounds'
 }

@@ -22,7 +22,6 @@ import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.inject.Inject;
-import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.Validator;
 import javax.ws.rs.core.MediaType;
@@ -43,6 +42,7 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static javax.tools.Diagnostic.Kind;
 
 public class JaxRsModuleGenerator {
     private final Filer filer;
@@ -93,7 +93,7 @@ public class JaxRsModuleGenerator {
                     .emitImports(Generated.class)
                     .emitEmptyLine()
                             // begin class
-                    .emitJavadoc("Netty handler collections all JAX-RS resources.")
+                    .emitJavadoc("Netty handler dispatching request to appropriate JAX-RS resource.")
                     .emitAnnotation(Generated.class.getSimpleName(), stringLiteral(StaticAnalysisCompiler.GENERATOR_NAME))
                     .emitAnnotation("Sharable")
                     .beginType(handlerClassName, "class", EnumSet.of(PUBLIC, FINAL), "MessageToMessageDecoder<ApiRequest>", "JaxRsPipeline")
@@ -114,8 +114,9 @@ public class JaxRsModuleGenerator {
             if (handlerWriter != null) {
                 try {
                     handlerWriter.close();
+                    messager.printMessage(Kind.MANDATORY_WARNING, "Grapi: generated Netty JAX-RS call dispatcher handler");
                 } catch (IOException e) {
-                    messager.printMessage(Diagnostic.Kind.ERROR, "Can't close generated source file");
+                    messager.printMessage(Kind.ERROR, "Can't close generated source file");
                 }
             }
         }

@@ -2,6 +2,7 @@ package com.kalixia.grapi.apt.jaxrs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.javawriter.JavaWriter;
+
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -20,6 +21,8 @@ import java.util.SortedSet;
 
 import static com.squareup.javawriter.JavaWriter.stringLiteral;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.tools.Diagnostic.Kind.*;
+import static javax.tools.Diagnostic.Kind.ERROR;
 
 public class JaxRsDaggerModuleGenerator {
     private final Filer filer;
@@ -83,8 +86,9 @@ public class JaxRsDaggerModuleGenerator {
             if (handlerWriter != null) {
                 try {
                     handlerWriter.close();
+                    messager.printMessage(MANDATORY_WARNING, "Grapi: generated Dagger module for Netty handlers");
                 } catch (IOException e) {
-                    messager.printMessage(Diagnostic.Kind.ERROR, "Can't close generated source file");
+                    messager.printMessage(ERROR, "Can't close generated source file");
                 }
             }
         }
