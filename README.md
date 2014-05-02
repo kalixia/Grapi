@@ -80,13 +80,13 @@ Then you simply need to add two dependencies to your project/module (where your 
 <dependency>
     <groupId>com.kalixia.grapi</groupId>
     <artifactId>netty-codecs</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
 </dependency>
 
 <dependency>
     <groupId>com.kalixia.grapi</groupId>
     <artifactId>netty-compiler</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
 </dependency>
 ```
 
