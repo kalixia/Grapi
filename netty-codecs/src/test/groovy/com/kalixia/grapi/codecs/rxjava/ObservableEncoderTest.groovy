@@ -43,10 +43,10 @@ class ObservableEncoderTest extends Specification {
         def HttpContent chunk2 = channel.readOutbound()
         def HttpContent endListToken = channel.readOutbound()
         assert httpResponse.status == OK
-        assert startListToken.content().toString(Charset.forName("UTF_8")) == '['
-        assert chunk1.content().toString(Charset.forName("UTF_8")) == '{"dummy1":"some","dummy2":"messages"}'
-        assert chunk2.content().toString(Charset.forName("UTF_8")) == ',{"dummy1":"to be","dummy2":"tested"}'
-        assert endListToken.content().toString(Charset.forName("UTF_8")) == ']'
+        assert startListToken.content().toString(Charset.forName("UTF-8")) == '['
+        assert chunk1.content().toString(Charset.forName("UTF-8")) == '{"dummy1":"some","dummy2":"messages"}'
+        assert chunk2.content().toString(Charset.forName("UTF-8")) == ',{"dummy1":"to be","dummy2":"tested"}'
+        assert endListToken.content().toString(Charset.forName("UTF-8")) == ']'
     }
 
     def class TestObject implements Serializable {
