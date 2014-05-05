@@ -1,7 +1,6 @@
 package com.kalixia.grapi.codecs.rxjava
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.common.base.Charsets
 import com.kalixia.grapi.ObservableApiResponse
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.HttpContent
@@ -10,6 +9,7 @@ import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap
 import spock.lang.Specification
 
 import javax.ws.rs.core.MultivaluedMap
+import java.nio.charset.Charset
 
 import static io.netty.handler.codec.http.HttpResponseStatus.OK
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON
@@ -43,10 +43,10 @@ class ObservableEncoderTest extends Specification {
         def HttpContent chunk2 = channel.readOutbound()
         def HttpContent endListToken = channel.readOutbound()
         assert httpResponse.status == OK
-        assert startListToken.content().toString(Charsets.UTF_8) == '['
-        assert chunk1.content().toString(Charsets.UTF_8) == '{"dummy1":"some","dummy2":"messages"}'
-        assert chunk2.content().toString(Charsets.UTF_8) == ',{"dummy1":"to be","dummy2":"tested"}'
-        assert endListToken.content().toString(Charsets.UTF_8) == ']'
+        assert startListToken.content().toString(Charset.forName("UTF_8")) == '['
+        assert chunk1.content().toString(Charset.forName("UTF_8")) == '{"dummy1":"some","dummy2":"messages"}'
+        assert chunk2.content().toString(Charset.forName("UTF_8")) == ',{"dummy1":"to be","dummy2":"tested"}'
+        assert endListToken.content().toString(Charset.forName("UTF_8")) == ']'
     }
 
     def class TestObject implements Serializable {
