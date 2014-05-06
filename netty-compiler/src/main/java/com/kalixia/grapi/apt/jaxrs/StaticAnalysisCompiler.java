@@ -33,7 +33,7 @@ import java.util.TreeSet;
 import static javax.tools.Diagnostic.Kind;
 
 @SupportedAnnotationTypes({ "javax.ws.rs.*" })
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
+//@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions({ "dagger", "metrics" })
 public class StaticAnalysisCompiler extends AbstractProcessor {
     private Elements elementUtils;
