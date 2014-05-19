@@ -1,5 +1,6 @@
 package com.kalixia.grapi.codecs.ajax;
 
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
@@ -16,11 +17,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import static io.netty.handler.codec.http.HttpHeaders.Names.ACCESS_CONTROL_ALLOW_CREDENTIALS;
 import static io.netty.handler.codec.http.HttpHeaders.Names.ACCESS_CONTROL_ALLOW_HEADERS;
 import static io.netty.handler.codec.http.HttpHeaders.Names.ACCESS_CONTROL_ALLOW_METHODS;
 import static io.netty.handler.codec.http.HttpHeaders.Names.ACCESS_CONTROL_ALLOW_ORIGIN;
 import static io.netty.handler.codec.http.HttpHeaders.Names.ACCESS_CONTROL_MAX_AGE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.ACCESS_CONTROL_REQUEST_HEADERS;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.ORIGIN;
 
 /**
@@ -56,8 +60,10 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
         response.headers().add(ACCESS_CONTROL_ALLOW_ORIGIN, request.headers().get(ORIGIN));
         response.headers().add(ACCESS_CONTROL_ALLOW_HEADERS, request.headers().get(ACCESS_CONTROL_REQUEST_HEADERS));
         response.headers().add(ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, DELETE, OPTIONS");
+        response.headers().add(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
         response.headers().add(ACCESS_CONTROL_MAX_AGE, "3628800");
-        ctx.write(response);
+        ctx.channel().writeAndFlush(response);
+        LOGGER.debug("CORS preflight request response {}", response);
     }
 
     @Override
