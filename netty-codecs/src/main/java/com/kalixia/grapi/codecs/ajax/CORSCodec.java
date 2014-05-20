@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -47,6 +48,7 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
                 return;
             }
             String origin = request.headers().get(ORIGIN);
+            LOGGER.debug("Origin: {}", origin);
             ctx.channel().attr(ATTRIBUTE_ORIGIN).set(origin);
         }
         // otherwise simply forward to the next channel handler as-is
@@ -62,7 +64,12 @@ public class CORSCodec extends MessageToMessageCodec<FullHttpRequest, HttpRespon
         response.headers().add(ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, DELETE, OPTIONS");
         response.headers().add(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
         response.headers().add(ACCESS_CONTROL_MAX_AGE, "3628800");
-        ctx.channel().writeAndFlush(response);
+        if (HttpHeaders.isKeepAlive(request)) {
+            response.headers().add(CONTENT_LENGTH, 0);
+            ctx.channel().writeAndFlush(response);
+        } else {
+            ctx.channel().writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        }
         LOGGER.debug("CORS preflight request response {}", response);
     }
 
