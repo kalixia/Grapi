@@ -2,7 +2,6 @@ package com.kalixia.grapi.codecs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kalixia.grapi.MDCLogging;
-import com.kalixia.grapi.codecs.ajax.CORSCodec;
 import com.kalixia.grapi.codecs.rest.RESTCodec;
 import com.kalixia.grapi.codecs.websockets.WebSocketsApiRequestDecoder;
 import com.kalixia.grapi.codecs.websockets.WebSocketsApiResponseEncoder;
@@ -12,6 +11,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.cors.CorsConfig;
+import io.netty.handler.codec.http.cors.CorsHandler;
 import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,15 +31,29 @@ import java.util.List;
 @ChannelHandler.Sharable
 public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest> {
     private final ObjectMapper objectMapper;
+    private final CorsConfig corsConfig;
     private static final ChannelHandler webSocketsServerProtocolUpdater = new WebSocketsServerProtocolUpdater();
     private static final ChannelHandler webSocketsApiResponseEncoder = new WebSocketsApiResponseEncoder();
-    private static final CORSCodec corsCodec = new CORSCodec();
     private static final ChannelHandler restCodec = new RESTCodec();
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiProtocolSwitcher.class);
 
     @Inject
     public ApiProtocolSwitcher(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+        corsConfig = CorsConfig.withAnyOrigin()
+                .allowCredentials()                                     // required for custom headers
+                .allowedRequestMethods(
+                        HttpMethod.GET,
+                        HttpMethod.POST,
+                        HttpMethod.PUT,
+                        HttpMethod.DELETE,
+                        HttpMethod.OPTIONS)
+                .maxAge(1 * 60 * 60)                                    // 1 hour
+                .allowedRequestHeaders(
+                        RESTCodec.HEADER_REQUEST_ID,                    // header for tracking request ID
+                        HttpHeaders.Names.AUTHORIZATION)                // header for OAuth2 authentication
+                .exposeHeaders(RESTCodec.HEADER_REQUEST_ID)
+                .build();
     }
 
     @Override
@@ -51,8 +68,8 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
             pipeline.remove(this);
         } else {
             LOGGER.debug("Switching to REST pipeline...");
-            pipeline.addBefore("api-request-logger", "cors-codec", corsCodec);
-            pipeline.addAfter("cors-codec", "rest-codec", restCodec);
+            pipeline.addBefore("api-request-logger", "cors", new CorsHandler(corsConfig));
+            pipeline.addAfter("cors", "rest-codec", restCodec);
             pipeline.remove(this);
         }
 
