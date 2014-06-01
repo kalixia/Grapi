@@ -50,6 +50,7 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
                         HttpMethod.OPTIONS)
                 .maxAge(1 * 60 * 60)                                    // 1 hour
                 .allowedRequestHeaders(
+                        HttpHeaders.Names.CONTENT_TYPE,
                         RESTCodec.HEADER_REQUEST_ID,                    // header for tracking request ID
                         HttpHeaders.Names.AUTHORIZATION)                // header for OAuth2 authentication
                 .exposeHeaders(RESTCodec.HEADER_REQUEST_ID)
