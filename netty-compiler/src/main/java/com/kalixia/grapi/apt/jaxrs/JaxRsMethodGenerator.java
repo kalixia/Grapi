@@ -13,6 +13,12 @@ import com.squareup.javawriter.JavaWriter;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
+import org.apache.shiro.authz.annotation.RequiresGuest;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.apache.shiro.authz.annotation.RequiresUser;
+
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -31,6 +37,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -52,6 +59,7 @@ public class JaxRsMethodGenerator {
     private final Messager messager;
     private final boolean useDagger;
     private final boolean useMetrics;
+    private final boolean useShiro;
     private final boolean useRxJava;
     private final JaxRsAnalyzer analyzer = new JaxRsAnalyzer();
 
@@ -62,6 +70,8 @@ public class JaxRsMethodGenerator {
                 && "true".equals(options.get(Options.DAGGER.getValue()));
         this.useMetrics = options.containsKey(Options.METRICS.getValue())
                 && "true".equals(options.get(Options.METRICS.getValue()));
+        this.useShiro = options.containsKey(Options.SHIRO.getValue())
+                        && "true".equals(options.get(Options.SHIRO.getValue()));
         this.useRxJava = options.containsKey(Options.RXJAVA.getValue())
                 && "true".equals(options.get(Options.RXJAVA.getValue()));
     }
@@ -99,6 +109,9 @@ public class JaxRsMethodGenerator {
                         .emitImports("com.codahale.metrics.Timer")
                         .emitImports("com.codahale.metrics.MetricRegistry")
                         .emitImports("com.codahale.metrics.annotation.Timed");
+            }
+            if (useShiro) {
+                ShiroGenerator.generateImports(writer);
             }
 
             writer
@@ -260,7 +273,10 @@ public class JaxRsMethodGenerator {
 
         writer
                 .emitAnnotation(Override.class)
-                .beginMethod("ApiResponse", "handle", EnumSet.of(PUBLIC), "ApiRequest", "request");
+                .beginMethod("ApiResponse", "handle", EnumSet.of(PUBLIC),
+                        "ApiRequest", "request",
+                        "ChannelHandlerContext", "ctx"
+                );
 
         if (useMetrics) {
             // initialize Timer
@@ -271,6 +287,31 @@ public class JaxRsMethodGenerator {
 
         writer.emitSingleLineComment("TODO: extract expected charset from the API request instead of using the default charset");
         writer.emitStatement("Charset charset = Charset.defaultCharset()");
+
+        if (useShiro) {
+            List<Annotation> shiroAnnotations = methodInfo.getShiroAnnotations();
+            if (shiroAnnotations != null && shiroAnnotations.size() > 0) {
+                ShiroGenerator.beginSubject(writer);
+                for (Annotation shiroAnnotation : shiroAnnotations) {
+                    Class<? extends Annotation> annotationType = shiroAnnotation.annotationType();
+                    if (annotationType.isAssignableFrom(RequiresPermissions.class)) {
+                        ShiroGenerator.generateShiroCodeForRequiresPermissionsCheck(writer, (RequiresPermissions) shiroAnnotation);
+                    } else if (annotationType.isAssignableFrom(RequiresRoles.class)) {
+                        ShiroGenerator.generateShiroCodeForRequiresRolesCheck(writer, (RequiresRoles) shiroAnnotation);
+                    } else if (annotationType.isAssignableFrom(RequiresGuest.class)) {
+                        ShiroGenerator.generateShiroCodeForRequiresGuestCheck(writer, (RequiresGuest) shiroAnnotation);
+                    } else if (annotationType.isAssignableFrom(RequiresUser.class)) {
+                        ShiroGenerator.generateShiroCodeForRequiresUserCheck(writer, (RequiresUser) shiroAnnotation);
+                    } else if (annotationType.isAssignableFrom(RequiresAuthentication.class)) {
+                        ShiroGenerator.generateShiroCodeForRequiresAuthenticationCheck(writer, (RequiresAuthentication) shiroAnnotation);
+                    } else {
+                        messager.printMessage(Diagnostic.Kind.ERROR, "Can't process annotation of type " + annotationType.getSimpleName());
+                        return writer;
+                    }
+                }
+                ShiroGenerator.endSubject(writer);
+            }
+        }
 
         // analyze @PathParam annotations
         Map<String, String> parametersMap = analyzer.analyzePathParamAnnotations(methodInfo);
@@ -438,4 +479,5 @@ public class JaxRsMethodGenerator {
 
         return writer.endMethod();
     }
+
 }

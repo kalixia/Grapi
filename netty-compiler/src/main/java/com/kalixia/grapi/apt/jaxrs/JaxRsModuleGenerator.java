@@ -106,6 +106,7 @@ public class JaxRsModuleGenerator {
             generateConstructor(writer, handlerClassName, generatedHandlers);
             generateDecodeMethod(writer);
             generateIsKeepAliveMethod(writer);
+            generateExceptionCaughtMethod(writer);
             // end class
             writer.endType();
         } catch (IOException e) {
@@ -169,7 +170,7 @@ public class JaxRsModuleGenerator {
                     .beginControlFlow("for (GeneratedJaxRsMethodHandler handler : handlers)")
                         .beginControlFlow("if (handler.matches(request))")
                             .beginControlFlow("try")
-                                .emitStatement("ApiResponse response = handler.handle(request)");
+                                .emitStatement("ApiResponse response = handler.handle(request, ctx)");
                                 writeToContextAndHandleKeepAlive(writer)
                                 .emitStatement("return")
                             .nextControlFlow("catch (Exception e)")
@@ -198,6 +199,20 @@ public class JaxRsModuleGenerator {
                         .emitStatement("return false")
                     .endControlFlow()
                     .emitStatement("return !HttpHeaders.Values.CLOSE.toString().equalsIgnoreCase(connection)")
+                .endMethod();
+    }
+
+    private JavaWriter generateExceptionCaughtMethod(JavaWriter writer) throws IOException {
+        return writer
+                .emitEmptyLine()
+                .emitAnnotation(Override.class)
+                .beginMethod("void", "exceptionCaught", EnumSet.of(PUBLIC),
+                        Arrays.asList(
+                                "ChannelHandlerContext", "ctx",
+                                "Throwable", "cause"),
+                        Arrays.asList("Exception"))
+                .emitStatement("LOGGER.error(\"Unexpected decoder exception\", cause)")
+                .emitStatement("super.exceptionCaught(ctx, cause)")
                 .endMethod();
     }
 

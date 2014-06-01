@@ -2,6 +2,8 @@ package com.kalixia.grapi.codecs.jaxrs;
 
 import com.kalixia.grapi.ApiRequest;
 import com.kalixia.grapi.ApiResponse;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 
 public interface GeneratedJaxRsMethodHandler {
 
@@ -15,8 +17,9 @@ public interface GeneratedJaxRsMethodHandler {
     /**
      * Handles an {@link ApiRequest}
      * @param request the request to handle
+     * @param ctx     the channel context on which the request is made
      * @return the {@link} ApiResponse
      */
-    ApiResponse handle(ApiRequest request) throws Exception;
+    ApiResponse handle(ApiRequest request, ChannelHandlerContext ctx) throws Exception;
 
 }

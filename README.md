@@ -80,13 +80,13 @@ Then you simply need to add two dependencies to your project/module (where your 
 <dependency>
     <groupId>com.kalixia.grapi</groupId>
     <artifactId>netty-codecs</artifactId>
-    <version>0.4.1</version>
+    <version>0.4.2</version>
 </dependency>
 
 <dependency>
     <groupId>com.kalixia.grapi</groupId>
     <artifactId>netty-compiler</artifactId>
-    <version>0.4.1</version>
+    <version>0.4.2</version>
 </dependency>
 ```
 
@@ -98,6 +98,7 @@ There are currently two options available:
 |---------|------------
 | dagger  | Additionally generate a Dagger module, named ``` GeneratedJaxRsDaggerModule ```
 | metrics | Additionally use [Metrics](http://metrics.codahale.com) for tracing JAX-RS resource method calls
+| shiro   | Additionally analyze [Shiro](http://shiro.apache.org) annotations in JAX-RS resources and ensure they are met
 
 In order to configure a Maven project, you can use something like this:
 ```xml
@@ -111,6 +112,7 @@ In order to configure a Maven project, you can use something like this:
         <compilerArgs>
             <compilerArg>-Adagger=true</compilerArg>
             <compilerArg>-Ametrics=true</compilerArg>
+            <compilerArg>-Ashiro=true</compilerArg>
         </compilerArgs>
     </configuration>
 </plugin>

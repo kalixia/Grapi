@@ -13,6 +13,9 @@ dependencies {
     compile 'javax.el:javax.el-api:2.2.4'
     compile 'org.glassfish.web:javax.el:2.2.4'
 
+    // Shiro
+    compile 'org.apache.shiro:shiro-core:1.2.3'
+
     compile 'com.netflix.rxjava:rxjava-core:0.18.1'
     compile 'ch.qos.logback:logback-classic:1.1.2'
 

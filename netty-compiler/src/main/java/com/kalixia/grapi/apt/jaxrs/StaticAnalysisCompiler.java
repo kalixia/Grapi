@@ -3,6 +3,12 @@ package com.kalixia.grapi.apt.jaxrs;
 import com.kalixia.grapi.apt.jaxrs.model.JaxRsMethodInfo;
 import com.kalixia.grapi.apt.jaxrs.model.JaxRsMethodInfoComparator;
 import com.kalixia.grapi.apt.jaxrs.model.JaxRsParamInfo;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
+import org.apache.shiro.authz.annotation.RequiresGuest;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.apache.shiro.authz.annotation.RequiresUser;
+
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -22,6 +28,8 @@ import javax.tools.Diagnostic;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +40,7 @@ import java.util.TreeSet;
 
 import static javax.tools.Diagnostic.Kind;
 
-@SupportedAnnotationTypes({ "javax.ws.rs.*" })
+@SupportedAnnotationTypes({ "javax.ws.rs.*", "org.apache.shiro.authz.annotation" })
 //@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions({ "dagger", "metrics" })
 public class StaticAnalysisCompiler extends AbstractProcessor {
@@ -97,7 +105,25 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
                     produces = producesAnnotation.value();
                 else
                     produces = new String[] { MediaType.TEXT_PLAIN };
-                JaxRsMethodInfo methodInfo = new JaxRsMethodInfo(elem, verb, uriTemplate, methodName, returnType, parameters, produces);
+                // process Shiro annotations
+                RequiresAuthentication requiresAuthenticationAnnotation = methodElement.getAnnotation(RequiresAuthentication.class);
+                RequiresGuest requiresGuestAnnotation = methodElement.getAnnotation(RequiresGuest.class);
+                RequiresPermissions requiresPermissionsAnnotation = methodElement.getAnnotation(RequiresPermissions.class);
+                RequiresRoles requiresRolesAnnotation = methodElement.getAnnotation(RequiresRoles.class);
+                RequiresUser requiresUserAnnotation = methodElement.getAnnotation(RequiresUser.class);
+                List<Annotation> shiroAnnotations = new ArrayList<>();
+                if (requiresAuthenticationAnnotation != null)
+                    shiroAnnotations.add(requiresAuthenticationAnnotation);
+                if (requiresGuestAnnotation != null)
+                    shiroAnnotations.add(requiresGuestAnnotation);
+                if (requiresPermissionsAnnotation != null)
+                    shiroAnnotations.add(requiresPermissionsAnnotation);
+                if (requiresRolesAnnotation != null)
+                    shiroAnnotations.add(requiresRolesAnnotation);
+                if (requiresUserAnnotation != null)
+                    shiroAnnotations.add(requiresUserAnnotation);
+
+                JaxRsMethodInfo methodInfo = new JaxRsMethodInfo(elem, verb, uriTemplate, methodName, returnType, parameters, produces, shiroAnnotations);
                 String generatedHandler = methodGenerator.generateHandlerClass(resourceClassName, resourcePackage, uriTemplate, methodInfo);
                 methodToHandlerName.put(methodInfo, generatedHandler);
             }
