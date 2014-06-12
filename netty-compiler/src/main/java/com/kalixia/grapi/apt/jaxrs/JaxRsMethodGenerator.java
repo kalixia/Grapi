@@ -11,6 +11,7 @@ import com.kalixia.grapi.codecs.jaxrs.GeneratedJaxRsMethodHandler;
 import com.kalixia.grapi.codecs.jaxrs.UriTemplateUtils;
 import com.squareup.javawriter.JavaWriter;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -100,6 +101,7 @@ public class JaxRsMethodGenerator {
                     .emitImports(ObjectMapper.class)
                     .emitImports(JsonMappingException.class)
 //                        .emitImports("io.netty.channel.ChannelHandler.Sharable")
+                    .emitImports(ChannelHandlerContext.class)
                     .emitImports(Unpooled.class)
                     .emitImports(Charset.class)
                     .emitImports(HttpMethod.class)

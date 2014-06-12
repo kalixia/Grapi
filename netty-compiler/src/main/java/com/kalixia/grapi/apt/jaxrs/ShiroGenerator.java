@@ -22,7 +22,6 @@ public class ShiroGenerator {
                 .emitImports(UnauthenticatedException.class)
                 .emitImports(UnavailableSecurityManagerException.class)
                 .emitImports(ShiroHandler.class)
-                .emitImports(ChannelHandlerContext.class)
         ;
     }
 
