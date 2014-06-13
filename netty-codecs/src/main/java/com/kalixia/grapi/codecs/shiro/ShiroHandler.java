@@ -8,6 +8,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpMessage;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
@@ -47,13 +48,14 @@ public class ShiroHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof HttpMessage) {
-            HttpMessage httpMessage = (HttpMessage) msg;
+        if (msg instanceof HttpRequest) {
+            HttpRequest httpMessage = (HttpRequest) msg;
+            LOGGER.debug("Intercepting {} request on '{}'", httpMessage.getMethod(), httpMessage.getUri());
             InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-            Subject subject = (new Subject.Builder(securityManager))
-                    .host(socketAddress.getHostString())
-                    .buildSubject();
             if (httpMessage.headers().contains(AUTHORIZATION)) {
+                Subject subject = (new Subject.Builder(securityManager))
+                        .host(socketAddress.getHostString())
+                        .buildSubject();
                 String authorization = httpMessage.headers().get(AUTHORIZATION);
                 if (authorization.startsWith(BEARER)) {
                     String bearer = authorization.substring(BEARER.length());
@@ -74,8 +76,10 @@ public class ShiroHandler extends ChannelDuplexHandler {
                         return;
                     }
                 }
+                ctx.channel().attr(ATTR_SUBJECT).set(subject);
             }
-            ctx.channel().attr(ATTR_SUBJECT).set(subject);
+        } else {
+            LOGGER.debug("Ignoring unsupported message {}", msg);
         }
         super.channelRead(ctx, msg);
     }
@@ -85,13 +89,15 @@ public class ShiroHandler extends ChannelDuplexHandler {
         super.write(ctx, msg, promise);
         if (msg instanceof HttpMessage) {
             Subject subject = ctx.channel().attr(ATTR_SUBJECT).getAndRemove();
-            subject.logout();
+            if (subject != null)
+                subject.logout();
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         LOGGER.error("Unexpected error", cause);
+        cause.printStackTrace();
         ctx.close();
     }
 }
