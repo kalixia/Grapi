@@ -19,8 +19,6 @@ import org.slf4j.MDC;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +53,8 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         }
         MDC.put(MDCLogging.MDC_REQUEST_ID, requestID.toString());
 
+        LOGGER.debug("Decoding HTTP request as ApiRequest for {}", request);
+
         String contentType = request.headers().get(ACCEPT);
 
         // build headers map
@@ -71,7 +71,6 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
                 request.getUri(), request.getMethod(),
                 ReferenceCountUtil.retain(request.content()), contentType,
                 headers, ClientAddressUtil.extractClientAddress(ctx.channel().remoteAddress()));
-        LOGGER.debug("About to handle request {}", request);
         out.add(apiRequest);
     }
 
@@ -84,6 +83,8 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
      */
     @Override
     protected void encode(ChannelHandlerContext ctx, ApiResponse apiResponse, List<Object> out) throws Exception {
+        LOGGER.debug("Encoding ApiResponse as HTTP response for {}", apiResponse);
+
         FullHttpResponse httpResponse = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1,
                 apiResponse.status(),
