@@ -131,7 +131,10 @@ public class ShiroGenerator {
     public static void beginSubject(JavaWriter writer) throws IOException {
         writer
                 .beginControlFlow("try")
-                    .emitStatement("final Subject subject = ctx.channel().attr(ShiroHandler.ATTR_SUBJECT).get()");
+                    .emitStatement("final Subject subject = ctx.channel().attr(ShiroHandler.ATTR_SUBJECT).get()")
+                    .beginControlFlow("if (subject == null)")
+                        .emitStatement("throw new UnauthenticatedException(\"Shiro Subject is null\")")
+                    .endControlFlow();
     }
 
     public static void endSubject(JavaWriter writer) throws IOException {
