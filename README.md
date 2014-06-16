@@ -39,7 +39,7 @@ The project is in early stages. It's being successfully used and tested on other
 | Data conversion  | Uses Jackson in order to convert objects to the appropriate data format (XML, JSon, etc.) -- both for incoming data and outgoing data
 | JAX-RS Response  | Can partially cope with JAX-RS ``` Response ``` results.
 | WebApplicationException | Basic support.
-| CORS             | A Cross-Origin Resource Sharing (CORS) handler is available if needed
+| CORS             | Netty CorsHandler can be properly used.
 | Dagger           | Generate a Dagger module simplifying even more the use of the generated code
 | Metrics          | Expose your JAX-RS resource calls as [Metrics](http://metrics.codahale.com)
 | JSR-349 (Bean Validation 1.1) | If your JAX-RS resources are annotated with Bean Validation annotations, the handlers to check the parameters and result
@@ -136,23 +136,21 @@ This will allow you JAX-RS resources to be reached both by HTTP requests and via
 public class ApiServerChannelInitializer extends ChannelInitializer<SocketChannel> {
     private final ObjectMapper objectMapper;
     private final ChannelHandler apiProtocolSwitcher;
+    private final ShiroHandler shiroHandler;
     private final GeneratedJaxRsModuleHandler jaxRsHandlers;
-    private final EventExecutorGroup jaxRsGroup;
-    private static final ChannelHandler debugger = new MessageLoggingHandler(LogLevel.TRACE);
-    private static final ChannelHandler apiRequestLogger = new MessageLoggingHandler(RESTCodec.class, LogLevel.DEBUG);
+    private static final ChannelHandler apiRequestLogger = new LoggingHandler(RESTCodec.class, LogLevel.DEBUG);
 
     @Inject
     public ApiServerChannelInitializer(ObjectMapper objectMapper,
                                        ApiProtocolSwitcher apiProtocolSwitcher,
+                                       SecurityManager securityManager,
                                        GeneratedJaxRsModuleHandler jaxRsModuleHandler) {
-        this.objectMapper = objectMapper;
         this.apiProtocolSwitcher = apiProtocolSwitcher;
         this.jaxRsHandlers =  jaxRsModuleHandler;
+        this.shiroHandler = new ShiroHandler(securityManager);
         SimpleModule nettyModule = new SimpleModule("Netty", PackageVersion.VERSION);
         nettyModule.addSerializer(new ByteBufSerializer());
         objectMapper.registerModule(nettyModule);
-        jaxRsGroup = new DefaultEventExecutorGroup(Runtime.getRuntime().availableProcessors(),
-                new DefaultThreadFactory("jax-rs"));
     }
 
     @Override
@@ -160,20 +158,18 @@ public class ApiServerChannelInitializer extends ChannelInitializer<SocketChanne
         ChannelPipeline pipeline = ch.pipeline();
 
         pipeline.addLast("http-request-decoder", new HttpRequestDecoder());
-        pipeline.addLast("deflater", new HttpContentDecompressor());
-        pipeline.addLast("http-object-aggregator", new HttpObjectAggregator(1048576));
         pipeline.addLast("http-response-encoder", new HttpResponseEncoder());
-        pipeline.addLast("inflater", new HttpContentCompressor());
+        pipeline.addLast("http-object-aggregator", new HttpObjectAggregator(1048576));
+        pipeline.addLast("shiro", shiroHandler);
 
         // Alters the pipeline depending on either REST or WebSockets requests
         pipeline.addLast("api-protocol-switcher", apiProtocolSwitcher);
-        pipeline.addLast("debugger", debugger);
 
         // Logging handlers for API requests
         pipeline.addLast("api-request-logger", apiRequestLogger);
 
         // JAX-RS handlers
-        pipeline.addLast(jaxRsGroup, "jax-rs-handler", jaxRsHandlers);
+        pipeline.addLast("jax-rs-handlers", jaxRsHandlers);
     }
 }
 ```
@@ -197,3 +193,7 @@ For option 2, you can create your Dagger graph like so:
 ```java
 ObjectGraph objectGraph = ObjectGraph.create(new GeneratedJaxRsDaggerModule());
 ```
+
+### Shiro
+
+When enabled, Grapi will extract OAuth2 bearer tokens and authenticate the user via Shiro and Grapi's classes.
