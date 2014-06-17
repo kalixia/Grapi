@@ -2,14 +2,14 @@
 
 ### Version 0.4.2 ###
 
-This fixes some bugs.
+This release includes:
 
 * [Enhancement #4](https://github.com/kalixia/Grapi/issues/4) Scan for Shiro annotations and ensure the security constraints are met
 * [Enhancement #2](https://github.com/kalixia/Grapi/issues/2) Replaced Grapi CORSCodec with new Netty ``` CorsHandler ```
 
 ### Version 0.4.1 ###
 
-This fixes some bugs.
+This release fixes some bugs.
 
 * [Bug #1](https://github.com/kalixia/Grapi/issues/1) Fixed bug with CORSCodec when using preflight requests with Chrome
 
