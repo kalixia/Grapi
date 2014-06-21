@@ -1,9 +1,11 @@
 package com.kalixia.grapi.apt.jaxrs.model;
 
 import io.netty.handler.codec.http.HttpMethod;
+
+import java.io.Serializable;
 import java.util.Comparator;
 
-public class JaxRsMethodInfoComparator implements Comparator<JaxRsMethodInfo> {
+public class JaxRsMethodInfoComparator implements Comparator<JaxRsMethodInfo>, Serializable {
     private final UriTemplatePrecedenceComparator templateComparator = new UriTemplatePrecedenceComparator();
 
     @Override

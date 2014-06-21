@@ -2,6 +2,9 @@ package com.kalixia.grapi.apt.jaxrs.model;
 
 import javax.lang.model.element.Element;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class JaxRsMethodInfo {
@@ -21,9 +24,9 @@ public class JaxRsMethodInfo {
         this.uriTemplate = uriTemplate;
         this.methodName = methodName;
         this.returnType = returnType;
-        this.parameters = parameters;
-        this.produces = produces;
-        this.shiroAnnotations = shiroAnnotations;
+        this.parameters = new ArrayList<>(parameters);
+        this.produces = Arrays.copyOf(produces, produces.length);
+        this.shiroAnnotations = new ArrayList<>(shiroAnnotations);
     }
 
     public Element getElement() {
@@ -51,19 +54,19 @@ public class JaxRsMethodInfo {
     }
 
     public List<JaxRsParamInfo> getParameters() {
-        return parameters;
+        return new ArrayList<>(parameters);
     }
 
     public boolean hasParameters() {
-        return getParameters().size() > 0;
+        return parameters.size() > 0;
     }
 
     public String[] getProduces() {
-        return produces;
+        return Arrays.copyOf(produces, produces.length);
     }
 
     public List<Annotation> getShiroAnnotations() {
-        return shiroAnnotations;
+        return new ArrayList<>(shiroAnnotations);
     }
 
     @Override

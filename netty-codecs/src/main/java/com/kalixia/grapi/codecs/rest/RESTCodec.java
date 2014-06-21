@@ -17,12 +17,14 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.ReferenceCountUtil;
+import org.omg.CORBA.INVALID_ACTIVITY;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,9 +39,17 @@ import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
 @ChannelHandler.Sharable
 public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiResponse> {
     public static final String HEADER_REQUEST_ID = "X-Api-Request-ID";
-    private static final ByteBuf INVALID_REQUEST_ID = Unpooled.wrappedBuffer(
-            String.format("%s should be a UUID", HEADER_REQUEST_ID).getBytes());
+    private static ByteBuf INVALID_REQUEST_ID;
     private static final Logger LOGGER = LoggerFactory.getLogger(RESTCodec.class);
+
+    static {
+        try {
+            INVALID_REQUEST_ID = Unpooled.wrappedBuffer(
+                    String.format("%s should be a UUID", HEADER_REQUEST_ID).getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            INVALID_REQUEST_ID = Unpooled.EMPTY_BUFFER;
+        }
+    }
 
     /**
      * Decode a {@link FullHttpRequest} as a {@link ApiRequest}.
