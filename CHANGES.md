@@ -1,4 +1,10 @@
 # Grapi Releases #
+                 
+### Version 0.4.3 (*not yet released*) ###
+
+This release includes:
+
+* [Bug #5](https://github.com/kalixia/Grapi/issues/5) IllegalArgumentException if X-Api-Request-ID is not a valid UUID
 
 ### Version 0.4.2 ###
 

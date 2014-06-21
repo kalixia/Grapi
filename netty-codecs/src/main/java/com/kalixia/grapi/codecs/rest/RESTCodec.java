@@ -4,6 +4,9 @@ import com.kalixia.grapi.ApiRequest;
 import com.kalixia.grapi.ApiResponse;
 import com.kalixia.grapi.ClientAddressUtil;
 import com.kalixia.grapi.MDCLogging;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
@@ -11,6 +14,7 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
@@ -32,8 +36,10 @@ import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
 
 @ChannelHandler.Sharable
 public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiResponse> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RESTCodec.class);
     public static final String HEADER_REQUEST_ID = "X-Api-Request-ID";
+    private static final ByteBuf INVALID_REQUEST_ID = Unpooled.wrappedBuffer(
+            String.format("%s should be a UUID", HEADER_REQUEST_ID).getBytes());
+    private static final Logger LOGGER = LoggerFactory.getLogger(RESTCodec.class);
 
     /**
      * Decode a {@link FullHttpRequest} as a {@link ApiRequest}.
@@ -45,9 +51,16 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
     @Override
     protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, List<Object> out) throws Exception {
         UUID requestID;
-        String requestIDasString = request.headers().get("X-Api-Request-ID");
+        String requestIDasString = request.headers().get(HEADER_REQUEST_ID);
         if (requestIDasString != null && !"".equals(requestIDasString)) {
-            requestID = UUID.fromString(requestIDasString);
+            try {
+                requestID = UUID.fromString(requestIDasString);
+            } catch (Exception e) {
+                FullHttpResponse httpResponse = new DefaultFullHttpResponse(
+                        HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST, INVALID_REQUEST_ID);
+                ctx.writeAndFlush(httpResponse).addListener(ChannelFutureListener.CLOSE);
+                return;
+            }
         } else {
             requestID = UUID.randomUUID();
         }
