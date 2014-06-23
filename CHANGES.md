@@ -1,6 +1,6 @@
 # Grapi Releases #
                  
-### Version 0.4.3 (*not yet released*) ###
+### Version 0.4.3 ###
 
 This release includes:
 

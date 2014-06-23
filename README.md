@@ -28,7 +28,7 @@ The project is in early stages. It's being successfully used and tested on other
 
 ### Build Status
 
-[![Build Status](https://buildhive.cloudbees.com/job/kalixia/job/Grapi/badge/icon)](https://buildhive.cloudbees.com/job/kalixia/job/Grapi/)
+[![Build Status](https://travis-ci.org/kalixia/Grapi.svg?branch=master)](https://travis-ci.org/kalixia/Grapi)
 
 ### Working Features
 
@@ -80,13 +80,13 @@ Then you simply need to add two dependencies to your project/module (where your 
 <dependency>
     <groupId>com.kalixia.grapi</groupId>
     <artifactId>netty-codecs</artifactId>
-    <version>0.4.2</version>
+    <version>0.4.3</version>
 </dependency>
 
 <dependency>
     <groupId>com.kalixia.grapi</groupId>
     <artifactId>netty-compiler</artifactId>
-    <version>0.4.2</version>
+    <version>0.4.3</version>
 </dependency>
 ```
 
