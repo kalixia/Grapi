@@ -288,7 +288,7 @@ public class JaxRsMethodGenerator {
         }
 
         writer.emitSingleLineComment("TODO: extract expected charset from the API request instead of using the default charset");
-        writer.emitStatement("Charset charset = Charset.defaultCharset()");
+        writer.emitStatement("Charset charset = Charset.forName(\"UTF-8\")");
 
         if (useShiro) {
             List<Annotation> shiroAnnotations = methodInfo.getShiroAnnotations();
