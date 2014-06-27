@@ -330,7 +330,7 @@ public class JaxRsMethodGenerator {
                 String parameterValueSource;
                 if (uriTemplateParameter == null) {
                     // consider this is actually content to be converted to an object
-                    parameterValueSource = "request.content().toString(Charset.defaultCharset())";
+                    parameterValueSource = "request.content().toString(Charset.forName(\"UTF-8\"))";
                 } else {
                     // otherwise this is extracted parameterValueSource URI
                     parameterValueSource = String.format("parameters.get(\"%s\")", uriTemplateParameter);
