@@ -36,7 +36,7 @@ buildscript {
 
 allprojects {
     group = 'com.kalixia.grapi'
-    version = '0.4.3'
+    version = '0.4.4-SNAPSHOT'
 
 //    apply from: 'https://raw.github.com/brunodecarvalho/gradle-plugins/master/jacoco-multiproject-aggregator.gradle'
 }

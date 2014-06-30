@@ -14,8 +14,12 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.multipart.Attribute;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.util.ReferenceCountUtil;
 import org.omg.CORBA.INVALID_ACTIVITY;
 import org.slf4j.Logger;
@@ -89,11 +93,26 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
             headers.put(headerName, nettyHeaders.getAll(headerName));
         }
 
+        // build form parameters
+        MultivaluedMap<String, String> formParameters = new MultivaluedHashMap<>();
+        if (HttpMethod.POST.equals(request.getMethod())) {
+            HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(request);
+            List<InterfaceHttpData> dataList = decoder.getBodyHttpDatas();
+            for (InterfaceHttpData data : dataList) {
+                Attribute attribute = (Attribute) data;
+                String paramName = attribute.getName();
+                String paramValue = attribute.getValue();
+                formParameters.add(paramName, paramValue);
+            }
+            decoder.destroy();
+        }
+
         // build ApiRequest object
         ApiRequest apiRequest = new ApiRequest(requestID,
                 request.getUri(), request.getMethod(),
                 ReferenceCountUtil.retain(request.content()), contentType,
-                headers, ClientAddressUtil.extractClientAddress(ctx.channel().remoteAddress()));
+                headers, formParameters,
+                ClientAddressUtil.extractClientAddress(ctx.channel().remoteAddress()));
         out.add(apiRequest);
     }
 

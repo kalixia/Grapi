@@ -57,7 +57,6 @@ missing features:
 * no support for @QueryParam
 * no support for @HeaderParam
 * no support for @CookieParam
-* no support for @FormParam
 * no support for @MatrixParam
 * no support for processing Groovy sources (probably through AST transformations)
 

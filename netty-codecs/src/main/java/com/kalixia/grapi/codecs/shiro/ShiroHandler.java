@@ -67,7 +67,7 @@ public class ShiroHandler extends ChannelDuplexHandler {
                         String errorMessage = String.format("OAuth2 token '%s' is not valid.", bearer);
                         HttpResponse httpResponse = new DefaultFullHttpResponse(
                                 HttpVersion.HTTP_1_1,
-                                HttpResponseStatus.FORBIDDEN,
+                                HttpResponseStatus.UNAUTHORIZED,
                                 Unpooled.copiedBuffer(errorMessage,
                                         Charset.defaultCharset()));
                         httpResponse.headers().set(CONTENT_LENGTH, errorMessage.length());

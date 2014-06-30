@@ -1,5 +1,11 @@
 # Grapi Releases #
-                 
+
+### Version 0.4.4-SNAPSHOT ###
+
+This release includes:
+
+* [Enhancement #6](https://github.com/kalixia/Grapi/issues/6) Support @FormParam parameters extraction
+
 ### Version 0.4.3 ###
 
 This release includes:

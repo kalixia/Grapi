@@ -2,6 +2,7 @@ package com.kalixia.grapi;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
+
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.UUID;
 
@@ -15,13 +16,16 @@ import java.util.UUID;
 public class ApiRequest extends ApiObject {
     private final String uri;
     private final HttpMethod method;
+    private final MultivaluedMap<String, String> formParameters;
     private final String clientAddress;
 
     public ApiRequest(UUID id, String uri, HttpMethod method, ByteBuf content, String contentType,
-                      MultivaluedMap<String, String> headers, String clientAddress) {
+                      MultivaluedMap<String, String> headers, MultivaluedMap<String, String> formParameters,
+                      String clientAddress) {
         super(id, content, contentType, headers);
         this.uri = uri;
         this.method = method;
+        this.formParameters = formParameters;
         this.clientAddress = clientAddress;
     }
 
@@ -31,6 +35,10 @@ public class ApiRequest extends ApiObject {
 
     public HttpMethod method() {
         return method;
+    }
+
+    public String formParameter(String parameter) {
+        return formParameters.getFirst(parameter);
     }
 
     public String clientAddress() {

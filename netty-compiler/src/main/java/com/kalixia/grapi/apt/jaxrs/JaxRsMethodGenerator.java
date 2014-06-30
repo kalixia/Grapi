@@ -19,6 +19,7 @@ import org.apache.shiro.authz.annotation.RequiresGuest;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.authz.annotation.RequiresUser;
+import org.apache.shiro.subject.Subject;
 
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
@@ -30,6 +31,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -322,20 +324,25 @@ public class JaxRsMethodGenerator {
 
         // check if JAX-RS resource method has parameters; if so extract them from URI
         if (methodInfo.hasParameters()) {
-            writer.emitSingleLineComment("Extract parameters from URI");
+            writer.emitSingleLineComment("Extract parameters from request");
             writer.emitStatement("Map<String, String> parameters = UriTemplateUtils.extractParameters(URI_TEMPLATE, request.uri())");
             // extract each parameter
             for (JaxRsParamInfo parameter : methodInfo.getParameters()) {
-                String uriTemplateParameter = parametersMap.get(parameter.getName());
                 String parameterValueSource;
-                if (uriTemplateParameter == null) {
-                    // consider this is actually content to be converted to an object
-                    parameterValueSource = "request.content().toString(Charset.forName(\"UTF-8\"))";
+                if (parameter.getElement().getAnnotation(FormParam.class) != null) {
+                    FormParam formParam = parameter.getElement().getAnnotation(FormParam.class);
+                    writer.emitSingleLineComment("extract form param '%s'", parameter.getName());
+                    parameterValueSource = String.format("request.formParameter(\"%s\")", formParam.value());
                 } else {
-                    // otherwise this is extracted parameterValueSource URI
-                    parameterValueSource = String.format("parameters.get(\"%s\")", uriTemplateParameter);
+                    String uriTemplateParameter = parametersMap.get(parameter.getName());
+                    if (uriTemplateParameter == null) {
+                        // consider this is actually content to be converted to an object
+                        parameterValueSource = "request.content().toString(Charset.forName(\"UTF-8\"))";
+                    } else {
+                        // otherwise this is extracted parameterValueSource URI
+                        parameterValueSource = String.format("parameters.get(\"%s\")", uriTemplateParameter);
+                    }
                 }
-
                 TypeMirror type = parameter.getType();
                 if (String.class.getName().equals(type.toString())) {
                     writer.emitStatement("String %s = %s",
