@@ -1,6 +1,12 @@
 # Grapi Releases #
 
-### Version 0.4.4-SNAPSHOT ###
+### Version 0.4.5-SNAPSHOT ###
+
+This release includes:
+
+* [Enhancement #12](https://github.com/kalixia/Grapi/issues/12) Hystrix Turbine stream as a Netty handler
+
+### Version 0.4.4 ###
 
 This release includes:
 
