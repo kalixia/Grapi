@@ -2,7 +2,7 @@ subprojects {
     apply plugin: 'findbugs'
 
     findbugs {
-        toolVersion = "2.0.3"
+        toolVersion = '3.0.0'
         sourceSets = [sourceSets.main]
         ignoreFailures = false
 //        reportsDir = file("$project.buildDir/findbugsReports")
