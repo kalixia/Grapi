@@ -461,6 +461,7 @@ public class JaxRsMethodGenerator {
         else
             writer.nextControlFlow("catch (IllegalArgumentException e)");
         writer
+                    .emitStatement("LOGGER.error(\"Bad request\", e)")
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST, " +
                             "Unpooled.copiedBuffer(e.getMessage(), charset), MediaType.TEXT_PLAIN)")
                 .nextControlFlow("catch (WebApplicationException e)")
