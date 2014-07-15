@@ -8,7 +8,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'jacoco'
     jacoco {
-        toolVersion = "0.7.0.201403182114"
+        toolVersion = "0.7.1.201405082137"
     }
     test {
         jacoco {
