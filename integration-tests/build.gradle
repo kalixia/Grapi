@@ -7,8 +7,8 @@ dependencies {
     compile 'com.squareup.dagger:dagger-compiler:1.2.1'
     compile 'com.codahale.metrics:metrics-core:3.0.2'
     compile 'com.codahale.metrics:metrics-annotation:3.0.2'
-    compile 'com.netflix.rxjava:rxjava-core:0.16.1'
-    compile 'com.netflix.rxjava:rxjava-groovy:0.16.1'
+    compile 'com.netflix.rxjava:rxjava-core:0.19.6'
+    compile 'com.netflix.rxjava:rxjava-groovy:0.19.6'
 
     apt project(':netty-compiler')
     apt 'com.squareup.dagger:dagger-compiler:1.2.1'

@@ -1,5 +1,5 @@
 dependencies {
-    compile 'io.netty:netty-all:4.0.20.Final'
+    compile 'io.netty:netty-all:4.1.0.Beta1'
     compile 'org.javassist:javassist:3.18.1-GA'
     compile 'javax.ws.rs:javax.ws.rs-api:2.0'
     compile 'org.glassfish.jersey.core:jersey-common:2.8'
