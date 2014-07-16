@@ -22,4 +22,12 @@ public class OAuth2Token implements AuthenticationToken {
     public Object getCredentials() {
         return token;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("OAuth2Token{");
+        sb.append("token='").append(token).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

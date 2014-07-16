@@ -21,13 +21,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.charset.Charset;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.AUTHORIZATION;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
 
 /**
  * <a href="http://shiro.apache.org">Shiro</a> handler exposing the {@link Subject}
@@ -38,11 +37,13 @@ import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
 @ChannelHandler.Sharable
 public class ShiroHandler extends ChannelDuplexHandler {
     private final SecurityManager securityManager;
-    private static final String BEARER = "Bearer ";
     private static final Logger LOGGER = LoggerFactory.getLogger(ShiroHandler.class);
+    public static final String BEARER = "Bearer ";
     public static final AttributeKey<Subject> ATTR_SUBJECT = AttributeKey.valueOf("SHIRO_SUBJECT");
 
     public ShiroHandler(SecurityManager securityManager) {
+        if (securityManager == null)
+            throw new NullPointerException("Shiro security manager can't be null");
         this.securityManager = securityManager;
     }
 
@@ -51,10 +52,15 @@ public class ShiroHandler extends ChannelDuplexHandler {
         if (msg instanceof HttpRequest) {
             HttpRequest httpMessage = (HttpRequest) msg;
             LOGGER.debug("Intercepting {} request on '{}'", httpMessage.getMethod(), httpMessage.getUri());
-            InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+            SocketAddress socketAddress = ctx.channel().remoteAddress();
+            String remoteHost;
+            if (socketAddress instanceof InetSocketAddress)
+                remoteHost = ((InetSocketAddress) socketAddress).getHostString();
+            else
+                remoteHost = "";
             if (httpMessage.headers().contains(AUTHORIZATION)) {
                 Subject subject = (new Subject.Builder(securityManager))
-                        .host(socketAddress.getHostString())
+                        .host(remoteHost)
                         .buildSubject();
                 String authorization = httpMessage.headers().get(AUTHORIZATION);
                 if (authorization.startsWith(BEARER)) {
@@ -62,6 +68,7 @@ public class ShiroHandler extends ChannelDuplexHandler {
                     OAuth2Token token = new OAuth2Token(bearer);
                     try {
                         subject.login(token);
+                        ctx.channel().attr(ATTR_SUBJECT).set(subject);
                     } catch (AuthenticationException e) {
                         LOGGER.error("Can't authenticate user with OAuth2 token '{}'", bearer);
                         String errorMessage = String.format("OAuth2 token '%s' is not valid.", bearer);
@@ -76,7 +83,6 @@ public class ShiroHandler extends ChannelDuplexHandler {
                         return;
                     }
                 }
-                ctx.channel().attr(ATTR_SUBJECT).set(subject);
             }
         } else {
             LOGGER.debug("Ignoring unsupported message {}", msg);
