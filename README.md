@@ -91,7 +91,7 @@ Then you simply need to add two dependencies to your project/module (where your 
 
 ## Configuration
 
-There are currently two options available:
+There are currently three options available:
 
 | Option  | Description
 |---------|------------
