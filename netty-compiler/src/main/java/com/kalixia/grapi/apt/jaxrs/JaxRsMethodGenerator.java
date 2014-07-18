@@ -30,6 +30,7 @@ import javax.tools.JavaFileObject;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.ws.rs.FormParam;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -338,6 +339,10 @@ public class JaxRsMethodGenerator {
                     QueryParam queryParam = parameter.getElement().getAnnotation(QueryParam.class);
                     writer.emitSingleLineComment("Extract query param '%s'", queryParam.value());
                     parameterValueSource = String.format("request.queryParameter(\"%s\")", queryParam.value());
+                } else if (parameter.getElement().getAnnotation(HeaderParam.class) != null) {
+                    HeaderParam headerParam = parameter.getElement().getAnnotation(HeaderParam.class);
+                    writer.emitSingleLineComment("Extract header param '%s'", headerParam.value());
+                    parameterValueSource = String.format("request.headerParameter(\"%s\")", headerParam.value());
                 } else {
                     String uriTemplateParameter = parametersMap.get(parameter.getName());
                     if (uriTemplateParameter == null) {
@@ -364,7 +369,9 @@ public class JaxRsMethodGenerator {
                     typeClassName = typeClassName.substring("java.lang.".length());
                 }
                 TypeMirror type = parameter.getType();
-                if (type.getKind().isPrimitive()) {
+                if (String.class.getSimpleName().equals(typeClassName)) {
+                    writer.emitStatement("String %s = %s", parameter.getName(), parameterValueSource);
+                } else if (type.getKind().isPrimitive()) {
                     char firstChar = type.toString().charAt(0);
                     String shortName = Character.toUpperCase(firstChar) + type.toString().substring(1);
                     switch (type.getKind()) {

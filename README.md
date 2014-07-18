@@ -35,7 +35,7 @@ The project is in early stages. It's being successfully used and tested on other
 | Feature                       | Description
 |-------------------------------|----------------------------------------------------------------------------------------------------
 | @Path                         | Full working with all HTTP verbs, URI templates and path precedence rules
-| @QueryParam, @FormParam       | Proper extraction from HTTP requests
+| @QueryParam, @FormParam, @HeaderParam | Proper extraction from HTTP requests
 | @Produces                     | Correctly expose your resources with the proper content-type
 | Data conversion               | Uses Jackson in order to convert objects to the appropriate data format (XML, JSon, etc.) -- both for incoming data and outgoing data
 | JAX-RS Response               | Can partially cope with JAX-RS ``` Response ``` results.
@@ -51,11 +51,9 @@ The project is in early stages. It's being successfully used and tested on other
 They are though some few limitations worth knowing. These limitations will be taken care of and are only
 missing features:
 
-* basic support for JAX-RS exceptions
 * the WS stack is highly experimental at the moment
 * no support for UriInfo injection and UriBuilder
 * no support for @Consumes
-* no support for @HeaderParam
 * no support for @CookieParam
 * no support for @MatrixParam
 * no support for processing Groovy sources (probably through AST transformations)

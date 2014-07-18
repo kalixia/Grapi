@@ -66,7 +66,8 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
     @Override
     protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, List<Object> out) throws Exception {
         UUID requestID;
-        String requestIDasString = request.headers().get(HEADER_REQUEST_ID);
+        HttpHeaders requestHeaders = request.headers();
+        String requestIDasString = requestHeaders.get(HEADER_REQUEST_ID);
         if (requestIDasString != null && !"".equals(requestIDasString)) {
             try {
                 requestID = UUID.fromString(requestIDasString);
@@ -83,15 +84,12 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
 
         LOGGER.debug("Decoding HTTP request as ApiRequest for {}", request);
 
-        String contentType = request.headers().get(ACCEPT);
+        String contentType = requestHeaders.get(ACCEPT);
 
         // build headers map
         MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
-        HttpHeaders nettyHeaders = request.headers();
-        Iterator<String> iterator = nettyHeaders.names().iterator();
-        while (iterator.hasNext()) {
-            String headerName = iterator.next();
-            headers.put(headerName, nettyHeaders.getAll(headerName));
+        for (Map.Entry<String, String> header : requestHeaders) {
+            headers.add(header.getKey(), header.getValue());
         }
 
         // build form parameters

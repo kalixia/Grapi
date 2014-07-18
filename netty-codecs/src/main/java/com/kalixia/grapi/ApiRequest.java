@@ -18,6 +18,7 @@ public class ApiRequest extends ApiObject {
     private final HttpMethod method;
     private final MultivaluedMap<String, String> formParameters;
     private final MultivaluedMap<String, String> queryParameters;
+    private final MultivaluedMap<String, String> headers;
     private final String clientAddress;
 
     public ApiRequest(UUID id, String uri, HttpMethod method, ByteBuf content, String contentType,
@@ -30,6 +31,7 @@ public class ApiRequest extends ApiObject {
         this.method = method;
         this.formParameters = formParameters;
         this.queryParameters = queryParameters;
+        this.headers = headers;
         this.clientAddress = clientAddress;
     }
 
@@ -47,6 +49,10 @@ public class ApiRequest extends ApiObject {
 
     public String queryParameter(String parameter) {
         return queryParameters.getFirst(parameter);
+    }
+
+    public String headerParameter(String parameter) {
+        return headers.getFirst(parameter);
     }
 
     public String clientAddress() {
