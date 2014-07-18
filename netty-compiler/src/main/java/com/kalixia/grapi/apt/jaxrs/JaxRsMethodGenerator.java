@@ -29,6 +29,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import javax.ws.rs.CookieParam;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.QueryParam;
@@ -344,6 +345,10 @@ public class JaxRsMethodGenerator {
                     HeaderParam headerParam = parameter.getElement().getAnnotation(HeaderParam.class);
                     writer.emitSingleLineComment("Extract header param '%s'", headerParam.value());
                     parameterValueSource = String.format("request.headerParameter(\"%s\")", headerParam.value());
+                } else if (parameter.getElement().getAnnotation(CookieParam.class) != null) {
+                    CookieParam cookieParam = parameter.getElement().getAnnotation(CookieParam.class);
+                    writer.emitSingleLineComment("Extract cookie param '%s'", cookieParam.value());
+                    parameterValueSource = String.format("request.cookieParameter(\"%s\")", cookieParam.value());
                 } else {
                     String uriTemplateParameter = parametersMap.get(parameter.getName());
                     if (uriTemplateParameter == null) {

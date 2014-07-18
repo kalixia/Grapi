@@ -10,6 +10,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
+import io.netty.handler.codec.http.Cookie;
+import io.netty.handler.codec.http.CookieDecoder;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -39,6 +41,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.ACCEPT;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
 import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
 
 @ChannelHandler.Sharable
@@ -114,23 +117,19 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
             queryParameters.addAll(param.getKey(), param.getValue());
         }
 
-        if (HttpMethod.POST.equals(request.getMethod())) {
-            HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(request);
-            List<InterfaceHttpData> dataList = decoder.getBodyHttpDatas();
-            for (InterfaceHttpData data : dataList) {
-                Attribute attribute = (Attribute) data;
-                String paramName = attribute.getName();
-                String paramValue = attribute.getValue();
-                formParameters.add(paramName, paramValue);
-            }
-            decoder.destroy();
+        // build cookie parameters
+        MultivaluedMap<String, String> cookies = new MultivaluedHashMap<>();
+        String cookiesHeader = requestHeaders.get(COOKIE);
+        Set<Cookie> rawCookies = CookieDecoder.decode(cookiesHeader);
+        for (Cookie cookie : rawCookies) {
+            cookies.add(cookie.getName(), cookie.getValue());
         }
 
         // build ApiRequest object
         ApiRequest apiRequest = new ApiRequest(requestID,
                 request.getUri(), request.getMethod(),
                 ReferenceCountUtil.retain(request.content()), contentType,
-                headers, formParameters, queryParameters,
+                headers, formParameters, queryParameters, cookies,
                 ClientAddressUtil.extractClientAddress(ctx.channel().remoteAddress()));
         out.add(apiRequest);
     }

@@ -48,11 +48,13 @@ public class WebSocketsApiRequestDecoder extends MessageToMessageDecoder<TextWeb
         UUID requestID = wsRequest.getId() != null ? wsRequest.getId() : UUID.randomUUID();
         MDC.put(MDCLogging.MDC_REQUEST_ID, requestID.toString());
 
-        // TODO: find a way to expose headers
         MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
         out.add(new ApiRequest(requestID, wsRequest.getPath(),
                 HttpMethod.valueOf(wsRequest.getMethod()), content, MediaType.APPLICATION_JSON,
-                headers, new MultivaluedHashMap<String, String>(), new MultivaluedHashMap<String, String>(),
+                headers,
+                new MultivaluedHashMap<String, String>(),
+                new MultivaluedHashMap<String, String>(),
+                new MultivaluedHashMap<String, String>(),
                 ClientAddressUtil.extractClientAddress(ctx.channel().remoteAddress())));
     }
 
