@@ -270,6 +270,7 @@ public class JaxRsMethodGenerator {
         return writer.endMethod();
     }
 
+    @SuppressWarnings("PMD.EmptyCatchBlock")
     private JavaWriter generateHandleMethod(JavaWriter writer, JaxRsMethodInfo methodInfo, String resourceClassName)
             throws IOException {
         writer.emitEmptyLine();
