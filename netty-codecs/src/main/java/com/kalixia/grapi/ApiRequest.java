@@ -17,15 +17,19 @@ public class ApiRequest extends ApiObject {
     private final String uri;
     private final HttpMethod method;
     private final MultivaluedMap<String, String> formParameters;
+    private final MultivaluedMap<String, String> queryParameters;
     private final String clientAddress;
 
     public ApiRequest(UUID id, String uri, HttpMethod method, ByteBuf content, String contentType,
-                      MultivaluedMap<String, String> headers, MultivaluedMap<String, String> formParameters,
+                      MultivaluedMap<String, String> headers,
+                      MultivaluedMap<String, String> formParameters,
+                      MultivaluedMap<String, String> queryParameters,
                       String clientAddress) {
         super(id, content, contentType, headers);
         this.uri = uri;
         this.method = method;
         this.formParameters = formParameters;
+        this.queryParameters = queryParameters;
         this.clientAddress = clientAddress;
     }
 
@@ -39,6 +43,10 @@ public class ApiRequest extends ApiObject {
 
     public String formParameter(String parameter) {
         return formParameters.getFirst(parameter);
+    }
+
+    public String queryParameter(String parameter) {
+        return queryParameters.getFirst(parameter);
     }
 
     public String clientAddress() {

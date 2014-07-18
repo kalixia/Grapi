@@ -5,6 +5,7 @@
 This release includes:
 
 * [Enhancement #6](https://github.com/kalixia/Grapi/issues/6) Support @FormParam parameters extraction
+* [Enhancement #7](https://github.com/kalixia/Grapi/issues/7) Support @QueryParam parameters extraction
 
 ### Version 0.4.3 ###
 

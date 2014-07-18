@@ -17,6 +17,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.multipart.Attribute;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
@@ -28,10 +29,15 @@ import org.slf4j.MDC;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.ACCEPT;
@@ -107,11 +113,31 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
             decoder.destroy();
         }
 
+        // build query parameters
+        MultivaluedMap<String, String> queryParameters = new MultivaluedHashMap<>();
+        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.getUri());
+        Set<Map.Entry<String, List<String>>> params = queryStringDecoder.parameters().entrySet();
+        for (Map.Entry<String, List<String>> param : params) {
+            queryParameters.addAll(param.getKey(), param.getValue());
+        }
+
+        if (HttpMethod.POST.equals(request.getMethod())) {
+            HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(request);
+            List<InterfaceHttpData> dataList = decoder.getBodyHttpDatas();
+            for (InterfaceHttpData data : dataList) {
+                Attribute attribute = (Attribute) data;
+                String paramName = attribute.getName();
+                String paramValue = attribute.getValue();
+                formParameters.add(paramName, paramValue);
+            }
+            decoder.destroy();
+        }
+
         // build ApiRequest object
         ApiRequest apiRequest = new ApiRequest(requestID,
                 request.getUri(), request.getMethod(),
                 ReferenceCountUtil.retain(request.content()), contentType,
-                headers, formParameters,
+                headers, formParameters, queryParameters,
                 ClientAddressUtil.extractClientAddress(ctx.channel().remoteAddress()));
         out.add(apiRequest);
     }

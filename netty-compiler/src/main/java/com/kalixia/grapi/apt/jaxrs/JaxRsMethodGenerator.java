@@ -32,6 +32,7 @@ import javax.tools.JavaFileObject;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.ws.rs.FormParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -331,8 +332,12 @@ public class JaxRsMethodGenerator {
                 String parameterValueSource;
                 if (parameter.getElement().getAnnotation(FormParam.class) != null) {
                     FormParam formParam = parameter.getElement().getAnnotation(FormParam.class);
-                    writer.emitSingleLineComment("extract form param '%s'", parameter.getName());
+                    writer.emitSingleLineComment("Extract form param '%s'", formParam.value());
                     parameterValueSource = String.format("request.formParameter(\"%s\")", formParam.value());
+                } else if (parameter.getElement().getAnnotation(QueryParam.class) != null) {
+                    QueryParam queryParam = parameter.getElement().getAnnotation(QueryParam.class);
+                    writer.emitSingleLineComment("Extract query param '%s'", queryParam.value());
+                    parameterValueSource = String.format("request.queryParameter(\"%s\")", queryParam.value());
                 } else {
                     String uriTemplateParameter = parametersMap.get(parameter.getName());
                     if (uriTemplateParameter == null) {

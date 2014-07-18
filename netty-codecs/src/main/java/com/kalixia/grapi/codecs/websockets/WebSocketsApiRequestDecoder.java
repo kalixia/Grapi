@@ -54,7 +54,7 @@ public class WebSocketsApiRequestDecoder extends MessageToMessageDecoder<TextWeb
         MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
         out.add(new ApiRequest(requestID, wsRequest.getPath(),
                 HttpMethod.valueOf(wsRequest.getMethod()), content, MediaType.APPLICATION_JSON,
-                headers, new MultivaluedHashMap<String, String>(),
+                headers, new MultivaluedHashMap<String, String>(), new MultivaluedHashMap<String, String>(),
                 ClientAddressUtil.extractClientAddress(ctx.channel().remoteAddress())));
     }
 

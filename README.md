@@ -54,7 +54,6 @@ missing features:
 * the WS stack is highly experimental at the moment
 * no support for UriInfo injection and UriBuilder
 * no support for @Consumes
-* no support for @QueryParam
 * no support for @HeaderParam
 * no support for @CookieParam
 * no support for @MatrixParam
