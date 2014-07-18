@@ -32,16 +32,17 @@ The project is in early stages. It's being successfully used and tested on other
 
 ### Working Features
 
-| Feature          | Description
-|------------------|----------------------------------------------------------------------------------------------------
-| @Path            | Full working with all HTTP verbs, URI templates and path precedence rules
-| @Produces        | Correctly expose your resources with the proper content-type
-| Data conversion  | Uses Jackson in order to convert objects to the appropriate data format (XML, JSon, etc.) -- both for incoming data and outgoing data
-| JAX-RS Response  | Can partially cope with JAX-RS ``` Response ``` results.
-| WebApplicationException | Basic support.
-| CORS             | Netty CorsHandler can be properly used.
-| Dagger           | Generate a Dagger module simplifying even more the use of the generated code
-| Metrics          | Expose your JAX-RS resource calls as [Metrics](http://metrics.codahale.com)
+| Feature                       | Description
+|-------------------------------|----------------------------------------------------------------------------------------------------
+| @Path                         | Full working with all HTTP verbs, URI templates and path precedence rules
+| @QueryParam, @FormParam       | Proper extraction from HTTP requests
+| @Produces                     | Correctly expose your resources with the proper content-type
+| Data conversion               | Uses Jackson in order to convert objects to the appropriate data format (XML, JSon, etc.) -- both for incoming data and outgoing data
+| JAX-RS Response               | Can partially cope with JAX-RS ``` Response ``` results.
+| WebApplicationException       | Basic support.
+| CORS                          | Netty CorsHandler can be properly used.
+| Dagger                        | Generate a Dagger module simplifying even more the use of the generated code
+| Metrics                       | Expose your JAX-RS resource calls as [Metrics](http://metrics.codahale.com)
 | JSR-349 (Bean Validation 1.1) | If your JAX-RS resources are annotated with Bean Validation annotations, the handlers to check the parameters and result
 
 
