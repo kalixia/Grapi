@@ -1,3 +1,10 @@
 subprojects {
     apply plugin: 'pmd'
+    pmd {
+        //toolVersion = '5.1.1'
+        //ruleSets = ["design"]
+        ruleSets = [
+            "basic", "braces", "controversial", "coupling", "imports", "strings", "typeresolution", "unusedcode"
+        ]
+    }
 }

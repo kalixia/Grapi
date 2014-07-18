@@ -59,7 +59,7 @@ public class ShiroHandler extends ChannelDuplexHandler {
             else
                 remoteHost = "";
             if (httpMessage.headers().contains(AUTHORIZATION)) {
-                Subject subject = (new Subject.Builder(securityManager))
+                Subject subject = new Subject.Builder(securityManager)
                         .host(remoteHost)
                         .buildSubject();
                 String authorization = httpMessage.headers().get(AUTHORIZATION);

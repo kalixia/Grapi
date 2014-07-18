@@ -19,6 +19,6 @@ public interface GeneratedJaxRsMethodHandler {
      * @param ctx     the channel context on which the request is made
      * @return the {@link} ApiResponse
      */
-    ApiResponse handle(ApiRequest request, ChannelHandlerContext ctx) throws Exception;
+    ApiResponse handle(ApiRequest request, ChannelHandlerContext ctx);
 
 }
