@@ -2,7 +2,6 @@ package com.kalixia.grapi.apt.jaxrs;
 
 import com.kalixia.grapi.codecs.shiro.ShiroHandler;
 import com.squareup.javawriter.JavaWriter;
-import io.netty.channel.ChannelHandlerContext;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.authz.UnauthenticatedException;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;

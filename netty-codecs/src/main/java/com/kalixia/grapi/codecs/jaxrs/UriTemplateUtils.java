@@ -1,6 +1,7 @@
 package com.kalixia.grapi.codecs.jaxrs;
 
 import org.glassfish.jersey.uri.UriTemplate;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;

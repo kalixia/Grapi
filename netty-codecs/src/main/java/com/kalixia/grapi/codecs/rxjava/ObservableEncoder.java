@@ -17,7 +17,6 @@ import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 
-import javax.inject.Inject;
 import java.nio.charset.Charset;
 import java.util.List;
 

@@ -8,7 +8,6 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.inject.Singleton;
 import javax.lang.model.element.Modifier;
-import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -21,8 +20,8 @@ import java.util.SortedSet;
 
 import static com.squareup.javawriter.JavaWriter.stringLiteral;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.tools.Diagnostic.Kind.*;
 import static javax.tools.Diagnostic.Kind.ERROR;
+import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
 
 public class JaxRsDaggerModuleGenerator {
     private final Filer filer;

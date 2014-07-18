@@ -2,7 +2,6 @@ package com.kalixia.grapi.codecs.jaxrs;
 
 import com.kalixia.grapi.ApiRequest;
 import com.kalixia.grapi.ApiResponse;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 
 public interface GeneratedJaxRsMethodHandler {

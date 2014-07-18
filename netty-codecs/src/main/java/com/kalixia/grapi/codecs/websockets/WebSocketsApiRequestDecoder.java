@@ -19,8 +19,6 @@ import org.slf4j.MDC;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.List;
 import java.util.UUID;
 

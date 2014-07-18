@@ -12,4 +12,16 @@ public class QueryParamResource {
         return msg;
     }
 
+    @GET
+    @Path("/number")
+    String echoNumber(@QueryParam("number") Integer number) {
+        return number.toString();
+    }
+
+    @GET
+    @Path("/number-primitive")
+    String echoNumberPrimitive(@QueryParam("number") int number) {
+        return Integer.toString(number);
+    }
+
 }

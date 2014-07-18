@@ -1,6 +1,7 @@
 package com.kalixia.grapi.apt.jaxrs.model;
 
 import com.kalixia.grapi.codecs.jaxrs.UriTemplateUtils;
+
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.List;

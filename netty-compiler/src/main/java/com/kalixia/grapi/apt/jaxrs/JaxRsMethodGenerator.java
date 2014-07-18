@@ -19,7 +19,6 @@ import org.apache.shiro.authz.annotation.RequiresGuest;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.authz.annotation.RequiresUser;
-import org.apache.shiro.subject.Subject;
 
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
@@ -27,7 +26,6 @@ import javax.annotation.processing.Messager;
 import javax.inject.Inject;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -42,6 +40,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -57,6 +56,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static javax.tools.Diagnostic.Kind.ERROR;
 
 public class JaxRsMethodGenerator {
     private final Filer filer;
@@ -182,7 +182,7 @@ public class JaxRsMethodGenerator {
                 try {
                     handlerWriter.close();
                 } catch (IOException e) {
-                    messager.printMessage(Diagnostic.Kind.ERROR, "Can't close generated source file");
+                    messager.printMessage(ERROR, "Can't close generated source file");
                 }
             }
         }
@@ -310,7 +310,7 @@ public class JaxRsMethodGenerator {
                     } else if (annotationType.isAssignableFrom(RequiresAuthentication.class)) {
                         ShiroGenerator.generateShiroCodeForRequiresAuthenticationCheck(writer, (RequiresAuthentication) shiroAnnotation);
                     } else {
-                        messager.printMessage(Diagnostic.Kind.ERROR, "Can't process annotation of type " + annotationType.getSimpleName());
+                        messager.printMessage(ERROR, "Can't process annotation of type " + annotationType.getSimpleName());
                         return writer;
                     }
                 }
@@ -348,19 +348,41 @@ public class JaxRsMethodGenerator {
                         parameterValueSource = String.format("parameters.get(\"%s\")", uriTemplateParameter);
                     }
                 }
+
+                String typeClassName = parameter.getElement().asType().toString();
+                Method typeValueOfMethod = null;
+                Constructor<?> typeConstructorFromString = null;
+                try {
+                    Class<?> typeClass = Class.forName(typeClassName);
+                    typeValueOfMethod = typeClass.getMethod("valueOf", String.class);
+                    typeConstructorFromString = typeClass.getConstructor(String.class);
+                } catch (Exception e) {
+                    // ignore
+                }
+
+                if (typeClassName.startsWith("java.lang.")) {
+                    typeClassName = typeClassName.substring("java.lang.".length());
+                }
                 TypeMirror type = parameter.getType();
-                if (String.class.getName().equals(type.toString())) {
-                    writer.emitStatement("String %s = %s",
-                            parameter.getName(), parameterValueSource);
-                } else if (type.toString().startsWith("java.lang")) {
-                    String shortName = type.toString().substring(type.toString().lastIndexOf('.') + 1);
-                    writer.emitStatement("%s %s = %s.parse%s(%s)",
-                            shortName, parameter.getName(), shortName, shortName, parameterValueSource);
-                } else if (type.getKind().isPrimitive()) {
+                if (type.getKind().isPrimitive()) {
                     char firstChar = type.toString().charAt(0);
                     String shortName = Character.toUpperCase(firstChar) + type.toString().substring(1);
-                    writer.emitStatement("%s %s = %s.parse%s(%s)",
-                            type, parameter.getName(), shortName, shortName, parameterValueSource);
+                    switch (type.getKind()) {
+                        case INT:
+                            writer.emitStatement("%s %s = %s.parse%s(%s)", type, parameter.getName(),
+                                    Integer.class.getSimpleName(), shortName,
+                                    parameterValueSource);
+                            break;
+                        default:
+                            writer.emitStatement("%s %s = %s.parse%s(%s)", type, parameter.getName(),
+                                    shortName, shortName, parameterValueSource);
+                    }
+                } else if (typeValueOfMethod != null) {
+                    writer.emitStatement("%s %s = %s.valueOf(%s)",
+                            typeClassName, parameter.getName(), typeClassName, parameterValueSource);
+                } else if (typeConstructorFromString != null) {
+                    writer.emitStatement("%s %s = new %s(%s)",
+                        typeClassName, parameter.getName(), typeClassName, parameterValueSource);
                 } else {
                     writer.emitStatement("%s %s = objectMapper.readValue(%s, %s.class)",
                             type, parameter.getName(), parameterValueSource, type);

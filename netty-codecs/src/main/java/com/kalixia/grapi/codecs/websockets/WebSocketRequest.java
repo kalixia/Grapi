@@ -2,6 +2,7 @@ package com.kalixia.grapi.codecs.websockets;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.UUID;
 
 /**
