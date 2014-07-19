@@ -120,9 +120,11 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         // build cookie parameters
         MultivaluedMap<String, String> cookies = new MultivaluedHashMap<>();
         String cookiesHeader = requestHeaders.get(COOKIE);
-        Set<Cookie> rawCookies = CookieDecoder.decode(cookiesHeader);
-        for (Cookie cookie : rawCookies) {
-            cookies.add(cookie.getName(), cookie.getValue());
+        if (cookiesHeader != null) {
+            Set<Cookie> rawCookies = CookieDecoder.decode(cookiesHeader);
+            for (Cookie cookie : rawCookies) {
+                cookies.add(cookie.getName(), cookie.getValue());
+            }
         }
 
         // build ApiRequest object
