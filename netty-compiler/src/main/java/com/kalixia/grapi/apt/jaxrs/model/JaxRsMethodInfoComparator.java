@@ -13,12 +13,9 @@ public class JaxRsMethodInfoComparator implements Comparator<JaxRsMethodInfo>, S
         // compare verbs first
         HttpMethod verb1 = HttpMethod.valueOf(method1.getVerb());
         HttpMethod verb2 = HttpMethod.valueOf(method2.getVerb());
-        if (!verb1.equals(verb2)) {
-            return verb1.compareTo(verb2);
-        }
-
-        // finally compare URI templates
-        return templateComparator.compare(method1.getUriTemplate(), method2.getUriTemplate());
+        return verb1.equals(verb2) ?
+                templateComparator.compare(method1.getUriTemplate(), method2.getUriTemplate())
+                : verb1.compareTo(verb2);
     }
 
 }

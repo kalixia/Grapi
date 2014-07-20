@@ -25,6 +25,7 @@ import java.util.UUID;
 /**
  * Transforms {@link WebSocketFrame} objects to {@link ApiRequest} ones.
  */
+@SuppressWarnings("PMD.AvoidPrefixingMethodParameters")
 public class WebSocketsApiRequestDecoder extends MessageToMessageDecoder<TextWebSocketFrame> {
     private final ObjectMapper mapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketsApiRequestDecoder.class);
@@ -40,10 +41,11 @@ public class WebSocketsApiRequestDecoder extends MessageToMessageDecoder<TextWeb
 
         // extract entity, if available
         ByteBuf content;
-        if (wsRequest.getEntity() != null)
+        if (wsRequest.getEntity() != null) {
             content = Unpooled.copiedBuffer(wsRequest.getEntity().getBytes(CharsetUtil.UTF_8));
-        else
+        } else {
             content = Unpooled.EMPTY_BUFFER;
+        }
 
         UUID requestID = wsRequest.getId() != null ? wsRequest.getId() : UUID.randomUUID();
         MDC.put(MDCLogging.MDC_REQUEST_ID, requestID.toString());

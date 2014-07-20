@@ -23,6 +23,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
 
+@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class JaxRsDaggerModuleGenerator {
     private final Filer filer;
     private final Messager messager;
@@ -40,8 +41,9 @@ public class JaxRsDaggerModuleGenerator {
     }
 
     public void generateDaggerModule(String destPackage, SortedSet<String> generatedHandlers) {
-        if (!useDagger)
+        if (!useDagger) {
             return;
+        }
         Writer handlerWriter = null;
         try {
             // TODO: only uppercase the first character
@@ -74,8 +76,9 @@ public class JaxRsDaggerModuleGenerator {
 
             generateValidationFactoryMethod(writer);
             generateValidatorMethod(writer);
-            if (useMetrics)
+            if (useMetrics) {
                 generateProvideMetricRegistryMethod(writer);
+            }
 
             // end class
             writer.endType();

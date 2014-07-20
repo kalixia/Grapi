@@ -18,49 +18,56 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.OnlyOneReturn"})
 class JaxRsAnalyzer {
 
-    String extractVerb(Element elem) {
+    public String extractVerb(Element elem) {
         Annotation annotation;
 
         // check for GET method
         annotation = elem.getAnnotation(GET.class);
-        if (annotation != null)
+        if (annotation != null) {
             return HttpMethod.GET;
+        }
 
         // check for POST method
         annotation = elem.getAnnotation(POST.class);
-        if (annotation != null)
+        if (annotation != null) {
             return HttpMethod.POST;
+        }
 
         // check for PUT method
         annotation = elem.getAnnotation(PUT.class);
-        if (annotation != null)
+        if (annotation != null) {
             return HttpMethod.PUT;
+        }
 
         // check for DELETE method
         annotation = elem.getAnnotation(DELETE.class);
-        if (annotation != null)
+        if (annotation != null) {
             return HttpMethod.DELETE;
+        }
 
         // check for HEAD method
         annotation = elem.getAnnotation(HEAD.class);
-        if (annotation != null)
+        if (annotation != null) {
             return HttpMethod.HEAD;
+        }
 
         // check for OPTIONS method
         annotation = elem.getAnnotation(OPTIONS.class);
-        if (annotation != null)
+        if (annotation != null) {
             return HttpMethod.OPTIONS;
+        }
 
         return null;
     }
 
-    String extractUriTemplate(Element resource, Element element) {
+    public String extractUriTemplate(Element resource, Element element) {
         Path resourcePath = resource.getAnnotation(Path.class);
         Path elementPath = element.getAnnotation(Path.class);
         if (resourcePath == null) {
@@ -75,7 +82,7 @@ class JaxRsAnalyzer {
         }
     }
 
-    List<JaxRsParamInfo> extractParameters(ExecutableElement method) {
+    public List<JaxRsParamInfo> extractParameters(ExecutableElement method) {
         List<? extends VariableElement> parameters = method.getParameters();
         List<JaxRsParamInfo> parametersInfo = new ArrayList<>();
         for (VariableElement parameter : parameters) {
@@ -92,8 +99,9 @@ class JaxRsAnalyzer {
      * @param methodInfo the metamodel for the method
      * @return the map of associated parameters
      */
-    Map<String, String> analyzePathParamAnnotations(JaxRsMethodInfo methodInfo) {
-        Map<String, String> parametersToUriTemplateParameter = new HashMap<>();
+    @SuppressWarnings("PMD.UseConcurrentHashMap")
+    public Map<String, String> analyzePathParamAnnotations(JaxRsMethodInfo methodInfo) {
+        Map<String, String> parametersToUriTemplateParameter = new ConcurrentHashMap<>();
         for (JaxRsParamInfo paramInfo : methodInfo.getParameters()) {
             PathParam pathParam = paramInfo.getElement().getAnnotation(PathParam.class);
             if (pathParam != null) {

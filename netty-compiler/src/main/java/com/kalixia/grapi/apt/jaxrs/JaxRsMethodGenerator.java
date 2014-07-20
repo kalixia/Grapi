@@ -60,6 +60,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.TooManyStaticImports"})
 public class JaxRsMethodGenerator {
     private final Filer filer;
     private final Messager messager;
@@ -98,8 +99,9 @@ public class JaxRsMethodGenerator {
                     // add imports
                     .emitImports(ApiRequest.class)
                     .emitImports(ApiResponse.class);
-            if (useRxJava)
+            if (useRxJava) {
                 writer.emitImports(ObservableApiResponse.class);
+            }
             writer
                     .emitImports(GeneratedJaxRsMethodHandler.class)
                     .emitImports(UriTemplateUtils.class)
@@ -140,8 +142,9 @@ public class JaxRsMethodGenerator {
                     .emitImports(Method.class)
                     .emitImports(UnsupportedEncodingException.class);
 
-            if (useDagger)
+            if (useDagger) {
                 writer.emitImports(Inject.class);
+            }
 
             writer
                     .emitImports(Generated.class)
@@ -194,23 +197,24 @@ public class JaxRsMethodGenerator {
                                            String resourceClassName, JaxRsMethodInfo method) throws IOException {
         writer.emitEmptyLine();
 
-        if (useDagger)
-            writer.emitAnnotation(Inject.class);
-
         List<String> parameters = new ArrayList<>();
-        if (useDagger)
-            parameters.addAll(Arrays.asList(resourceClassName, "delegate"));
         parameters.addAll(Arrays.asList("ObjectMapper", "objectMapper"));
         parameters.addAll(Arrays.asList("Validator", "validator"));
-        if (useMetrics)
+        if (useDagger) {
+            writer.emitAnnotation(Inject.class);
+            parameters.addAll(Arrays.asList(resourceClassName, "delegate"));
+        }
+        if (useMetrics) {
             parameters.addAll(Arrays.asList("MetricRegistry", "registry"));
+        }
 
         writer.beginMethod(null, handlerClassName, EnumSet.of(PUBLIC), parameters.toArray(new String[parameters.size()]));
 
-        if (useDagger)
+        if (useDagger) {
             writer.emitStatement("this.delegate = delegate");
-        else
+        } else {
             writer.emitStatement("this.delegate = new %s()", resourceClassName);
+        }
 
         writer
                 .emitStatement("this.objectMapper = objectMapper")
@@ -224,8 +228,9 @@ public class JaxRsMethodGenerator {
             while (paramIterator.hasNext()) {
                 JaxRsParamInfo param = paramIterator.next();
                 builder.append(param.getType().toString()).append(".class");
-                if (paramIterator.hasNext())
+                if (paramIterator.hasNext()) {
                     builder.append(", ");
+                }
             }
             writer.emitStatement("this.delegateMethod = delegate.getClass().getMethod(%s, %s)",
                     stringLiteral(method.getMethodName()), builder.toString());
@@ -259,11 +264,12 @@ public class JaxRsMethodGenerator {
         writer.emitStatement("boolean verbMatches = HttpMethod.%s.equals(request.method())", methodInfo.getVerb());
 
         // check against URI template
-        if (UriTemplateUtils.hasParameters(methodInfo.getUriTemplate()))
+        if (UriTemplateUtils.hasParameters(methodInfo.getUriTemplate())) {
             writer.emitStatement("boolean uriMatches = UriTemplateUtils.extractParameters(URI_TEMPLATE, request.uri()).size() > 0");
-        else
+        } else {
             writer.emitStatement("boolean uriMatches = %s.equals(request.uri()) || %s.equals(request.uri())",
                     stringLiteral(methodInfo.getUriTemplate()), stringLiteral(methodInfo.getUriTemplate() + "/"));
+        }
 
         // return result
         writer.emitStatement("return verbMatches && uriMatches");
@@ -271,13 +277,14 @@ public class JaxRsMethodGenerator {
         return writer.endMethod();
     }
 
-    @SuppressWarnings("PMD.EmptyCatchBlock")
+    @SuppressWarnings({"PMD.EmptyCatchBlock", "PMD.OnlyOneReturn"})
     private JavaWriter generateHandleMethod(JavaWriter writer, JaxRsMethodInfo methodInfo, String resourceClassName)
             throws IOException {
         writer.emitEmptyLine();
 
-        if (useMetrics)
+        if (useMetrics) {
             writer.emitAnnotation("Timed");         // the annotation is only for "documentation" purpose
+        }
 
         writer
                 .emitAnnotation(Override.class)
@@ -410,8 +417,9 @@ public class JaxRsMethodGenerator {
             while (iterator.hasNext()) {
                 JaxRsParamInfo param = iterator.next();
                 builder.append(param.getName());
-                if (iterator.hasNext())
+                if (iterator.hasNext()) {
                     builder.append(", ");
+                }
             }
             writer.emitSingleLineComment("Validate parameters");
             writer.emitStatement("Set<ConstraintViolation<%s>> violations = validator.forExecutables().validateParameters(delegate,%n" +
@@ -437,8 +445,9 @@ public class JaxRsMethodGenerator {
             for (int i = 0; i < methodInfo.getParameters().size(); i++) {
                 JaxRsParamInfo paramInfo = methodInfo.getParameters().get(i);
                 builder.append(paramInfo.getName());
-                if (i + 1 < methodInfo.getParameters().size())
+                if (i + 1 < methodInfo.getParameters().size()) {
                     builder.append(", ");
+                }
             }
             if (methodInfo.hasReturnType()) {
                 writer.emitStatement("%s result = delegate.%s(%s)",
@@ -496,10 +505,11 @@ public class JaxRsMethodGenerator {
                     "Unpooled.EMPTY_BUFFER, %s)", stringLiteral(produces));
         }
 
-        if (methodInfo.hasReturnType() || methodInfo.hasParameters())
+        if (methodInfo.hasReturnType() || methodInfo.hasParameters()) {
             writer.nextControlFlow("catch (IllegalArgumentException|JsonMappingException e)");
-        else
+        } else {
             writer.nextControlFlow("catch (IllegalArgumentException e)");
+        }
         writer
                     .emitStatement("LOGGER.error(\"Bad request\", e)")
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.BAD_REQUEST, " +

@@ -67,7 +67,7 @@ public class ApiRequest extends ApiObject {
     }
 
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder(70);
         sb.append("ApiRequest");
         sb.append("{id=").append(id());
         sb.append(", path='").append(uri()).append('\'');

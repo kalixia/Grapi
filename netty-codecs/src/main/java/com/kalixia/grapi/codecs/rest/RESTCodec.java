@@ -45,6 +45,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
 import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
 
 @ChannelHandler.Sharable
+@SuppressWarnings({"PMD.AvoidPrefixingMethodParameters", "PMD.DataflowAnomalyAnalysis", "PMD.TooManyStaticImports"})
 public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiResponse> {
     public static final String HEADER_REQUEST_ID = "X-Api-Request-ID";
     private static ByteBuf INVALID_REQUEST_ID;

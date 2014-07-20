@@ -35,6 +35,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
  * To use it, add it in your pipeline after the {@link io.netty.handler.codec.http.HttpRequestDecoder}.
  */
 @ChannelHandler.Sharable
+@SuppressWarnings({"PMD.AvoidPrefixingMethodParameters", "PMD.DataflowAnomalyAnalysis"})
 public class ShiroHandler extends ChannelDuplexHandler {
     private final SecurityManager securityManager;
     private static final Logger LOGGER = LoggerFactory.getLogger(ShiroHandler.class);
@@ -42,8 +43,10 @@ public class ShiroHandler extends ChannelDuplexHandler {
     public static final AttributeKey<Subject> ATTR_SUBJECT = AttributeKey.valueOf("SHIRO_SUBJECT");
 
     public ShiroHandler(SecurityManager securityManager) {
-        if (securityManager == null)
+        super();
+        if (securityManager == null) {
             throw new NullPointerException("Shiro security manager can't be null");
+        }
         this.securityManager = securityManager;
     }
 
@@ -54,10 +57,12 @@ public class ShiroHandler extends ChannelDuplexHandler {
             LOGGER.debug("Intercepting {} request on '{}'", httpMessage.getMethod(), httpMessage.getUri());
             SocketAddress socketAddress = ctx.channel().remoteAddress();
             String remoteHost;
-            if (socketAddress instanceof InetSocketAddress)
+            if (socketAddress instanceof InetSocketAddress) {
                 remoteHost = ((InetSocketAddress) socketAddress).getHostString();
-            else
+            } else {
                 remoteHost = "";
+
+            }
             if (httpMessage.headers().contains(AUTHORIZATION)) {
                 Subject subject = new Subject.Builder(securityManager)
                         .host(remoteHost)
@@ -95,8 +100,9 @@ public class ShiroHandler extends ChannelDuplexHandler {
         super.write(ctx, msg, promise);
         if (msg instanceof HttpMessage) {
             Subject subject = ctx.channel().attr(ATTR_SUBJECT).getAndRemove();
-            if (subject != null)
+            if (subject != null) {
                 subject.logout();
+            }
         }
     }
 

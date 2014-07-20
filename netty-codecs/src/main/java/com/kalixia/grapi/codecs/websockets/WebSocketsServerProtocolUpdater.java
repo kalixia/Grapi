@@ -11,8 +11,6 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
@@ -20,17 +18,19 @@ import static io.netty.handler.codec.http.HttpHeaders.setContentLength;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.TooManyStaticImports"})
 public class WebSocketsServerProtocolUpdater extends ChannelInboundHandlerAdapter {
-    private WebSocketServerHandshaker handshaker;
     public static final String WEBSOCKET_PATH = "/websocket";
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketsServerProtocolUpdater.class);
 
     @Override
+    @SuppressWarnings("PMD.OnlyOneReturn")
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof FullHttpRequest) {
             FullHttpRequest req = (FullHttpRequest) msg;
+
             // Handle a bad request.
             if (!req.getDecoderResult().isSuccess()) {
                 sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
@@ -46,7 +46,7 @@ public class WebSocketsServerProtocolUpdater extends ChannelInboundHandlerAdapte
             // Handshake
             WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
                     getWebSocketLocation(req), null, false);
-            handshaker = wsFactory.newHandshaker(req);
+            WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(req);
             if (handshaker == null) {
                 WebSocketServerHandshakerFactory.sendUnsupportedWebSocketVersionResponse(ctx.channel());
             } else {
@@ -58,8 +58,8 @@ public class WebSocketsServerProtocolUpdater extends ChannelInboundHandlerAdapte
     }
 
     private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
-        // Generate an error page if response status code is not OK (200).
-        if (res.getStatus().code() != 200) {
+        // Generate an error page if response status code is not OK (200)
+        if (!OK.equals(res.getStatus())) {
             res.content().writeBytes(Unpooled.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8));
             setContentLength(res, res.content().readableBytes());
         }

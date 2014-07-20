@@ -2,16 +2,9 @@ package com.kalixia.grapi.codecs.rest
 
 import com.kalixia.grapi.ApiRequest
 import com.kalixia.grapi.ApiResponse
-import io.netty.buffer.ByteBuf
-import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
-import io.netty.handler.codec.http.DefaultFullHttpRequest
-import io.netty.handler.codec.http.FullHttpRequest
-import io.netty.handler.codec.http.FullHttpResponse
-import io.netty.handler.codec.http.HttpHeaders
-import io.netty.handler.codec.http.HttpResponseStatus
-import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap
+import io.netty.handler.codec.http.*
 import spock.lang.Specification
 
 import javax.ws.rs.core.MediaType

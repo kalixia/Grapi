@@ -40,6 +40,7 @@ import static javax.tools.Diagnostic.Kind;
 @SupportedAnnotationTypes({ "javax.ws.rs.*", "org.apache.shiro.authz.annotation" })
 //@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions({ "dagger", "metrics" })
+@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class StaticAnalysisCompiler extends AbstractProcessor {
     private Elements elementUtils;
     private Messager messager;
@@ -72,8 +73,9 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
 
         for (Element resource : resources) {
             // only keep classes
-            if (!resource.getKind().isClass())
+            if (!resource.getKind().isClass()) {
                 continue;
+            }
 
             // extract class being analyzed
             PackageElement resourcePackage = elementUtils.getPackageOf(resource);
@@ -81,27 +83,31 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
 
             List<? extends Element> enclosedElements = resource.getEnclosedElements();
             for (Element elem : enclosedElements) {
-                if (!ElementKind.METHOD.equals(elem.getKind()))
+                if (!ElementKind.METHOD.equals(elem.getKind())) {
                     continue;
+                }
                 ExecutableElement methodElement = (ExecutableElement) elem;
 
                 // figure out if @GET, @POST, @DELETE, @PUT, etc are annotated on the method
                 String verb = analyzer.extractVerb(elem);
-                if (verb == null)
+                if (verb == null) {
                     continue;
+                }
                 String uriTemplate = analyzer.extractUriTemplate(resource, elem);
                 String methodName = elem.getSimpleName().toString();
                 String returnType = methodElement.getReturnType().toString();
                 List<JaxRsParamInfo> parameters = analyzer.extractParameters(methodElement);
                 // process @Produces annotations
                 Produces producesAnnotation = resource.getAnnotation(Produces.class);
-                if (producesAnnotation == null)
+                if (producesAnnotation == null) {
                     producesAnnotation = methodElement.getAnnotation(Produces.class);
+                }
                 String[] produces;
-                if (producesAnnotation != null)
+                if (producesAnnotation != null) {
                     produces = producesAnnotation.value();
-                else
-                    produces = new String[] { MediaType.TEXT_PLAIN };
+                } else {
+                    produces = new String[]{MediaType.TEXT_PLAIN};
+                }
                 // process Shiro annotations
                 RequiresAuthentication requiresAuthenticationAnnotation = methodElement.getAnnotation(RequiresAuthentication.class);
                 RequiresGuest requiresGuestAnnotation = methodElement.getAnnotation(RequiresGuest.class);
@@ -109,16 +115,21 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
                 RequiresRoles requiresRolesAnnotation = methodElement.getAnnotation(RequiresRoles.class);
                 RequiresUser requiresUserAnnotation = methodElement.getAnnotation(RequiresUser.class);
                 List<Annotation> shiroAnnotations = new ArrayList<>();
-                if (requiresAuthenticationAnnotation != null)
+                if (requiresAuthenticationAnnotation != null) {
                     shiroAnnotations.add(requiresAuthenticationAnnotation);
-                if (requiresGuestAnnotation != null)
+                }
+                if (requiresGuestAnnotation != null) {
                     shiroAnnotations.add(requiresGuestAnnotation);
-                if (requiresPermissionsAnnotation != null)
+                }
+                if (requiresPermissionsAnnotation != null) {
                     shiroAnnotations.add(requiresPermissionsAnnotation);
-                if (requiresRolesAnnotation != null)
+                }
+                if (requiresRolesAnnotation != null) {
                     shiroAnnotations.add(requiresRolesAnnotation);
-                if (requiresUserAnnotation != null)
+                }
+                if (requiresUserAnnotation != null) {
                     shiroAnnotations.add(requiresUserAnnotation);
+                }
 
                 JaxRsMethodInfo methodInfo = new JaxRsMethodInfo(elem, verb, uriTemplate, methodName, returnType, parameters, produces, shiroAnnotations);
                 String generatedHandler = methodGenerator.generateHandlerClass(resourceClassName, resourcePackage, uriTemplate, methodInfo);

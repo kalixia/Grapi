@@ -11,6 +11,7 @@ import java.util.List;
  *
  * @see <a href="http://www.j2eeprogrammer.com/2010/11/jax-rs-path-precedence-rules.html">JAX-RS Path precedence rules</a>
  */
+@SuppressWarnings("PMD.OnlyOneReturn")
 class UriTemplatePrecedenceComparator implements Comparator<String>, Serializable {
     @Override
     public int compare(String uriTemplate1, String uriTemplate2) {

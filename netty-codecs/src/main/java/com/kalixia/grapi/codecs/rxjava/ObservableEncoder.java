@@ -30,15 +30,16 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  * hence sends chunked HTTP responses.
  */
 @ChannelHandler.Sharable
+@SuppressWarnings({"PMD.AvoidPrefixingMethodParameters", "PMD.DataflowAnomalyAnalysis"})
 public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResponse<?>> {
-    ObjectMapper objectMapper;
-
+    private final ObjectMapper objectMapper;
     private static final ByteBuf LIST_BEGIN = Unpooled.wrappedBuffer("[".getBytes(Charset.defaultCharset()));
     private static final ByteBuf LIST_END   = Unpooled.wrappedBuffer("]".getBytes(Charset.defaultCharset()));
     private static final ByteBuf LIST_ITEM_SEPARATOR = Unpooled.wrappedBuffer(",".getBytes(Charset.defaultCharset()));
     private static final Logger LOGGER = LoggerFactory.getLogger(ObservableEncoder.class);
 
     public ObservableEncoder(ObjectMapper objectMapper) {
+        super();
         this.objectMapper = objectMapper;
     }
 

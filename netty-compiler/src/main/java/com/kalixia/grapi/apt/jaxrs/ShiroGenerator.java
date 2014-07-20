@@ -13,6 +13,7 @@ import org.apache.shiro.subject.Subject;
 
 import java.io.IOException;
 
+@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class ShiroGenerator {
 
     public static void generateImports(JavaWriter writer) throws IOException {
@@ -24,6 +25,7 @@ public class ShiroGenerator {
         ;
     }
 
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
     public static void generateShiroCodeForRequiresPermissionsCheck(JavaWriter writer, RequiresPermissions ann) throws IOException {
         String[] perms = ann.value();
         if (perms.length == 1) {
@@ -35,8 +37,9 @@ public class ShiroGenerator {
                 builder.append('"');
                 builder.append(perm);
                 builder.append('"');
-                if (i < perms.length - 1)
+                if (i < perms.length - 1) {
                     builder.append(", ");
+                }
             }
             String permsAsString = builder.toString();
             switch (ann.logical()) {
@@ -63,6 +66,7 @@ public class ShiroGenerator {
         }
     }
 
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
     public static void generateShiroCodeForRequiresRolesCheck(JavaWriter writer, RequiresRoles ann) throws IOException {
         String[] roles = ann.value();
         if (roles.length == 1) {
@@ -74,8 +78,9 @@ public class ShiroGenerator {
                 builder.append('"');
                 builder.append(perm);
                 builder.append('"');
-                if (i < roles.length - 1)
+                if (i < roles.length - 1) {
                     builder.append(", ");
+                }
             }
             String permsAsString = builder.toString();
             switch (ann.logical()) {

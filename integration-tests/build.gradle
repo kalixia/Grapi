@@ -20,3 +20,7 @@ compileJava {
     options.compilerArgs << '-Adagger=true' << '-Ametrics=true' << '-Ashiro=true'
 //    options.compilerArgs << '-XprintProcessorInfo' << '-XprintRounds'
 }
+
+pmd {
+    ignoreFailures = true
+}

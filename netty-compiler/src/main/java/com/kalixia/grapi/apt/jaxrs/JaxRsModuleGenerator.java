@@ -44,6 +44,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind;
 
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.TooManyStaticImports"})
 public class JaxRsModuleGenerator {
     private final Filer filer;
     private final Messager messager;
@@ -146,12 +147,14 @@ public class JaxRsModuleGenerator {
         StringBuilder builder = new StringBuilder();
         Iterator<String> iterator = generatedHandlers.iterator();
         for (int i = 0; i < generatedHandlers.size(); i++) {
-            if (useDagger)
+            if (useDagger) {
                 builder.append(String.format("handler%d", i + 1));
-            else
+            } else {
                 builder.append(String.format("new %s(objectMapper, validator)", iterator.next()));
-            if (i + 1 < generatedHandlers.size())
+            }
+            if (i + 1 < generatedHandlers.size()) {
                 builder.append(",\n");
+            }
         }
 
         return writer.

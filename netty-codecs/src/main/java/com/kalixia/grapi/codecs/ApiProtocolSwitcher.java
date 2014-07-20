@@ -29,6 +29,7 @@ import java.util.List;
  * Alters the pipeline in order to cope with both HTTP REST API handlers and WebSockets handlers.
  */
 @ChannelHandler.Sharable
+@SuppressWarnings("PMD.AvoidPrefixingMethodParameters")
 public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest> {
     private final ObjectMapper objectMapper;
     private final CorsConfig corsConfig;
@@ -39,6 +40,7 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
 
     @Inject
     public ApiProtocolSwitcher(ObjectMapper objectMapper) {
+        super();
         this.objectMapper = objectMapper;
         corsConfig = CorsConfig.withAnyOrigin()
                 .allowCredentials()                                     // required for custom headers
@@ -82,10 +84,11 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
         super.channelActive(ctx);
         SocketAddress remoteAddress = ctx.channel().remoteAddress();
         String clientAddr;
-        if (remoteAddress instanceof InetSocketAddress)
+        if (remoteAddress instanceof InetSocketAddress) {
             clientAddr = ((InetSocketAddress) remoteAddress).getHostString();
-        else
+        } else {
             clientAddr = remoteAddress.toString();
+        }
         MDC.put(MDCLogging.MDC_CLIENT_ADDR, clientAddr);
     }
 

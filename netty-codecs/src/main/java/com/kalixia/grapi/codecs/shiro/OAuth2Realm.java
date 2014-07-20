@@ -17,6 +17,7 @@ public class OAuth2Realm extends AuthorizingRealm {
     private final OAuthAuthorizationServer authorizationServer;
 
     public OAuth2Realm(OAuthAuthorizationServer authorizationServer) {
+        super();
         this.authorizationServer = authorizationServer;
     }
 

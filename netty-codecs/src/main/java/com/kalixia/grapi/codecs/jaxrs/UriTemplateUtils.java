@@ -3,15 +3,13 @@ package com.kalixia.grapi.codecs.jaxrs;
 import org.glassfish.jersey.uri.UriTemplate;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
+@SuppressWarnings("PMD.UseConcurrentHashMap")
 public class UriTemplateUtils {
     @Deprecated
-    private static final Pattern uriTemplatePattern = Pattern.compile("\\{(.*)\\}");
     private static final Map<String, UriTemplate> uriTemplatesCache = new ConcurrentHashMap<>();
 
     public static void prepareUriTemplate(String uriTemplate) {
@@ -26,14 +24,10 @@ public class UriTemplateUtils {
 
     public static Map<String, String> extractParameters(String uriTemplate, String uri) {
         UriTemplate template = createUriTemplateOrGetFromCache(uriTemplate);
-        Map<String, String> parametersMap = new HashMap<>();
+        Map<String, String> parametersMap = new ConcurrentHashMap<>();
         uri = sanitizeUri(uri);
         boolean match = template.match(uri, parametersMap);
-        if (!match) {
-            return Collections.emptyMap();
-        } else {
-            return parametersMap;
-        }
+        return match ? parametersMap : Collections.<String, String>emptyMap();
     }
 
     public static List<String> extractParametersNames(String uriTemplate) {
@@ -66,8 +60,9 @@ public class UriTemplateUtils {
     }
 
     private static String sanitizeUri(String uri) {
-        if (uri.endsWith("/"))
+        if (uri.endsWith("/")) {
             uri = uri.substring(0, uri.length() - 1);
+        }
         return uri.replaceAll("//", "/");
     }
 }
