@@ -9,13 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("PMD.UseConcurrentHashMap")
 public class UriTemplateUtils {
-    @Deprecated
     private static final Map<String, UriTemplate> uriTemplatesCache = new ConcurrentHashMap<>();
-
-    public static void prepareUriTemplate(String uriTemplate) {
-        UriTemplate template = new UriTemplate(uriTemplate);
-        uriTemplatesCache.put(uriTemplate, template);
-    }
 
     public static boolean hasParameters(String uriTemplate) {
         UriTemplate template = createUriTemplateOrGetFromCache(uriTemplate);

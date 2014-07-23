@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.squareup.javawriter.JavaWriter.rawType;
 import static com.squareup.javawriter.JavaWriter.stringLiteral;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -241,7 +242,8 @@ public class JaxRsMethodGenerator {
         writer
                 .nextControlFlow("catch (NoSuchMethodException e)")
                 .emitSingleLineComment("should not happen as Grapi scanned the source code!")
-                .emitStatement("throw new RuntimeException(%s)", stringLiteral("Can't find method through reflection"))
+                .emitStatement("throw new RuntimeException(\"Can't find method '%s.%s' through reflection\")",
+                        resourceClassName, method.getMethodName())
                 .endControlFlow();
 
         if (useMetrics) {
@@ -280,6 +282,8 @@ public class JaxRsMethodGenerator {
     @SuppressWarnings({"PMD.EmptyCatchBlock", "PMD.OnlyOneReturn"})
     private JavaWriter generateHandleMethod(JavaWriter writer, JaxRsMethodInfo methodInfo, String resourceClassName)
             throws IOException {
+        boolean conversionNeeded = false;
+
         writer.emitEmptyLine();
 
         if (useMetrics) {
@@ -404,6 +408,7 @@ public class JaxRsMethodGenerator {
                     writer.emitStatement("%s %s = new %s(%s)",
                         typeClassName, parameter.getName(), typeClassName, parameterValueSource);
                 } else {
+                    conversionNeeded = true;
                     writer.emitStatement("%s %s = objectMapper.readValue(%s, %s.class)",
                             type, parameter.getName(), parameterValueSource, type);
                 }
@@ -496,7 +501,12 @@ public class JaxRsMethodGenerator {
                             "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.EMPTY_BUFFER, %s, " +
                             "result.getStringHeaders())", stringLiteral(produces))
                     .endControlFlow();
+        } else if (String.class.getName().equals(methodInfo.getReturnType())) {
+            writer.emitStatement("byte[] content = result.getBytes(%s)", stringLiteral("UTF-8"))
+                    .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.OK, " +
+                            "Unpooled.wrappedBuffer(content), %s)", stringLiteral(produces));
         } else if (methodInfo.hasReturnType()) {            // convert result only if there is one
+            conversionNeeded = true;
             writer.emitStatement("byte[] content = objectMapper.writeValueAsBytes(result)")
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.OK, " +
                             "Unpooled.wrappedBuffer(content), %s)", stringLiteral(produces));
@@ -505,7 +515,8 @@ public class JaxRsMethodGenerator {
                     "Unpooled.EMPTY_BUFFER, %s)", stringLiteral(produces));
         }
 
-        if (methodInfo.hasReturnType() || methodInfo.hasParameters()) {
+        // conversion is only needed if returnType is not string and if at least one parameter need Json conversion
+        if (conversionNeeded) {
             writer.nextControlFlow("catch (IllegalArgumentException|JsonMappingException e)");
         } else {
             writer.nextControlFlow("catch (IllegalArgumentException e)");

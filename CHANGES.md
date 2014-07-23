@@ -9,6 +9,7 @@ This release includes:
 * [Enhancement #9](https://github.com/kalixia/Grapi/issues/9) Support @HeaderParam parameters extraction
 * [Enhancement #10](https://github.com/kalixia/Grapi/issues/10) Support @CookieParam parameters extraction
 * [Enhancement #8](https://github.com/kalixia/Grapi/issues/8) Improve parameters conversion
+* [Enhancement #11](https://github.com/kalixia/Grapi/issues/11) Add integration tests of JAX-RS resources generated handlers
 
 ### Version 0.4.3 ###
 

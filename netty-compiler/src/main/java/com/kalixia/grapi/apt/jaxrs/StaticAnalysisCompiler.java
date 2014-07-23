@@ -16,6 +16,8 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
+import javax.annotation.processing.SupportedSourceVersion;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -38,7 +40,6 @@ import java.util.TreeSet;
 import static javax.tools.Diagnostic.Kind;
 
 @SupportedAnnotationTypes({ "javax.ws.rs.*", "org.apache.shiro.authz.annotation" })
-//@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions({ "dagger", "metrics" })
 @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class StaticAnalysisCompiler extends AbstractProcessor {
@@ -48,7 +49,7 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
     private JaxRsMethodGenerator methodGenerator;
     private JaxRsModuleGenerator moduleGenerator;
     private JaxRsDaggerModuleGenerator daggerGenerator;
-    private SortedMap<JaxRsMethodInfo,String> methodToHandlerName;
+    private SortedMap<JaxRsMethodInfo, String> methodToHandlerName;
     private SortedSet<String> generatedHandlers;
     private boolean done = false;
     public static final String GENERATOR_NAME = "Grapi";
@@ -131,8 +132,18 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
                     shiroAnnotations.add(requiresUserAnnotation);
                 }
 
-                JaxRsMethodInfo methodInfo = new JaxRsMethodInfo(elem, verb, uriTemplate, methodName, returnType, parameters, produces, shiroAnnotations);
+                JaxRsMethodInfo methodInfo = new JaxRsMethodInfo(elem, verb, uriTemplate,
+                        methodName, returnType, parameters, produces, shiroAnnotations);
                 String generatedHandler = methodGenerator.generateHandlerClass(resourceClassName, resourcePackage, uriTemplate, methodInfo);
+                if (methodToHandlerName.containsKey(methodInfo)) {
+                    messager.printMessage(Kind.ERROR, "Handler " + generatedHandler
+                            + " for uri template " + uriTemplate + " won't be added."
+                            + " Method Info: " + methodInfo);
+                    messager.printMessage(Kind.ERROR, "Currently available method infos:");
+                    for (JaxRsMethodInfo aMethodInfo : methodToHandlerName.keySet()) {
+                        messager.printMessage(Kind.ERROR, aMethodInfo.toString());
+                    }
+                }
                 methodToHandlerName.put(methodInfo, generatedHandler);
             }
         }
@@ -154,4 +165,8 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
         return false;
     }
 
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latest();
+    }
 }

@@ -1,5 +1,6 @@
 package com.kalixia.grapi;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -13,6 +14,10 @@ import java.util.UUID;
 @Path("/objects")
 @Produces(MediaType.APPLICATION_JSON)
 public class ObjectsResource {
+
+    @Inject
+    public ObjectsResource() {
+    }
 
     @GET
     public List<Test> getAllTests() {

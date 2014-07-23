@@ -28,6 +28,7 @@ class UriTemplateUtilsTest extends Specification {
         where:
         uri                                | uri_template                     || parametersMap
         "/hello"                           | "/hello"                         || []
+        "/hello/Doe/John"                  | "/hello/{lastName}/{firstName}"  || [firstName: 'John', lastName: 'Doe']
         "/echo/test"                       | "/echo/{message}"                || [message: "test"]
         "/users/johndoe/devices/my_device" | "/users/{user}/devices/{device}" || [user: 'johndoe', device: 'my_device']
         "/jeje/devices/"                   | "/{username}/devices"            || [username: 'jeje']

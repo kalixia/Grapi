@@ -1,11 +1,16 @@
 package com.kalixia.grapi;
 
+import javax.inject.Inject;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
 @Path("/")
 public class LoginResource {
+
+    @Inject
+    public LoginResource() {
+    }
 
     @GET
     @Path("login")

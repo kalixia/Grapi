@@ -8,6 +8,7 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.authz.annotation.RequiresUser;
 
+import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -18,6 +19,10 @@ import javax.ws.rs.core.MediaType;
 @Path("/secured/echo")
 @Produces(MediaType.TEXT_PLAIN)
 public class SecuredEchoResource {
+
+    @Inject
+    public SecuredEchoResource() {
+    }
 
     @Path("{message}")
     @GET
@@ -61,28 +66,28 @@ public class SecuredEchoResource {
         return "Hello Administrator!";
     }
 
-    @Path("/admin-or-user")
+    @Path("/admin-and-user")
     @GET
     @RequiresRoles({"admin", "user"})
     public String welcomeAdminAndUser() {
         return "Hello Administrator!";
     }
 
-    @Path("two-permissions/{messsage}")
+    @Path("two-permissions/{message}")
     @GET
     @RequiresPermissions({"echo", "move-than-one-perm"})
     public String twoPermissionsRequired(@PathParam("message") @NotNull String message) {
             return message;
         }
 
-    @Path("many-permissions/{messsage}")
+    @Path("many-permissions/{message}")
     @GET
     @RequiresPermissions({"echo", "move-than-one-perm", "another-perm"})
     public String moreThanOnePermissionRequired(@PathParam("message") @NotNull String message) {
             return message;
         }
 
-    @Path("any-permission/{messsage}")
+    @Path("any-permission/{message}")
     @GET
     @RequiresPermissions(value = {"echo", "move-than-one-perm", "another-perm"}, logical = Logical.OR)
     public String atLeastOnePermissionRequired(@PathParam("message") @NotNull String message) {

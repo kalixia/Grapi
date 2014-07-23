@@ -1,5 +1,6 @@
 package com.kalixia.grapi;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
@@ -8,6 +9,10 @@ import java.net.URISyntaxException;
 
 @Path("/response")
 public class ResponseResource {
+
+    @Inject
+    public ResponseResource() {
+    }
 
     @GET
     public Response createSomethingFake() throws URISyntaxException {

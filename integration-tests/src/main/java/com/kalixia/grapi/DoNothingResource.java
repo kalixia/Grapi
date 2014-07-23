@@ -1,5 +1,6 @@
 package com.kalixia.grapi;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -7,6 +8,11 @@ import javax.ws.rs.PathParam;
 
 @Path("/nothing")
 public class DoNothingResource {
+
+    @Inject
+    public DoNothingResource() {
+    }
+
     @POST
     public void doNothing() {
     }

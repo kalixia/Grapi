@@ -28,8 +28,13 @@ class UriTemplatePrecedenceComparator implements Comparator<String>, Serializabl
         }
 
         // sort by the number of regular expressions contained within the expression
-        return Integer.compare(
+        int nbRegexp = Integer.compare(
                 UriTemplateUtils.getNumberOfExplicitRegexes(uriTemplate1),
                 UriTemplateUtils.getNumberOfExplicitRegexes(uriTemplate2));
+        if (nbRegexp != 0) {
+            return nbRegexp;
+        }
+
+        return uriTemplate1.compareTo(uriTemplate2);
     }
 }
