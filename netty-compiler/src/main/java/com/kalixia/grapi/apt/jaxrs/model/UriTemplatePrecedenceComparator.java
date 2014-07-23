@@ -14,6 +14,7 @@ import java.util.List;
 @SuppressWarnings("PMD.OnlyOneReturn")
 class UriTemplatePrecedenceComparator implements Comparator<String>, Serializable {
     @Override
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
     public int compare(String uriTemplate1, String uriTemplate2) {
         // sort by the number of literal characters contained within the expression
         if (uriTemplate1.length() != uriTemplate2.length()) {

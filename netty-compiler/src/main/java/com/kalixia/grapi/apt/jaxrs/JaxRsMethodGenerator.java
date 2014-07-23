@@ -53,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.squareup.javawriter.JavaWriter.rawType;
 import static com.squareup.javawriter.JavaWriter.stringLiteral;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
