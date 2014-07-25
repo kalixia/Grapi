@@ -1,11 +1,17 @@
 package com.kalixia.grapi.apt.jaxrs.model;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import javax.validation.Valid;
 import javax.ws.rs.QueryParam;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class JaxRsMethodInfo {
     private final Element element;
@@ -59,6 +65,23 @@ public class JaxRsMethodInfo {
 
     public boolean hasParameters() {
         return parameters.size() > 0;
+    }
+
+    public boolean hasParametersToValidate() {
+        if (parameters.size() == 0) {
+            return false;
+        }
+        boolean validationRequired = false;
+        for (JaxRsParamInfo param : parameters) {
+            VariableElement element = param.getElement();
+            List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
+            for (AnnotationMirror annotationMirror : annotationMirrors) {
+                if (annotationMirror.toString().startsWith("@javax.validation")) {
+                    validationRequired = true;
+                }
+            }
+        }
+        return validationRequired;
     }
 
     @SuppressWarnings("PMD.DataflowAnomalyAnalysis")

@@ -422,7 +422,7 @@ public class JaxRsMethodGenerator {
         }
 
         // validate parameters
-        if (methodInfo.hasParameters()) {
+        if (methodInfo.hasParametersToValidate()) {
             StringBuilder builder = new StringBuilder();
             Iterator<JaxRsParamInfo> iterator = methodInfo.getParameters().iterator();
             while (iterator.hasNext()) {

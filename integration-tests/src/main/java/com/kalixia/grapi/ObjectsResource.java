@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -39,13 +41,14 @@ public class ObjectsResource {
     }
 
     @POST
-    public Response addTest(Test test) throws URISyntaxException {
+    public Response addTest(@Valid Test test) throws URISyntaxException {
         tests.add(test);
         URI testURI = new URI(UriTemplateUtils.createURI("/objects/{test}", test.getName()));
         return Response.created(testURI).build();
     }
 
     public static class Test {
+        @NotNull
         private String name;
 
         public String getName() {
