@@ -501,9 +501,10 @@ public class JaxRsMethodGenerator {
                             "result.getStringHeaders())", stringLiteral(produces))
                     .endControlFlow();
         } else if (String.class.getName().equals(methodInfo.getReturnType())) {
-            writer.emitStatement("byte[] content = result.getBytes(%s)", stringLiteral("UTF-8"))
-                    .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.OK, " +
-                            "Unpooled.wrappedBuffer(content), %s)", stringLiteral(produces));
+                    writer
+                            .emitStatement("byte[] content = result == null ? new byte[] {} : result.getBytes(%s)",  stringLiteral("UTF-8"))
+                            .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.OK, " +
+                                    "Unpooled.wrappedBuffer(content), %s)", stringLiteral(produces));
         } else if (methodInfo.hasReturnType()) {            // convert result only if there is one
             conversionNeeded = true;
             writer.emitStatement("byte[] content = objectMapper.writeValueAsBytes(result)")

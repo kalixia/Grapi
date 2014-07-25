@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.HttpResponse
 import io.netty.handler.codec.http.HttpResponseStatus
+import io.netty.handler.codec.http.QueryStringEncoder
 import io.reactivex.netty.RxNetty
 import io.reactivex.netty.pipeline.PipelineConfigurator
 import io.reactivex.netty.pipeline.PipelineConfigurators
@@ -65,6 +66,19 @@ abstract class JaxRsResourceTest extends Specification {
 
     def request(String requestURL, HttpMethod method) {
         return httpClient.submit(HttpClientRequest.create(method, requestURL))
+    }
+
+    def requestWithHeaders(String requestURL, HttpMethod method, Map<String, String> headers) {
+        def request = HttpClientRequest.create(method, requestURL)
+        headers.each { key, value -> request = request.withHeader(key, value) }
+        return httpClient.submit(request)
+    }
+
+    def requestWithQueryParams(String requestURL, HttpMethod method, Map<String, String> queryParams) {
+        QueryStringEncoder enc = new QueryStringEncoder(requestURL)
+        queryParams.each { key, value -> enc.addParam(key, value )}
+        def request = HttpClientRequest.create(method, enc.toString())
+        return httpClient.submit(request)
     }
 
     def requestWithJacksonBody(String requestURL, HttpMethod method, Object body) {
