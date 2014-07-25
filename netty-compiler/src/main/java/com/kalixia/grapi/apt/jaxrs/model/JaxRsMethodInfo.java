@@ -1,18 +1,15 @@
 package com.kalixia.grapi.apt.jaxrs.model;
 
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
-import javax.validation.Valid;
 import javax.ws.rs.QueryParam;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
+@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class JaxRsMethodInfo {
     private final Element element;
     private final String verb;
@@ -67,8 +64,9 @@ public class JaxRsMethodInfo {
         return parameters.size() > 0;
     }
 
+    @SuppressWarnings("PMD.OnlyOneReturn")
     public boolean hasParametersToValidate() {
-        if (parameters.size() == 0) {
+        if (parameters.isEmpty()) {
             return false;
         }
         boolean validationRequired = false;
@@ -84,7 +82,6 @@ public class JaxRsMethodInfo {
         return validationRequired;
     }
 
-    @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
     public boolean hasQueryParameters() {
         List<JaxRsParamInfo> methodInfoParameters = getParameters();
         boolean hasQueryParam = false;
