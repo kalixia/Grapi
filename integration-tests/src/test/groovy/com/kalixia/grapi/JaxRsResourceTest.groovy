@@ -7,6 +7,7 @@ import groovy.util.logging.Slf4j
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelPipeline
+import io.netty.handler.codec.http.DefaultCookie
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.HttpResponse
@@ -65,71 +66,26 @@ abstract class JaxRsResourceTest extends Specification {
     }
 
     def request(String requestURL, HttpMethod method) {
-        return httpClient.submit(HttpClientRequest.create(method, requestURL))
-                .mergeMap(
-                    new Func1<HttpClientResponse<ByteBuf>, Observable<ByteBuf>>() {
-                        @Override
-                        public Observable<ByteBuf> call(HttpClientResponse<ByteBuf> response) {
-                            return response.getContent().defaultIfEmpty(Unpooled.EMPTY_BUFFER)
-                        }
-                    },
-                    new Func2<HttpClientResponse<ByteBuf>, ByteBuf, HttpContentWithStatus>() {
-                        @Override
-                        public HttpContentWithStatus call(HttpClientResponse<ByteBuf> response, ByteBuf buffer) {
-                            def status = response.getStatus()
-                            def content = buffer.toString(Charset.forName("UTF-8"))
-                            return new HttpContentWithStatus(content, status, dataHolder.objectMapper)
-                        }
-                    }
-                )
-                .toBlockingObservable().last();
+        return buildHttpContentWithStatusFromObservable(httpClient.submit(HttpClientRequest.create(method, requestURL)))
     }
 
     def requestWithHeaders(String requestURL, HttpMethod method, Map<String, String> headers) {
         def request = HttpClientRequest.create(method, requestURL)
         headers.each { key, value -> request = request.withHeader(key, value) }
-        return httpClient.submit(request)
-                .mergeMap(
-                    new Func1<HttpClientResponse<ByteBuf>, Observable<ByteBuf>>() {
-                        @Override
-                        public Observable<ByteBuf> call(HttpClientResponse<ByteBuf> response) {
-                            return response.getContent().defaultIfEmpty(Unpooled.EMPTY_BUFFER)
-                        }
-                    },
-                    new Func2<HttpClientResponse<ByteBuf>, ByteBuf, HttpContentWithStatus>() {
-                        @Override
-                        public HttpContentWithStatus call(HttpClientResponse<ByteBuf> response, ByteBuf buffer) {
-                            def status = response.getStatus()
-                            def content = buffer.toString(Charset.forName("UTF-8"))
-                            return new HttpContentWithStatus(content, status, dataHolder.objectMapper)
-                        }
-                    }
-                )
-                .toBlockingObservable().last();
+        return buildHttpContentWithStatusFromObservable(httpClient.submit(request))
     }
 
     def requestWithQueryParams(String requestURL, HttpMethod method, Map<String, String> queryParams) {
         QueryStringEncoder enc = new QueryStringEncoder(requestURL)
         queryParams.each { key, value -> enc.addParam(key, value )}
         def request = HttpClientRequest.create(method, enc.toString())
-        return httpClient.submit(request)
-                .mergeMap(
-                    new Func1<HttpClientResponse<ByteBuf>, Observable<ByteBuf>>() {
-                        @Override
-                        public Observable<ByteBuf> call(HttpClientResponse<ByteBuf> response) {
-                            return response.getContent().defaultIfEmpty(Unpooled.EMPTY_BUFFER)
-                        }
-                    },
-                    new Func2<HttpClientResponse<ByteBuf>, ByteBuf, HttpContentWithStatus>() {
-                        @Override
-                        public HttpContentWithStatus call(HttpClientResponse<ByteBuf> response, ByteBuf buffer) {
-                            def status = response.getStatus()
-                            def content = buffer.toString(Charset.forName("UTF-8"))
-                            return new HttpContentWithStatus(content, status, dataHolder.objectMapper)
-                        }
-                    }
-                )
-                .toBlockingObservable().last();
+        return buildHttpContentWithStatusFromObservable(httpClient.submit(request))
+    }
+
+    def requestWithCookies(String requestURL, HttpMethod method, Map<String, String> cookies) {
+        def request = HttpClientRequest.create(method, requestURL)
+        cookies.each { key, value -> request = request.withCookie(new DefaultCookie(key, value)) }
+        return buildHttpContentWithStatusFromObservable(httpClient.submit(request))
     }
 
     def requestWithJacksonBody(String requestURL, HttpMethod method, Object body) {
@@ -138,25 +94,7 @@ abstract class JaxRsResourceTest extends Specification {
         if (body != null) {
             request = request.withContent(json(body))
         }
-        return httpClient
-                .submit(request)
-                .mergeMap(
-                    new Func1<HttpClientResponse<ByteBuf>, Observable<ByteBuf>>() {
-                        @Override
-                        public Observable<ByteBuf> call(HttpClientResponse<ByteBuf> response) {
-                            return response.getContent().defaultIfEmpty(Unpooled.EMPTY_BUFFER)
-                        }
-                    },
-                    new Func2<HttpClientResponse<ByteBuf>, ByteBuf, HttpContentWithStatus>() {
-                        @Override
-                        public HttpContentWithStatus call(HttpClientResponse<ByteBuf> response, ByteBuf buffer) {
-                            def status = response.getStatus()
-                            def content = buffer.toString(Charset.forName("UTF-8"))
-                            return new HttpContentWithStatus(content, status, dataHolder.objectMapper)
-                        }
-                    }
-                )
-                .toBlockingObservable().last();
+        return buildHttpContentWithStatusFromObservable(httpClient.submit(request))
     }
 
     def String json(Object o) {
@@ -185,4 +123,22 @@ abstract class JaxRsResourceTest extends Specification {
         server.start()
     }
 
+    def buildHttpContentWithStatusFromObservable(obs) {
+        return obs.mergeMap(
+                new Func1<HttpClientResponse<ByteBuf>, Observable<ByteBuf>>() {
+                    @Override
+                    public Observable<ByteBuf> call(HttpClientResponse<ByteBuf> response) {
+                        return response.getContent().defaultIfEmpty(Unpooled.EMPTY_BUFFER)
+                    }
+                },
+                new Func2<HttpClientResponse<ByteBuf>, ByteBuf, HttpContentWithStatus>() {
+                    @Override
+                    public HttpContentWithStatus call(HttpClientResponse<ByteBuf> response, ByteBuf buffer) {
+                        def status = response.getStatus()
+                        def content = buffer.toString(Charset.forName("UTF-8"))
+                        return new HttpContentWithStatus(content, status, dataHolder.objectMapper)
+                    }
+                }
+        ).toBlockingObservable().last()
+    }
 }

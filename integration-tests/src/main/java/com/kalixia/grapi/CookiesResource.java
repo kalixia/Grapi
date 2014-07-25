@@ -13,7 +13,7 @@ public class CookiesResource {
     }
 
     @GET
-    public String echoHeader(@CookieParam("my-cookie") String cookie) {
+    public String echoCookie(@CookieParam("my-cookie") String cookie) {
         return cookie;
     }
 
