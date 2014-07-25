@@ -61,13 +61,15 @@ public class JaxRsMethodInfo {
         return parameters.size() > 0;
     }
 
+    @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
     public boolean hasQueryParameters() {
         List<JaxRsParamInfo> methodInfoParameters = getParameters();
         boolean hasQueryParam = false;
         for (JaxRsParamInfo paramInfo : methodInfoParameters) {
             QueryParam queryParam = paramInfo.getElement().getAnnotation(QueryParam.class);
-            if (queryParam != null)
+            if (queryParam != null) {
                 hasQueryParam = true;
+            }
         }
         return hasQueryParam;
     }
