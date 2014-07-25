@@ -11,7 +11,7 @@ class ResponseResourceTest extends JaxRsResourceTest {
         def response = request('/response')
 
         then:
-        that status(response), equalTo(CREATED)
+        that response.status, equalTo(CREATED)
     }
 
 }

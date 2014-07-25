@@ -9,8 +9,8 @@ class HeadersResourceTest extends JaxRsResourceTest {
 
     def "test headers"() {
         expect:
-        that status(response), equalTo(OK)
-        that content(response), equalTo(expected_response)
+        that response.status, equalTo(OK)
+        that response.content, equalTo(expected_response)
 
         where:
         url        | header_param_name | header_param_value | expected_response
