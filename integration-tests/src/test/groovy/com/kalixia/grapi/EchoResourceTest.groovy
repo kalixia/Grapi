@@ -11,8 +11,8 @@ class EchoResourceTest extends JaxRsResourceTest {
     @Unroll
     def "test echo of #message"() {
         expect:
-        that responseStatus(response), equalTo(status)
-        that responseContent(response), equalTo(content)
+        that status(response), equalTo(status)
+        that content(response), equalTo(content)
 
         where:
         message | status

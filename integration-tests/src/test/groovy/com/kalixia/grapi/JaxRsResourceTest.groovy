@@ -1,16 +1,16 @@
 package com.kalixia.grapi
 
-import com.kalixia.grapi.codecs.rest.RESTCodec
 import com.kalixia.grapi.tests.DataHolder
 import com.kalixia.grapi.tests.TestModule
 import dagger.ObjectGraph
+import groovy.util.logging.Slf4j
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelPipeline
+import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.HttpResponse
 import io.netty.handler.codec.http.HttpResponseStatus
-import io.netty.handler.logging.LogLevel
-import io.netty.handler.logging.LoggingHandler
 import io.reactivex.netty.RxNetty
 import io.reactivex.netty.pipeline.PipelineConfigurator
 import io.reactivex.netty.pipeline.PipelineConfigurators
@@ -22,11 +22,16 @@ import io.reactivex.netty.protocol.http.server.HttpServerRequest
 import io.reactivex.netty.protocol.http.server.HttpServerResponse
 import io.reactivex.netty.protocol.http.server.RequestHandler
 import rx.Observable
+import rx.functions.Func1
+import rx.functions.Func2
 import spock.lang.Shared
 import spock.lang.Specification
 
 import java.nio.charset.Charset
 
+import static io.netty.handler.codec.http.HttpMethod.GET
+
+@Slf4j("LOGGER")
 abstract class JaxRsResourceTest extends Specification {
     @Shared
     Integer serverPort = 33333
@@ -55,18 +60,55 @@ abstract class JaxRsResourceTest extends Specification {
     }
 
     def request(String requestURL) {
-        return httpClient.submit(HttpClientRequest.createGet(requestURL))
+        return request(requestURL, GET)
     }
 
-    def String responseContent(Observable<HttpClientResponse> response) {
+    def request(String requestURL, HttpMethod method) {
+        return httpClient.submit(HttpClientRequest.create(method, requestURL))
+    }
+
+    def requestWithJacksonBody(String requestURL, HttpMethod method, Object body) {
+        LOGGER.debug("Requesting [$method] $requestURL...")
+        def request = HttpClientRequest.create(method, requestURL)
+        if (body != null) {
+            request = request.withContent(json(body))
+        }
+        return httpClient
+                .submit(request)
+                .mergeMap(
+                    new Func1<HttpClientResponse<ByteBuf>, Observable<ByteBuf>>() {
+                        @Override
+                        public Observable<ByteBuf> call(HttpClientResponse<ByteBuf> response) {
+                            return response.getContent().defaultIfEmpty(Unpooled.EMPTY_BUFFER)
+                        }
+                    },
+                    new Func2<HttpClientResponse<ByteBuf>, ByteBuf, HttpContentWithStatus>() {
+                        @Override
+                        public HttpContentWithStatus call(HttpClientResponse<ByteBuf> response, ByteBuf buffer) {
+                            def status = response.getStatus()
+                            def content = buffer.toString(Charset.forName("UTF-8"))
+                            return new HttpContentWithStatus(content, status, dataHolder.objectMapper)
+                        }
+                    }
+                )
+                .toBlockingObservable().last();
+    }
+
+    def String content(Observable<HttpClientResponse> response) {
+        LOGGER.debug("Parsing response content...")
         return response
                 .flatMap({ resp -> resp.getContent() })
                 .map({ ByteBuf buffer -> buffer.toString(Charset.forName("UTF-8")) })
-                .toBlockingObservable().single()
+                .toBlockingObservable().firstOrDefault("")
     }
 
-    def HttpResponseStatus responseStatus(Observable<HttpClientResponse> response) {
+    def HttpResponseStatus status(Observable<HttpClientResponse> response) {
+        LOGGER.info("Parsing response status...")
         return response.toBlockingObservable().first().status
+    }
+
+    def String json(Object o) {
+        return dataHolder.objectMapper.writeValueAsString(o)
     }
 
     def startServer() {
@@ -78,7 +120,6 @@ abstract class JaxRsResourceTest extends Specification {
                     void configureNewPipeline(ChannelPipeline pipeline) {
                         //                pipeline.addLast("shiro", new ShiroHandler(securityManager))
                         pipeline.addLast("api-protocol-switcher", dataHolder.apiProtocolSwitcher)
-                        pipeline.addLast("api-request-logger", new LoggingHandler(RESTCodec.class, LogLevel.DEBUG))
                         pipeline.addLast("jax-rs-jaxRsHandler", dataHolder.jaxRsHandler)
                     }
                 }

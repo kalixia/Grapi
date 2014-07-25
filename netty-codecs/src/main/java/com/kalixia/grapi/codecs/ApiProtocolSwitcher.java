@@ -65,13 +65,13 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
 
         if (msg.getUri().equals("/websocket")) {
             LOGGER.debug("Switching to WebSockets pipeline...");
-            pipeline.addBefore("api-request-logger", "ws-protocol-updater", webSocketsServerProtocolUpdater);
+            pipeline.addAfter(ctx.name(), "ws-protocol-updater", webSocketsServerProtocolUpdater);
             pipeline.addAfter("ws-protocol-updater", "api-response-encoder-ws", webSocketsApiResponseEncoder);
             pipeline.addAfter("api-response-encoder-ws", "api-request-decoder-ws", new WebSocketsApiRequestDecoder(objectMapper));
             pipeline.remove(this);
         } else {
             LOGGER.debug("Switching to REST pipeline...");
-            pipeline.addBefore("api-request-logger", "cors", new CorsHandler(corsConfig));
+            pipeline.addAfter(ctx.name(), "cors", new CorsHandler(corsConfig));
             pipeline.addAfter("cors", "rest-codec", restCodec);
             pipeline.remove(this);
         }

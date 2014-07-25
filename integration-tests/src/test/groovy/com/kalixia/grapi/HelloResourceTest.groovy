@@ -11,8 +11,8 @@ class HelloResourceTest extends JaxRsResourceTest {
     @Unroll
     def "test hello #description"() {
         expect:
-        that responseStatus(response), equalTo(status)
-        that responseContent(response), equalTo(content)
+        that status(response), equalTo(status)
+        that content(response), equalTo(content)
 
         where:
         description                             | url               | status | content
