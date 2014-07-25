@@ -14,6 +14,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresGuest;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -112,7 +113,8 @@ public class JaxRsMethodGenerator {
                     .emitImports(Unpooled.class)
                     .emitImports(Charset.class)
                     .emitImports(HttpMethod.class)
-                    .emitImports(HttpResponseStatus.class);
+                    .emitImports(HttpResponseStatus.class)
+                    .emitImports(QueryStringDecoder.class);
             if (useMetrics) {
                 writer
                         .emitImports("com.codahale.metrics.Timer")
@@ -267,6 +269,11 @@ public class JaxRsMethodGenerator {
         // check against URI template
         if (UriTemplateUtils.hasParameters(methodInfo.getUriTemplate())) {
             writer.emitStatement("boolean uriMatches = UriTemplateUtils.extractParameters(URI_TEMPLATE, request.uri()).size() > 0");
+        } else if (methodInfo.hasQueryParameters()) {
+            writer
+                    .emitStatement("QueryStringDecoder dec = new QueryStringDecoder(request.uri())")
+                    .emitStatement("boolean uriMatches = %s.equals(dec.path()) || %s.equals(dec.path())",
+                            stringLiteral(methodInfo.getUriTemplate()), stringLiteral(methodInfo.getUriTemplate() + "/"));
         } else {
             writer.emitStatement("boolean uriMatches = %s.equals(request.uri()) || %s.equals(request.uri())",
                     stringLiteral(methodInfo.getUriTemplate()), stringLiteral(methodInfo.getUriTemplate() + "/"));

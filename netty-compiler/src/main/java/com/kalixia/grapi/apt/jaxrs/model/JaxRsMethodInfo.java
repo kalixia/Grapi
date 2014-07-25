@@ -1,6 +1,7 @@
 package com.kalixia.grapi.apt.jaxrs.model;
 
 import javax.lang.model.element.Element;
+import javax.ws.rs.QueryParam;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,6 +59,17 @@ public class JaxRsMethodInfo {
 
     public boolean hasParameters() {
         return parameters.size() > 0;
+    }
+
+    public boolean hasQueryParameters() {
+        List<JaxRsParamInfo> methodInfoParameters = getParameters();
+        boolean hasQueryParam = false;
+        for (JaxRsParamInfo paramInfo : methodInfoParameters) {
+            QueryParam queryParam = paramInfo.getElement().getAnnotation(QueryParam.class);
+            if (queryParam != null)
+                hasQueryParam = true;
+        }
+        return hasQueryParam;
     }
 
     public String[] getProduces() {
