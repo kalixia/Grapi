@@ -1,13 +1,13 @@
 dependencies {
-    compile 'io.netty:netty-all:4.1.0.Beta1'
-    compile 'org.javassist:javassist:3.18.1-GA'
-    compile 'javax.ws.rs:javax.ws.rs-api:2.0'
-    compile 'org.glassfish.jersey.core:jersey-common:2.8'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.4.0-rc2'
+    compile 'io.netty:netty-all:4.0.23.Final'
+    compile 'org.javassist:javassist:3.18.2-GA'
+    compile 'javax.ws.rs:javax.ws.rs-api:2.0.1'
+    compile 'org.glassfish.jersey.core:jersey-common:2.11'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.4.2'
 
     // Hibernate Validator
-    compile 'org.hibernate:hibernate-validator:5.1.0.Final'
-    compile 'org.hibernate:hibernate-validator-annotation-processor:5.1.0.Final'
+    compile 'org.hibernate:hibernate-validator:5.1.2.Final'
+    compile 'org.hibernate:hibernate-validator-annotation-processor:5.1.2.Final'
     compile 'org.jboss.logging:jboss-logging:3.1.4.GA'
     compile 'javax.validation:validation-api:1.1.0.Final'
     compile 'javax.el:javax.el-api:2.2.4'
@@ -16,7 +16,7 @@ dependencies {
     // Shiro
     compile 'org.apache.shiro:shiro-core:1.2.3'
 
-    compile 'com.netflix.rxjava:rxjava-core:0.18.1'
+    compile 'com.netflix.rxjava:rxjava-core:0.20.0'
     compile 'ch.qos.logback:logback-classic:1.1.2'
 
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'

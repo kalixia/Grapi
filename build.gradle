@@ -29,14 +29,14 @@ buildscript {
                 url "https://oss.sonatype.org/content/repositories/snapshots/"
             }
         }
-        classpath 'com.jimdo.gradle:gradle-apt-plugin:0.4-SNAPSHOT'
+        classpath 'com.jimdo.gradle:gradle-apt-plugin:0.5-SNAPSHOT'
         classpath 'org.codehaus.groovy.modules.http-builder:http-builder:0.6'
     }
 }
 
 allprojects {
     group = 'com.kalixia.grapi'
-    version = '0.4.4'
+    version = '0.4.5-SNAPSHOT'
 
 //    apply from: 'https://raw.github.com/brunodecarvalho/gradle-plugins/master/jacoco-multiproject-aggregator.gradle'
 }
