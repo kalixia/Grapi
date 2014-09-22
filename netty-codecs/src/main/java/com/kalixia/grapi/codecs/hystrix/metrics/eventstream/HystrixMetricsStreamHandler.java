@@ -42,6 +42,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Values.NO_CACHE;
  * @see com.netflix.hystrix.contrib.rxnetty.metricsstream.HystrixMetricsStreamHandler
  */
 @ChannelHandler.Sharable
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.TooManyStaticImports"})
 public class HystrixMetricsStreamHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     private final String urlMapping;
     private final long interval;
@@ -58,6 +59,7 @@ public class HystrixMetricsStreamHandler extends SimpleChannelInboundHandler<Ful
      * @throws UnsupportedEncodingException
      */
     public HystrixMetricsStreamHandler(String urlMapping, long interval) throws UnsupportedEncodingException {
+        super();
         this.urlMapping = urlMapping;
         this.interval = interval;
         PING = new DefaultHttpContent(Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer("ping: \n".getBytes("UTF-8"))));

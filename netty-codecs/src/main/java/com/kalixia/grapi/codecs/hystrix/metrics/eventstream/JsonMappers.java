@@ -25,7 +25,7 @@ final class JsonMappers {
     private JsonMappers() {
     }
 
-    static String toJson(HystrixCommandMetrics commandMetrics) throws IOException {
+    public static String toJson(HystrixCommandMetrics commandMetrics) throws IOException {
         HystrixCommandKey key = commandMetrics.getCommandKey();
         HystrixCircuitBreaker circuitBreaker = HystrixCircuitBreaker.Factory.getInstance(key);
 
@@ -133,7 +133,7 @@ final class JsonMappers {
         return jsonString.getBuffer().toString();
     }
 
-    static String toJson(HystrixThreadPoolMetrics threadPoolMetrics) throws IOException {
+    public static String toJson(HystrixThreadPoolMetrics threadPoolMetrics) throws IOException {
         HystrixThreadPoolKey key = threadPoolMetrics.getThreadPoolKey();
 
         StringWriter jsonString = new StringWriter();
