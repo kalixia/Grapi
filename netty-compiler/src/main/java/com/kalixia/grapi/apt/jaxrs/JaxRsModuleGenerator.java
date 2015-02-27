@@ -8,6 +8,7 @@ import com.kalixia.grapi.codecs.jaxrs.JaxRsPipeline;
 import com.squareup.javawriter.JavaWriter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.util.CharsetUtil;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -67,7 +68,7 @@ public class JaxRsModuleGenerator {
             JavaWriter writer = new JavaWriter(handlerWriter);
             writer
                     .emitPackage(destPackage)
-                            // add imports
+                    // add imports
                     .emitImports(ApiRequest.class)
                     .emitImports(ApiResponse.class)
                     .emitImports(MDCLogging.class)
@@ -87,21 +88,22 @@ public class JaxRsModuleGenerator {
                     .emitImports(LoggerFactory.class)
                     .emitImports(MDC.class)
                     .emitImports(Charset.class)
+                    .emitImports(CharsetUtil.class)
                     .emitImports(List.class)
                     .emitImports(Arrays.class)
                     .emitImports(MediaType.class)
                     .emitImports(Validator.class)
                     .emitImports(Generated.class)
                     .emitEmptyLine()
-                            // begin class
+                    // begin class
                     .emitJavadoc("Netty handler dispatching request to appropriate JAX-RS resource.")
                     .emitAnnotation(Generated.class.getSimpleName(), stringLiteral(StaticAnalysisCompiler.GENERATOR_NAME))
                     .emitAnnotation("Sharable")
                     .beginType(handlerClassName, "class", EnumSet.of(PUBLIC, FINAL), "MessageToMessageDecoder<ApiRequest>", "JaxRsPipeline")
                     // add set of handlers
                     .emitField("List<? extends GeneratedJaxRsMethodHandler>", "handlers", EnumSet.of(PRIVATE, FINAL))
-                    .emitField("ByteBuf", "ERROR_WRONG_URL", EnumSet.of(PRIVATE, STATIC, FINAL), "Unpooled.copiedBuffer(\"Wrong URL\", Charset.forName(\"UTF-8\"))")
-                    .emitField("ByteBuf", "ERROR_INTERNAL_ERROR", EnumSet.of(PRIVATE, STATIC, FINAL), "Unpooled.copiedBuffer(\"Unexpected error\", Charset.forName(\"UTF-8\"))")
+                    .emitField("ByteBuf", "ERROR_WRONG_URL", EnumSet.of(PRIVATE, STATIC, FINAL), "Unpooled.copiedBuffer(\"Wrong URL\", CharsetUtil.UTF_8)")
+                    .emitField("ByteBuf", "ERROR_INTERNAL_ERROR", EnumSet.of(PRIVATE, STATIC, FINAL), "Unpooled.copiedBuffer(\"Unexpected error\", CharsetUtil.UTF_8)")
                     .emitField("Logger", "LOGGER", EnumSet.of(PRIVATE, STATIC, FINAL), "LoggerFactory.getLogger(" + handlerClassName + ".class)")
             ;
             generateConstructor(writer, handlerClassName, generatedHandlers);

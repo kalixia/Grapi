@@ -11,6 +11,7 @@ import com.kalixia.grapi.codecs.jaxrs.GeneratedJaxRsMethodHandler;
 import com.kalixia.grapi.codecs.jaxrs.UriTemplateUtils;
 import com.squareup.javawriter.JavaWriter;
 import io.netty.buffer.Unpooled;
+import io.netty.util.CharsetUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -112,6 +113,7 @@ public class JaxRsMethodGenerator {
                     .emitImports(ChannelHandlerContext.class)
                     .emitImports(Unpooled.class)
                     .emitImports(Charset.class)
+                    .emitImports(CharsetUtil.class)
                     .emitImports(HttpMethod.class)
                     .emitImports(HttpResponseStatus.class)
                     .emitImports(QueryStringDecoder.class);
@@ -311,7 +313,7 @@ public class JaxRsMethodGenerator {
         }
 
         writer.emitSingleLineComment("TODO: extract expected charset from the API request instead of using the default charset");
-        writer.emitStatement("Charset charset = Charset.forName(\"UTF-8\")");
+        writer.emitStatement("Charset charset = CharsetUtil.UTF_8");
 
         if (useShiro) {
             List<Annotation> shiroAnnotations = methodInfo.getShiroAnnotations();
@@ -370,7 +372,7 @@ public class JaxRsMethodGenerator {
                     String uriTemplateParameter = parametersMap.get(parameter.getName());
                     if (uriTemplateParameter == null) {
                         // consider this is actually content to be converted to an object
-                        parameterValueSource = "request.content().toString(Charset.forName(\"UTF-8\"))";
+                        parameterValueSource = "request.content().toString(CharsetUtil.UTF_8)";
                     } else {
                         // otherwise this is extracted parameterValueSource URI
                         parameterValueSource = String.format("parameters.get(\"%s\")", uriTemplateParameter);
