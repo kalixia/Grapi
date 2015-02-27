@@ -1,5 +1,5 @@
 dependencies {
     compile project(':netty-codecs')
-    compile 'com.squareup:javawriter:2.5.0'
+    compile 'com.squareup:javawriter:2.5.1'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
