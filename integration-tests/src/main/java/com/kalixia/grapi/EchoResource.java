@@ -10,6 +10,7 @@ import javax.ws.rs.core.MediaType;
 
 @Path("/echo")
 @Produces(MediaType.TEXT_PLAIN)
+@SuppressWarnings("PMD.UnnecessaryConstructor")
 public class EchoResource {
 
     @Inject

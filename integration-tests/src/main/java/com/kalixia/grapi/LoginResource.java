@@ -6,6 +6,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
 @Path("/")
+@SuppressWarnings("PMD.UnnecessaryConstructor")
 public class LoginResource {
 
     @Inject

@@ -10,6 +10,7 @@ import dagger.Provides;
 import javax.inject.Singleton;
 
 @Module(injects = DataHolder.class, includes = GeneratedJaxRsDaggerModule.class)
+@SuppressWarnings("PMD.DefaultPackage")
 public class TestModule {
 
     @Singleton @Provides ObjectMapper provideObjectMapper() {

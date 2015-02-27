@@ -7,6 +7,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 @Path("/nothing")
+@SuppressWarnings("PMD.UnnecessaryConstructor")
 public class DoNothingResource {
 
     @Inject

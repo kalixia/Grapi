@@ -6,6 +6,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 
 @Path("/headers")
+@SuppressWarnings("PMD.UnnecessaryConstructor")
 public class HeadersResource {
 
     @Inject

@@ -18,6 +18,7 @@ import javax.ws.rs.core.MediaType;
 
 @Path("/secured/echo")
 @Produces(MediaType.TEXT_PLAIN)
+@SuppressWarnings("PMD.UnnecessaryConstructor")
 public class SecuredEchoResource {
 
     @Inject

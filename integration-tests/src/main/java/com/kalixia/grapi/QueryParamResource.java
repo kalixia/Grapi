@@ -6,6 +6,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
 @Path("/query")
+@SuppressWarnings("PMD.UnnecessaryConstructor")
 public class QueryParamResource {
 
     @Inject

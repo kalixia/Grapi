@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 @Path("/response")
+@SuppressWarnings("PMD.UnnecessaryConstructor")
 public class ResponseResource {
 
     @Inject

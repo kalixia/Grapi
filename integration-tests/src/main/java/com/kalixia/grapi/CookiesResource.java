@@ -6,6 +6,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
 @Path("/cookies")
+@SuppressWarnings("PMD.UnnecessaryConstructor")
 public class CookiesResource {
 
     @Inject

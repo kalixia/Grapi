@@ -21,6 +21,7 @@ import java.util.List;
 @Singleton
 @Path("/objects")
 @Produces(MediaType.APPLICATION_JSON)
+@SuppressWarnings("PMD.UnnecessaryConstructor")
 public class ObjectsResource {
     private final List<Test> tests = new ArrayList<>();
 
@@ -47,6 +48,7 @@ public class ObjectsResource {
         return Response.created(testURI).build();
     }
 
+    @SuppressWarnings({"PMD.OnlyOneReturn", "PMD.IfStmtsMustUseBraces"})
     public static class Test {
         @NotNull
         private String name;

@@ -6,6 +6,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 @Path("/hello")
+@SuppressWarnings("PMD.UnnecessaryConstructor")
 public class HelloResource {
 
     @Inject
