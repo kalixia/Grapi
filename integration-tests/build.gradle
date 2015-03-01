@@ -7,14 +7,15 @@ dependencies {
     compile 'com.squareup.dagger:dagger-compiler:1.2.2'
     compile 'io.dropwizard.metrics:metrics-core:3.1.0'
     compile 'io.dropwizard.metrics:metrics-annotation:3.1.0'
-    compile 'com.netflix.rxjava:rxjava-core:0.20.7'
-    compile 'com.netflix.rxjava:rxjava-groovy:0.20.7'
+    compile 'io.reactivex:rxjava:1.0.7'
+//    compile 'com.netflix.rxjava:rxjava-groovy:0.20.7'
 
     apt project(':netty-compiler')
     apt 'com.squareup.dagger:dagger-compiler:1.2.2'
 
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-    testCompile 'com.netflix.rxnetty:rx-netty:0.3.18'
+    testCompile 'io.reactivex:rxnetty:0.4.6'
+    testCompile 'org.codehaus.groovy:groovy-all:2.4.1'
 }
 
 compileJava {

@@ -7,12 +7,8 @@ import groovy.util.logging.Slf4j
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelPipeline
-import io.netty.handler.codec.http.DefaultCookie
-import io.netty.handler.codec.http.HttpMethod
-import io.netty.handler.codec.http.HttpRequest
-import io.netty.handler.codec.http.HttpResponse
-import io.netty.handler.codec.http.HttpResponseStatus
-import io.netty.handler.codec.http.QueryStringEncoder
+import io.netty.handler.codec.http.*
+import io.netty.util.CharsetUtil
 import io.reactivex.netty.RxNetty
 import io.reactivex.netty.pipeline.PipelineConfigurator
 import io.reactivex.netty.pipeline.PipelineConfigurators
@@ -24,12 +20,11 @@ import io.reactivex.netty.protocol.http.server.HttpServerRequest
 import io.reactivex.netty.protocol.http.server.HttpServerResponse
 import io.reactivex.netty.protocol.http.server.RequestHandler
 import rx.Observable
+import rx.functions.Action1
 import rx.functions.Func1
 import rx.functions.Func2
 import spock.lang.Shared
 import spock.lang.Specification
-
-import java.nio.charset.Charset
 
 import static io.netty.handler.codec.http.HttpMethod.GET
 
@@ -52,7 +47,7 @@ abstract class JaxRsResourceTest extends Specification {
         ObjectGraph objectGraph = ObjectGraph.create(new TestModule());
         dataHolder = objectGraph.get(DataHolder.class)
         // start Netty server serving 'HelloResource' JAX-RS resource generated code
-        startServer()
+        startServer(dataHolder)
     }
 
     def cleanupSpec() {
@@ -101,14 +96,14 @@ abstract class JaxRsResourceTest extends Specification {
         return dataHolder.objectMapper.writeValueAsString(o)
     }
 
-    def startServer() {
+    def startServer(DataHolder dataHolder) {
         PipelineConfigurator<?, ?> pipelineConfigurator =
                 PipelineConfigurators.<ByteBuf, ByteBuf> httpServerConfigurator()
         PipelineConfigurator<?, ?> grapiPipelineConfigurator =
                 new PipelineConfigurator<HttpRequest, HttpResponse>() {
                     @Override
                     void configureNewPipeline(ChannelPipeline pipeline) {
-                        //                pipeline.addLast("shiro", new ShiroHandler(securityManager))
+//                        pipeline.addLast("shiro", new ShiroHandler(securityManager))
                         pipeline.addLast("api-protocol-switcher", dataHolder.apiProtocolSwitcher)
                         pipeline.addLast("jax-rs-jaxRsHandler", dataHolder.jaxRsHandler)
                     }
@@ -123,22 +118,20 @@ abstract class JaxRsResourceTest extends Specification {
         server.start()
     }
 
-    def buildHttpContentWithStatusFromObservable(obs) {
-        return obs.mergeMap(
-                new Func1<HttpClientResponse<ByteBuf>, Observable<ByteBuf>>() {
-                    @Override
-                    public Observable<ByteBuf> call(HttpClientResponse<ByteBuf> response) {
-                        return response.getContent().defaultIfEmpty(Unpooled.EMPTY_BUFFER)
-                    }
-                },
-                new Func2<HttpClientResponse<ByteBuf>, ByteBuf, HttpContentWithStatus>() {
-                    @Override
-                    public HttpContentWithStatus call(HttpClientResponse<ByteBuf> response, ByteBuf buffer) {
+    def buildHttpContentWithStatusFromObservable(Observable<HttpClientResponse<ByteBuf>> obs) {
+        return obs
+                .flatMap(
+                    { HttpClientResponse<ByteBuf> response ->
+                        response.getContent().defaultIfEmpty(Unpooled.EMPTY_BUFFER)
+                    } as Func1<HttpClientResponse<ByteBuf>, Observable<ByteBuf>>,
+                    { HttpClientResponse<ByteBuf> response, ByteBuf buffer ->
                         def status = response.getStatus()
-                        def content = buffer.toString(Charset.forName("UTF-8"))
+                        def content = buffer.toString(CharsetUtil.UTF_8)
                         return new HttpContentWithStatus(content, status, dataHolder.objectMapper)
                     }
-                }
-        ).toBlockingObservable().last()
+                    as Func2<HttpClientResponse<ByteBuf>, ByteBuf, HttpContentWithStatus>
+                )
+                .doOnError({ LOGGER.error "Unexpected error", it } as Action1)
+                .toBlocking().last()
     }
 }
