@@ -54,7 +54,7 @@ public class ShiroHandler extends ChannelDuplexHandler {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof HttpRequest) {
             HttpRequest httpMessage = (HttpRequest) msg;
-            LOGGER.debug("Intercepting {} request on '{}'", httpMessage.getMethod(), httpMessage.getUri());
+            LOGGER.debug("Intercepting {} request on '{}'", httpMessage.method(), httpMessage.uri());
             SocketAddress socketAddress = ctx.channel().remoteAddress();
             String remoteHost;
             if (socketAddress instanceof InetSocketAddress) {

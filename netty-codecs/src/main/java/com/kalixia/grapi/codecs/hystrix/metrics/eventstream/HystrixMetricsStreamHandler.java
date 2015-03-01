@@ -69,7 +69,7 @@ public class HystrixMetricsStreamHandler extends SimpleChannelInboundHandler<Ful
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, FullHttpRequest msg) throws Exception {
-        if (!msg.getUri().startsWith(urlMapping)) {
+        if (!msg.uri().startsWith(urlMapping)) {
             ctx.fireChannelRead(ReferenceCountUtil.retain(msg));
             return;
         }

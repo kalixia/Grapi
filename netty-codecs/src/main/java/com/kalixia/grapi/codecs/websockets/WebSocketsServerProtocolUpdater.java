@@ -32,13 +32,13 @@ public class WebSocketsServerProtocolUpdater extends ChannelInboundHandlerAdapte
             FullHttpRequest req = (FullHttpRequest) msg;
 
             // Handle a bad request.
-            if (!req.getDecoderResult().isSuccess()) {
+            if (!req.decoderResult().isSuccess()) {
                 sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
                 return;
             }
 
             // Allow only GET methods.
-            if (req.getMethod() != GET) {
+            if (req.method() != GET) {
                 sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, FORBIDDEN));
                 return;
             }
@@ -48,7 +48,7 @@ public class WebSocketsServerProtocolUpdater extends ChannelInboundHandlerAdapte
                     getWebSocketLocation(req), null, false);
             WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(req);
             if (handshaker == null) {
-                WebSocketServerHandshakerFactory.sendUnsupportedWebSocketVersionResponse(ctx.channel());
+                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
             } else {
                 handshaker.handshake(ctx.channel(), req);
             }
@@ -59,14 +59,14 @@ public class WebSocketsServerProtocolUpdater extends ChannelInboundHandlerAdapte
 
     private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
         // Generate an error page if response status code is not OK (200)
-        if (!OK.equals(res.getStatus())) {
-            res.content().writeBytes(Unpooled.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8));
+        if (!OK.equals(res.status())) {
+            res.content().writeBytes(Unpooled.copiedBuffer(res.status().toString(), CharsetUtil.UTF_8));
             setContentLength(res, res.content().readableBytes());
         }
 
         // Send the response and close the connection if necessary.
         ChannelFuture f = ctx.channel().write(res);
-        if (!isKeepAlive(req) || res.getStatus().code() != 200) {
+        if (!isKeepAlive(req) || res.status().code() != 200) {
             f.addListener(ChannelFutureListener.CLOSE);
         }
     }

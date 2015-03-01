@@ -98,7 +98,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
 
         // build form parameters
         MultivaluedMap<String, String> formParameters = new MultivaluedHashMap<>();
-        if (HttpMethod.POST.equals(request.getMethod())) {
+        if (HttpMethod.POST.equals(request.method())) {
             HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(request);
             List<InterfaceHttpData> dataList = decoder.getBodyHttpDatas();
             for (InterfaceHttpData data : dataList) {
@@ -112,7 +112,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
 
         // build query parameters
         MultivaluedMap<String, String> queryParameters = new MultivaluedHashMap<>();
-        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.getUri());
+        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.uri());
         Set<Map.Entry<String, List<String>>> params = queryStringDecoder.parameters().entrySet();
         for (Map.Entry<String, List<String>> param : params) {
             queryParameters.addAll(param.getKey(), param.getValue());
@@ -124,13 +124,13 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         if (cookiesHeader != null) {
             Set<Cookie> rawCookies = CookieDecoder.decode(cookiesHeader);
             for (Cookie cookie : rawCookies) {
-                cookies.add(cookie.getName(), cookie.getValue());
+                cookies.add(cookie.name(), cookie.value());
             }
         }
 
         // build ApiRequest object
         ApiRequest apiRequest = new ApiRequest(requestID,
-                request.getUri(), request.getMethod(),
+                request.uri(), request.method(),
                 ReferenceCountUtil.retain(request.content()), contentType,
                 headers, formParameters, queryParameters, cookies,
                 ClientAddressUtil.extractClientAddress(ctx.channel().remoteAddress()));
