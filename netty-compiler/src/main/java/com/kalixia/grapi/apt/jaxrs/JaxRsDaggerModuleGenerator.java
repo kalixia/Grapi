@@ -2,6 +2,7 @@ package com.kalixia.grapi.apt.jaxrs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.javawriter.JavaWriter;
+import com.squareup.javawriter.StringLiteral;
 
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
@@ -18,7 +19,6 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.SortedSet;
 
-import static com.squareup.javawriter.JavaWriter.stringLiteral;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
@@ -71,7 +71,7 @@ public class JaxRsDaggerModuleGenerator {
                             // begin class
                     .emitJavadoc("Dagger module for all generated classes.")
                     .emitAnnotation("Module(library = true)")
-                    .emitAnnotation(Generated.class.getSimpleName(), stringLiteral(StaticAnalysisCompiler.GENERATOR_NAME))
+                    .emitAnnotation(Generated.class.getSimpleName(), StringLiteral.forValue(StaticAnalysisCompiler.GENERATOR_NAME))
                     .beginType(daggerModuleClassName, "class", EnumSet.of(PUBLIC));
 
             generateValidationFactoryMethod(writer);

@@ -10,12 +10,13 @@ import com.kalixia.grapi.apt.jaxrs.model.JaxRsParamInfo;
 import com.kalixia.grapi.codecs.jaxrs.GeneratedJaxRsMethodHandler;
 import com.kalixia.grapi.codecs.jaxrs.UriTemplateUtils;
 import com.squareup.javawriter.JavaWriter;
+import com.squareup.javawriter.StringLiteral;
 import io.netty.buffer.Unpooled;
-import io.netty.util.CharsetUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.util.CharsetUtil;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresGuest;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -55,7 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.squareup.javawriter.JavaWriter.stringLiteral;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -156,7 +156,7 @@ public class JaxRsMethodGenerator {
                             // begin class
                     .emitJavadoc(String.format("Netty handler for JAX-RS resource {@link %s#%s}.", resourceClassName,
                             method.getMethodName()))
-                    .emitAnnotation(Generated.class.getSimpleName(), stringLiteral(StaticAnalysisCompiler.GENERATOR_NAME))
+                    .emitAnnotation(Generated.class.getSimpleName(), StringLiteral.forValue(StaticAnalysisCompiler.GENERATOR_NAME))
 //                        .emitAnnotation("Sharable")
                     .beginType(handlerClassName, "class", EnumSet.of(PUBLIC, FINAL), null, "GeneratedJaxRsMethodHandler")
                             // add delegate to underlying JAX-RS resource
@@ -173,7 +173,8 @@ public class JaxRsMethodGenerator {
                 writer.emitField("Timer", "timer", EnumSet.of(PRIVATE, FINAL));
             }
             writer
-                    .emitField("String", "URI_TEMPLATE", EnumSet.of(PRIVATE, STATIC, FINAL), stringLiteral(uriTemplate))
+                    .emitField("String", "URI_TEMPLATE", EnumSet.of(PRIVATE, STATIC, FINAL),
+                            StringLiteral.forValue(uriTemplate).literal())
                     .emitField("Logger", "LOGGER", EnumSet.of(PRIVATE, STATIC, FINAL),
                             "LoggerFactory.getLogger(" + handlerClassName + ".class)");
 
@@ -237,10 +238,10 @@ public class JaxRsMethodGenerator {
                 }
             }
             writer.emitStatement("this.delegateMethod = delegate.getClass().getMethod(%s, %s)",
-                    stringLiteral(method.getMethodName()), builder.toString());
+                    StringLiteral.forValue(method.getMethodName()), builder.toString());
         } else {
             writer.emitStatement("this.delegateMethod = delegate.getClass().getMethod(%s)",
-                            stringLiteral(method.getMethodName()));
+                    StringLiteral.forValue(method.getMethodName()));
         }
         writer
                 .nextControlFlow("catch (NoSuchMethodException e)")
@@ -252,7 +253,7 @@ public class JaxRsMethodGenerator {
         if (useMetrics) {
 //            writer.emitStatement("this.registry = registry");
             writer.emitStatement("this.timer = registry.timer(MetricRegistry.name(%s, \"%s\"))",
-                    stringLiteral(resourceClassName), method.getMethodName());
+                    StringLiteral.forValue(resourceClassName), method.getMethodName());
         }
 
         return writer.endMethod();
@@ -275,10 +276,10 @@ public class JaxRsMethodGenerator {
             writer
                     .emitStatement("QueryStringDecoder dec = new QueryStringDecoder(request.uri())")
                     .emitStatement("boolean uriMatches = %s.equals(dec.path()) || %s.equals(dec.path())",
-                            stringLiteral(methodInfo.getUriTemplate()), stringLiteral(methodInfo.getUriTemplate() + "/"));
+                            StringLiteral.forValue(methodInfo.getUriTemplate()), StringLiteral.forValue(methodInfo.getUriTemplate() + "/"));
         } else {
             writer.emitStatement("boolean uriMatches = %s.equals(request.uri()) || %s.equals(request.uri())",
-                    stringLiteral(methodInfo.getUriTemplate()), stringLiteral(methodInfo.getUriTemplate() + "/"));
+                    StringLiteral.forValue(methodInfo.getUriTemplate()), StringLiteral.forValue(methodInfo.getUriTemplate() + "/"));
         }
 
         // return result
@@ -497,31 +498,31 @@ public class JaxRsMethodGenerator {
         String produces = methodInfo.getProduces()[0];
         if (useRxJava && methodInfo.hasReturnType() && methodInfo.getReturnType().startsWith("rx.Observable")) {
             writer.emitStatement("return new ObservableApiResponse(request.id(), HttpResponseStatus.OK, result, %s)",
-                    stringLiteral(produces));
+                    StringLiteral.forValue(produces));
         } else if (methodInfo.hasReturnType() && methodInfo.getReturnType().equals(Response.class.getName())) {
             writer.beginControlFlow("if (result.hasEntity())")
                     .emitStatement("byte[] content = objectMapper.writeValueAsBytes(result.getEntity())")
                     .emitStatement("return new ApiResponse(request.id(), " +
                             "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.copiedBuffer(content), %s, " +
-                            "result.getStringHeaders())", stringLiteral(produces))
+                            "result.getStringHeaders())", StringLiteral.forValue(produces))
                     .nextControlFlow("else")
                     .emitStatement("return new ApiResponse(request.id(), " +
                             "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.EMPTY_BUFFER, %s, " +
-                            "result.getStringHeaders())", stringLiteral(produces))
+                            "result.getStringHeaders())", StringLiteral.forValue(produces))
                     .endControlFlow();
         } else if (String.class.getName().equals(methodInfo.getReturnType())) {
                     writer
-                            .emitStatement("byte[] content = result == null ? new byte[] {} : result.getBytes(%s)",  stringLiteral("UTF-8"))
+                            .emitStatement("byte[] content = result == null ? new byte[] {} : result.getBytes(%s)", StringLiteral.forValue("UTF-8"))
                             .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.OK, " +
-                                    "Unpooled.wrappedBuffer(content), %s)", stringLiteral(produces));
+                                    "Unpooled.wrappedBuffer(content), %s)", StringLiteral.forValue(produces));
         } else if (methodInfo.hasReturnType()) {            // convert result only if there is one
             conversionNeeded = true;
             writer.emitStatement("byte[] content = objectMapper.writeValueAsBytes(result)")
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.OK, " +
-                            "Unpooled.wrappedBuffer(content), %s)", stringLiteral(produces));
+                            "Unpooled.wrappedBuffer(content), %s)", StringLiteral.forValue(produces));
         } else {
             writer.emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.NO_CONTENT, " +
-                    "Unpooled.EMPTY_BUFFER, %s)", stringLiteral(produces));
+                    "Unpooled.EMPTY_BUFFER, %s)", StringLiteral.forValue(produces));
         }
 
         // conversion is only needed if returnType is not string and if at least one parameter need Json conversion
@@ -537,7 +538,7 @@ public class JaxRsMethodGenerator {
                 .nextControlFlow("catch (WebApplicationException e)")
                     .emitStatement("Response response = e.getResponse()")
                     .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.valueOf(response.getStatus()), " +
-                                            "Unpooled.copiedBuffer(e.getMessage(), charset), MediaType.TEXT_PLAIN)")
+                            "Unpooled.copiedBuffer(e.getMessage(), charset), MediaType.TEXT_PLAIN)")
                 .nextControlFlow("catch (Exception e)")
                     .emitStatement("e.printStackTrace()")
                     .beginControlFlow("if (e.getMessage() != null)")

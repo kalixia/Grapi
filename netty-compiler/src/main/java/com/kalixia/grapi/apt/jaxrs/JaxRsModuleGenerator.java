@@ -6,15 +6,16 @@ import com.kalixia.grapi.MDCLogging;
 import com.kalixia.grapi.codecs.jaxrs.GeneratedJaxRsMethodHandler;
 import com.kalixia.grapi.codecs.jaxrs.JaxRsPipeline;
 import com.squareup.javawriter.JavaWriter;
+import com.squareup.javawriter.StringLiteral;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.util.CharsetUtil;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -37,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
-import static com.squareup.javawriter.JavaWriter.stringLiteral;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
@@ -97,7 +97,7 @@ public class JaxRsModuleGenerator {
                     .emitEmptyLine()
                     // begin class
                     .emitJavadoc("Netty handler dispatching request to appropriate JAX-RS resource.")
-                    .emitAnnotation(Generated.class.getSimpleName(), stringLiteral(StaticAnalysisCompiler.GENERATOR_NAME))
+                    .emitAnnotation(Generated.class.getSimpleName(), StringLiteral.forValue(StaticAnalysisCompiler.GENERATOR_NAME))
                     .emitAnnotation("Sharable")
                     .beginType(handlerClassName, "class", EnumSet.of(PUBLIC, FINAL), "MessageToMessageDecoder<ApiRequest>", "JaxRsPipeline")
                     // add set of handlers
