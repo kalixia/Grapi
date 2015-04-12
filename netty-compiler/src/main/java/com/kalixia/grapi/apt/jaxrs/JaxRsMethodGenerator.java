@@ -501,7 +501,13 @@ public class JaxRsMethodGenerator {
                     StringLiteral.forValue(produces));
         } else if (methodInfo.hasReturnType() && methodInfo.getReturnType().equals(Response.class.getName())) {
             writer.beginControlFlow("if (result.hasEntity())")
-                    .emitStatement("byte[] content = objectMapper.writeValueAsBytes(result.getEntity())")
+                    .emitStatement("Object entity = result.getEntity()")
+                    .emitStatement("byte[] content")
+                    .beginControlFlow("if (entity instanceof String)")
+                        .emitStatement("content = ((String) entity).getBytes(%s)", StringLiteral.forValue("UTF-8"))
+                    .nextControlFlow("else")
+                        .emitStatement("content = objectMapper.writeValueAsBytes(entity)")
+                    .endControlFlow()
                     .emitStatement("return new ApiResponse(request.id(), " +
                             "HttpResponseStatus.valueOf(result.getStatus()), Unpooled.copiedBuffer(content), %s, " +
                             "result.getStringHeaders())", StringLiteral.forValue(produces))
