@@ -3,6 +3,7 @@ package com.kalixia.grapi.apt.jaxrs.model;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.ws.rs.QueryParam;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -11,17 +12,19 @@ import java.util.List;
 
 @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class JaxRsMethodInfo {
+    private final Element resourceElement;
     private final Element element;
     private final String verb;
     private final String uriTemplate;
     private final String methodName;
-    private final String returnType;
+    private final TypeMirror returnType;
     private final List<JaxRsParamInfo> parameters;
     private final String[] produces;
     private final List<Annotation> shiroAnnotations;
 
-    public JaxRsMethodInfo(Element element, String verb, String uriTemplate, String methodName, String returnType,
+    public JaxRsMethodInfo(Element resourceElement, Element element, String verb, String uriTemplate, String methodName, TypeMirror returnType,
                     List<JaxRsParamInfo> parameters, String[] produces, List<Annotation> shiroAnnotations) {
+        this.resourceElement = resourceElement;
         this.element = element;
         this.verb = verb;
         this.uriTemplate = uriTemplate;
@@ -30,6 +33,10 @@ public class JaxRsMethodInfo {
         this.parameters = new ArrayList<>(parameters);
         this.produces = Arrays.copyOf(produces, produces.length);
         this.shiroAnnotations = new ArrayList<>(shiroAnnotations);
+    }
+
+    public Element getResourceElement() {
+        return resourceElement;
     }
 
     public Element getElement() {
@@ -48,12 +55,12 @@ public class JaxRsMethodInfo {
         return methodName;
     }
 
-    public String getReturnType() {
+    public TypeMirror getReturnType() {
         return returnType;
     }
 
     public boolean hasReturnType() {
-        return !"void".equals(returnType);
+        return !"void".equals(returnType.toString());
     }
 
     public List<JaxRsParamInfo> getParameters() {

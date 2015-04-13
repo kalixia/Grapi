@@ -1,8 +1,10 @@
 package com.kalixia.grapi.apt.jaxrs;
 
+import com.kalixia.grapi.ApiResponse;
 import com.kalixia.grapi.codecs.shiro.ShiroHandler;
-import com.squareup.javawriter.JavaWriter;
-import org.apache.shiro.UnavailableSecurityManagerException;
+import com.squareup.javapoet.MethodSpec;
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.shiro.authz.UnauthenticatedException;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresGuest;
@@ -11,55 +13,47 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.authz.annotation.RequiresUser;
 import org.apache.shiro.subject.Subject;
 
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 
 @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class ShiroGenerator {
 
-    public static void generateImports(JavaWriter writer) throws IOException {
-        writer
-                .emitImports(Subject.class)
-                .emitImports(UnauthenticatedException.class)
-                .emitImports(UnavailableSecurityManagerException.class)
-                .emitImports(ShiroHandler.class)
-        ;
-    }
-
     @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
-    public static void generateShiroCodeForRequiresPermissionsCheck(JavaWriter writer, RequiresPermissions ann) throws IOException {
+    public static void generateShiroCodeForRequiresPermissionsCheck(MethodSpec.Builder builder, RequiresPermissions ann) throws IOException {
         String[] perms = ann.value();
         if (perms.length == 1) {
-            writer.emitStatement("subject.checkPermission(\"%s\")", perms[0]);
+            builder.addStatement("subject.checkPermission($S)", perms[0]);
         } else {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder permsBuilder = new StringBuilder();
             for (int i = 0; i < perms.length; i++) {
                 String perm = perms[i];
-                builder.append('"');
-                builder.append(perm);
-                builder.append('"');
+                permsBuilder.append('"');
+                permsBuilder.append(perm);
+                permsBuilder.append('"');
                 if (i < perms.length - 1) {
-                    builder.append(", ");
+                    permsBuilder.append(", ");
                 }
             }
-            String permsAsString = builder.toString();
+            String permsAsString = permsBuilder.toString();
             switch (ann.logical()) {
                 case AND:
-                    writer.emitStatement("subject.checkPermissions(%s)", permsAsString);
+                    builder.addStatement("subject.checkPermissions($L)", permsAsString);
                     break;
                 case OR:
-                    writer
-                            .emitSingleLineComment("Avoid processing exceptions unnecessarily - \"delay\" throwing the exception by calling hasRole first")
-                            .emitStatement("boolean hasAtLeastOnePermission = false");
+                    builder
+                            .addCode("// Avoid processing exceptions unnecessarily - \"delay\" throwing the exception by calling hasRole first\n")
+                            .addStatement("boolean hasAtLeastOnePermission = false");
                     for (String perm : perms) {
-                        writer
-                                .beginControlFlow("if (subject.isPermitted(\"%s\"))", perm)
-                                .emitStatement("hasAtLeastOnePermission = true")
+                        builder
+                                .beginControlFlow("if (subject.isPermitted($S))", perm)
+                                    .addStatement("hasAtLeastOnePermission = true")
                                 .endControlFlow();
                     }
-                    writer
-                            .emitSingleLineComment("Cause the exception if none of the role match, note that the exception message will be a bit misleading")
+                    builder
+                            .addCode("// Cause the exception if none of the role match, note that the exception message will be a bit misleading\n")
                             .beginControlFlow("if (!hasAtLeastOnePermission)")
-                            .emitStatement("subject.checkPermission(\"%s\")", perms[0])
+                                .addStatement("subject.checkPermission($S)", perms[0])
                             .endControlFlow();
                     break;
             }
@@ -67,89 +61,96 @@ public class ShiroGenerator {
     }
 
     @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
-    public static void generateShiroCodeForRequiresRolesCheck(JavaWriter writer, RequiresRoles ann) throws IOException {
+    public static void generateShiroCodeForRequiresRolesCheck(MethodSpec.Builder builder, RequiresRoles ann) throws IOException {
         String[] roles = ann.value();
         if (roles.length == 1) {
-            writer.emitStatement("subject.checkRole(\"%s\")", roles[0]);
+            builder.addStatement("subject.checkRole($S)", roles[0]);
         } else {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder permsBuilder = new StringBuilder();
             for (int i = 0; i < roles.length; i++) {
                 String perm = roles[i];
-                builder.append('"');
-                builder.append(perm);
-                builder.append('"');
+                permsBuilder.append('"');
+                permsBuilder.append(perm);
+                permsBuilder.append('"');
                 if (i < roles.length - 1) {
-                    builder.append(", ");
+                    permsBuilder.append(", ");
                 }
             }
-            String permsAsString = builder.toString();
+            String permsAsString = permsBuilder.toString();
             switch (ann.logical()) {
                 case AND:
-                    writer.emitStatement("subject.checkRoles(%s)", permsAsString);
+                    builder.addStatement("subject.checkRoles($L)", permsAsString);
                     break;
                 case OR:
-                    writer
-                            .emitSingleLineComment("Avoid processing exceptions unnecessarily - \"delay\" throwing the exception by calling hasRole first")
-                            .emitStatement("boolean hasAtLeastOneRole = false");
+                    builder
+                            .addCode("// Avoid processing exceptions unnecessarily - \"delay\" throwing the exception by calling hasRole first\n")
+                            .addStatement("boolean hasAtLeastOneRole = false");
                     for (String perm : roles) {
-                        writer
-                                .beginControlFlow("if (subject.hasRole(\"%s\"))", perm)
-                                .emitStatement("hasAtLeastOneRole = true")
+                        builder
+                                .beginControlFlow("if (subject.hasRole($S))", perm)
+                                    .addStatement("hasAtLeastOneRole = true")
                                 .endControlFlow();
                     }
-                    writer
-                            .emitSingleLineComment("Cause the exception if none of the role match, note that the exception message will be a bit misleading")
+                    builder
+                            .addCode("// Cause the exception if none of the role match, note that the exception message will be a bit misleading\n")
                             .beginControlFlow("if (!hasAtLeastOneRole)")
-                            .emitStatement("subject.checkRole(\"%s\")", roles[0])
+                                .addStatement("subject.checkRole($S)", roles[0])
                             .endControlFlow();
                     break;
             }
         }
     }
 
-    public static void generateShiroCodeForRequiresGuestCheck(JavaWriter writer, RequiresGuest ann) throws IOException {
-        writer
+    public static void generateShiroCodeForRequiresGuestCheck(MethodSpec.Builder builder, RequiresGuest ann) throws IOException {
+        builder
                 .beginControlFlow("if (subject.getPrincipal() != null)")
-                .emitStatement("throw new UnauthenticatedException(\"Attempting to perform a guest-only operation.  The current Subject is \" +\n" +
-                        "                    \"not a guest (they have been authenticated or remembered from a previous login).  Access \" +\n" +
-                        "                    \"denied.\")")
+                .addStatement("throw new $T($S)",
+                        UnauthenticatedException.class,
+                        "Attempting to perform a guest-only operation.  "
+                                + "The current Subject is not a guest (they have been authenticated or remembered from a previous login)."
+                                + "  Access denied.")
                 .endControlFlow();
     }
 
-    public static void generateShiroCodeForRequiresUserCheck(JavaWriter writer, RequiresUser ann) throws IOException {
-        writer
+    public static void generateShiroCodeForRequiresUserCheck(MethodSpec.Builder builder, RequiresUser ann) throws IOException {
+        builder
                 .beginControlFlow("if (subject.getPrincipal() == null)")
-                .emitStatement("throw new UnauthenticatedException(\"Attempting to perform a user-only operation.  The current Subject is \" +\n" +
-                        "                    \"not a user (they haven't been authenticated or remembered from a previous login).  \" +\n" +
-                        "                    \"Access denied.\")")
+                .addStatement("throw new $T($S)",
+                        UnauthenticatedException.class,
+                        "Attempting to perform a user-only operation.  "
+                        + "The current Subject is not a user (they haven't been authenticated or remembered from a previous login)."
+                        + "  Access denied.")
                 .endControlFlow();
     }
 
-    public static void generateShiroCodeForRequiresAuthenticationCheck(JavaWriter writer, RequiresAuthentication ann) throws IOException {
-        writer
+    public static void generateShiroCodeForRequiresAuthenticationCheck(MethodSpec.Builder builder, RequiresAuthentication ann) throws IOException {
+        builder
                 .beginControlFlow("if (!subject.isAuthenticated())")
-                .emitStatement("throw new UnauthenticatedException(\"The current Subject is not authenticated.  Access denied.\")")
+                .addStatement("throw new $T($S)", UnauthenticatedException.class,
+                        "The current Subject is not authenticated.  Access denied.")
                 .endControlFlow();
     }
 
-    public static void beginSubject(JavaWriter writer) throws IOException {
-        writer
+    public static void beginSubject(MethodSpec.Builder builder) throws IOException {
+        builder
+                .addCode("// Retrieve authentication subject from the Channel\n")
                 .beginControlFlow("try")
-                    .emitStatement("final Subject subject = ctx.channel().attr(ShiroHandler.ATTR_SUBJECT).get()")
+                    .addStatement("final $T subject = ctx.channel().attr($T.ATTR_SUBJECT).get()",
+                            Subject.class, ShiroHandler.class)
                     .beginControlFlow("if (subject == null)")
-                        .emitStatement("throw new UnauthenticatedException(\"Shiro Subject is null\")")
+                        .addStatement("throw new $T($S)", UnauthenticatedException.class, "Shiro Subject is null")
                     .endControlFlow();
     }
 
-    public static void endSubject(JavaWriter writer) throws IOException {
-        writer
-                .nextControlFlow("catch (UnauthenticatedException e)")
-                    .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.FORBIDDEN, " +
-                                            "Unpooled.copiedBuffer(e.getMessage(), charset), MediaType.TEXT_PLAIN)")
-                .nextControlFlow("catch (UnavailableSecurityManagerException e)")
-                    .emitStatement("LOGGER.error(\"Shiro does not seems to be configured.\", e)")
-                    .emitStatement("return new ApiResponse(request.id(), HttpResponseStatus.INTERNAL_SERVER_ERROR, " +
-                            "Unpooled.EMPTY_BUFFER, MediaType.TEXT_PLAIN)")
+    public static void endSubject(MethodSpec.Builder builder) throws IOException {
+        builder
+                .nextControlFlow("catch (org.apache.shiro.authz.UnauthenticatedException e) ")
+                    .addStatement("return new $T(request.id(), $T.FORBIDDEN, $T.copiedBuffer(e.getMessage(), charset), $T.TEXT_PLAIN)",
+                            ApiResponse.class, HttpResponseStatus.class, Unpooled.class, MediaType.class)
+                .nextControlFlow("catch (org.apache.shiro.UnavailableSecurityManagerException e) ")
+                    .addStatement("LOGGER.error($S, e)", "Shiro does not seems to be configured.")
+                    .addStatement("return new $T(request.id(), $T.INTERNAL_SERVER_ERROR, $T.EMPTY_BUFFER, $T.TEXT_PLAIN)",
+                            ApiResponse.class, HttpResponseStatus.class, Unpooled.class, MediaType.class)
                 .endControlFlow();
     }
 

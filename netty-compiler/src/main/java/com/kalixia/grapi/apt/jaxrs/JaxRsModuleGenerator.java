@@ -1,16 +1,23 @@
 package com.kalixia.grapi.apt.jaxrs;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kalixia.grapi.ApiRequest;
 import com.kalixia.grapi.ApiResponse;
 import com.kalixia.grapi.MDCLogging;
 import com.kalixia.grapi.codecs.jaxrs.GeneratedJaxRsMethodHandler;
 import com.kalixia.grapi.codecs.jaxrs.JaxRsPipeline;
-import com.squareup.javawriter.JavaWriter;
-import com.squareup.javawriter.StringLiteral;
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeSpec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -29,20 +36,17 @@ import javax.validation.Validator;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
+import static java.lang.String.format;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind;
 
 @SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.TooManyStaticImports"})
@@ -59,65 +63,54 @@ public class JaxRsModuleGenerator {
     }
 
     public void generateModuleClass(String destPackage, SortedSet<String> generatedHandlers) {
-        Writer handlerWriter = null;
+        Writer writer = null;
         try {
-            // TODO: only uppercase the first character
-            String handlerClassName = destPackage + '.' + MODULE_HANDLER;
-            JavaFileObject handlerFile = filer.createSourceFile(handlerClassName);
-            handlerWriter = handlerFile.openWriter();
-            JavaWriter writer = new JavaWriter(handlerWriter);
-            writer
-                    .emitPackage(destPackage)
-                    // add imports
-                    .emitImports(ApiRequest.class)
-                    .emitImports(ApiResponse.class)
-                    .emitImports(MDCLogging.class)
-                    .emitImports(JaxRsPipeline.class)
-                    .emitImports(GeneratedJaxRsMethodHandler.class)
-                    .emitImports(ByteBuf.class)
-                    .emitImports(Unpooled.class)
-                    .emitImports(ChannelFuture.class)
-                    .emitImports(ChannelFutureListener.class)
-                    .emitImports(ChannelHandlerContext.class)
-                    .emitImports("io.netty.channel.ChannelHandler.Sharable")
-                    .emitImports(MessageToMessageDecoder.class)
-                    .emitImports(HttpHeaders.class)
-                    .emitImports(HttpResponseStatus.class)
-                    .emitImports("com.fasterxml.jackson.databind.ObjectMapper")
-                    .emitImports(Logger.class)
-                    .emitImports(LoggerFactory.class)
-                    .emitImports(MDC.class)
-                    .emitImports(Charset.class)
-                    .emitImports(CharsetUtil.class)
-                    .emitImports(List.class)
-                    .emitImports(Arrays.class)
-                    .emitImports(MediaType.class)
-                    .emitImports(Validator.class)
-                    .emitImports(Generated.class)
-                    .emitEmptyLine()
-                    // begin class
-                    .emitJavadoc("Netty handler dispatching request to appropriate JAX-RS resource.")
-                    .emitAnnotation(Generated.class.getSimpleName(), StringLiteral.forValue(StaticAnalysisCompiler.GENERATOR_NAME))
-                    .emitAnnotation("Sharable")
-                    .beginType(handlerClassName, "class", EnumSet.of(PUBLIC, FINAL), "MessageToMessageDecoder<ApiRequest>", "JaxRsPipeline")
-                    // add set of handlers
-                    .emitField("List<? extends GeneratedJaxRsMethodHandler>", "handlers", EnumSet.of(PRIVATE, FINAL))
-                    .emitField("ByteBuf", "ERROR_WRONG_URL", EnumSet.of(PRIVATE, STATIC, FINAL), "Unpooled.copiedBuffer(\"Wrong URL\", CharsetUtil.UTF_8)")
-                    .emitField("ByteBuf", "ERROR_INTERNAL_ERROR", EnumSet.of(PRIVATE, STATIC, FINAL), "Unpooled.copiedBuffer(\"Unexpected error\", CharsetUtil.UTF_8)")
-                    .emitField("Logger", "LOGGER", EnumSet.of(PRIVATE, STATIC, FINAL), "LoggerFactory.getLogger(" + handlerClassName + ".class)")
-            ;
-            generateConstructor(writer, handlerClassName, generatedHandlers);
-            generateDecodeMethod(writer);
-            generateIsKeepAliveMethod(writer);
-            generateExceptionCaughtMethod(writer);
-            // end class
-            writer.endType();
+            TypeSpec.Builder moduleHandler = TypeSpec.classBuilder(MODULE_HANDLER)
+                    .addJavadoc("Netty handler dispatching request to appropriate JAX-RS resource.\n")
+                    .addAnnotation(AnnotationSpec.builder(Generated.class)
+                            .addMember("value", "$S", StaticAnalysisCompiler.GENERATOR_NAME)
+                            .build())
+                    .addAnnotation(ChannelHandler.Sharable.class)
+                    .addModifiers(PUBLIC, FINAL)
+                    .superclass(ParameterizedTypeName.get(MessageToMessageDecoder.class, ApiRequest.class))
+                    .addSuperinterface(JaxRsPipeline.class);
+
+            // add fields
+
+            // private final List<? extends GeneratedJaxRsMethodHandler> handlers;
+            moduleHandler.addField(FieldSpec.builder(
+                    ParameterizedTypeName.get(List.class, GeneratedJaxRsMethodHandler.class),
+                    "handlers", PRIVATE, FINAL).build());
+            // private static final ByteBuf ERROR_WRONG_URL = Unpooled.copiedBuffer("Wrong URL", CharsetUtil.UTF_8)
+            moduleHandler.addField(FieldSpec.builder(ByteBuf.class, "ERROR_WRONG_URL", PRIVATE, FINAL)
+                    .initializer("$T.copiedBuffer($S, $T.$L)", Unpooled.class, "Wrong URL", CharsetUtil.class, "UTF_8")
+                    .build());
+            // private static final ByteBuf ERROR_INTERNAL_ERROR = Unpooled.copiedBuffer("Unexpected error", CharsetUtil.UTF_8)
+            moduleHandler.addField(FieldSpec.builder(ByteBuf.class, "ERROR_INTERNAL_ERROR", PRIVATE, FINAL)
+                    .initializer("$T.copiedBuffer($S, $T.$L)", Unpooled.class, "Unexpected error", CharsetUtil.class, "UTF_8")
+                    .build());
+            // private static final Logger LOGGER = LoggerFactory.getLogger(com.kalixia.grapi.GeneratedJaxRsModuleHandler.class)
+            moduleHandler.addField(FieldSpec.builder(Logger.class, "LOGGER", PRIVATE, FINAL)
+                    .initializer("$T.getLogger($T.class)", LoggerFactory.class, ClassName.get(destPackage, "GeneratedJaxRsModuleHandler"))
+                    .build());
+
+            MethodSpec isKeepAliveMethod = generateIsKeepAliveMethod();
+
+            moduleHandler.addMethod(generateConstructor(generatedHandlers));
+            moduleHandler.addMethod(generateDecodeMethod(isKeepAliveMethod));
+            moduleHandler.addMethod(isKeepAliveMethod);
+            moduleHandler.addMethod(generateExceptionCaughtMethod());
+
+            JavaFile javaFile = JavaFile.builder(destPackage, moduleHandler.build()).build();
+            JavaFileObject sourceFile = filer.createSourceFile(destPackage + '.' + MODULE_HANDLER);
+            writer = sourceFile.openWriter();
+            javaFile.writeTo(writer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            if (handlerWriter != null) {
+            if (writer != null) {
                 try {
-                    handlerWriter.close();
+                    writer.close();
                     messager.printMessage(Kind.MANDATORY_WARNING, "Grapi: generated Netty JAX-RS call dispatcher handler");
                 } catch (IOException e) {
                     messager.printMessage(Kind.ERROR, "Can't close generated source file");
@@ -126,107 +119,102 @@ public class JaxRsModuleGenerator {
         }
     }
 
-    private JavaWriter generateConstructor(JavaWriter writer, String handlerClassName, SortedSet<String> generatedHandlers)
-            throws IOException {
-        writer.emitEmptyLine();
+    private MethodSpec generateConstructor(SortedSet<String> generatedHandlers) throws IOException {
+        MethodSpec.Builder builder = MethodSpec.constructorBuilder().addModifiers(PUBLIC);
 
-        if (!useDagger) {
-            writer.beginMethod(null, handlerClassName, EnumSet.of(PUBLIC),
-                    "ObjectMapper", "objectMapper", "Validator", "validator");
-        } else {
-            writer.emitAnnotation(Inject.class.getName());
-            List<String> args = new ArrayList<>();
-            args.addAll(Arrays.asList("ObjectMapper", "objectMapper"));
-            args.addAll(Arrays.asList("Validator", "validator"));
-            Iterator<String> iterator = generatedHandlers.iterator();
-            for (int i = 1; i <= generatedHandlers.size(); i++) {
-                args.add(iterator.next());
-                args.add(String.format("handler%d", i));
-            }
-            writer.beginMethod(null, handlerClassName, EnumSet.of(PUBLIC), args.toArray(new String[args.size()]));
+        builder
+            .addParameter(ObjectMapper.class, "objectMapper")
+            .addParameter(Validator.class, "validator");
+
+        if (useDagger) {
+            builder.addAnnotation(Inject.class);
         }
 
-        StringBuilder builder = new StringBuilder();
         Iterator<String> iterator = generatedHandlers.iterator();
-        for (int i = 0; i < generatedHandlers.size(); i++) {
+        StringBuilder paramsBuilder = new StringBuilder();
+        for (int i = 1; i <= generatedHandlers.size(); i++) {
+            String generatedHandler = iterator.next();
+            String handlerParamName = format("handler%d", i);
+            builder.addParameter(ClassName.get("", generatedHandler), handlerParamName);
             if (useDagger) {
-                builder.append(String.format("handler%d", i + 1));
+                paramsBuilder.append(handlerParamName);
             } else {
-                builder.append(String.format("new %s(objectMapper, validator)", iterator.next()));
+                paramsBuilder.append(format("new %s(objectMapper, validator)", iterator.next()));
             }
-            if (i + 1 < generatedHandlers.size()) {
-                builder.append(",\n");
+            if (i < generatedHandlers.size()) {
+                paramsBuilder.append(",\n");
             }
         }
+        builder.addStatement("this.$L = $T.asList($L)", "handlers", Arrays.class, paramsBuilder.toString());
 
-        return writer.
-                emitStatement("this.handlers = Arrays.asList(\n" + builder.toString() + "\n)")
-                .endMethod();
+        return builder.build();
     }
 
-    private JavaWriter generateDecodeMethod(JavaWriter writer)
-            throws IOException {
-        writer
-                .emitEmptyLine()
-                .emitAnnotation(Override.class)
-                .beginMethod("void", "decode", EnumSet.of(PROTECTED),
-                        "ChannelHandlerContext", "ctx", "ApiRequest", "request", "List<Object>", "out")
-                    .emitStatement("MDC.put(MDCLogging.MDC_REQUEST_ID, request.id().toString())")
-                    .beginControlFlow("for (GeneratedJaxRsMethodHandler handler : handlers)")
-                        .beginControlFlow("if (handler.matches(request))")
-                            .beginControlFlow("try")
-                                .emitStatement("ApiResponse response = handler.handle(request, ctx)");
-                                writeToContextAndHandleKeepAlive(writer)
-                                .emitStatement("return")
-                            .nextControlFlow("catch (Exception e)")
-                                .emitStatement("LOGGER.error(\"Can't invoke JAX-RS resource\", e)")
-                                .emitStatement("ApiResponse response = new ApiResponse(request.id(), HttpResponseStatus.INTERNAL_SERVER_ERROR, ERROR_INTERNAL_ERROR, MediaType.TEXT_PLAIN)");
-        writeToContextAndHandleKeepAlive(writer)
-                                .emitStatement("return")
+    private MethodSpec generateDecodeMethod(MethodSpec isKeepAliveMethod) throws IOException {
+        return MethodSpec.methodBuilder("decode")
+                .addModifiers(PROTECTED)
+                .addAnnotation(Override.class)
+                .addParameter(ChannelHandlerContext.class, "ctx")
+                .addParameter(ApiRequest.class, "request")
+                .addParameter(ParameterizedTypeName.get(List.class, Object.class), "out")
+                .addStatement("$T.put($T.MDC_REQUEST_ID, $L.id().toString())", MDC.class, MDCLogging.class, "request")
+                .beginControlFlow("for ($T $L : handlers)", GeneratedJaxRsMethodHandler.class, "handler")
+                    .beginControlFlow("if ($L.matches(request))", "handler")
+                        .beginControlFlow("try")
+                            .addStatement("$T response = $L.handle(request, ctx)", ApiResponse.class, "handler")
+                            .addStatement("$T future = ctx.writeAndFlush(response)", ChannelFuture.class)
+                            .beginControlFlow("if (!$N(request))", isKeepAliveMethod)
+                                .addStatement("future.addListener($T.CLOSE)", ChannelFutureListener.class)
                             .endControlFlow()
+                            .addStatement("return")
+                        .nextControlFlow("catch (Exception e) ")
+                            .addStatement("LOGGER.error($S, e)", "Can't invoke JAX-RS resource")
+                            .addStatement("$T response = new $T(request.id(), $T.INTERNAL_SERVER_ERROR, ERROR_INTERNAL_ERROR, $T.TEXT_PLAIN)",
+                                    ApiResponse.class, ApiResponse.class, HttpResponseStatus.class, MediaType.class)
+                            .addStatement("$T future = ctx.writeAndFlush(response)", ChannelFuture.class)
+                            .beginControlFlow("if (!$N(request))", isKeepAliveMethod)
+                                .addStatement("future.addListener($T.CLOSE)", ChannelFutureListener.class)
+                            .endControlFlow()
+                            .addStatement("return")
                         .endControlFlow()
                     .endControlFlow()
-                    .emitSingleLineComment("no matching handler found -- issue a 404 error")
-                    .emitStatement("LOGGER.info(\"Could not locate a JAX-RS resource for path '{}' and method {}\", " +
-                            "request.uri(), request.method());")
-                    .emitEmptyLine()
-                    .emitStatement("ApiResponse response = new ApiResponse(request.id(), HttpResponseStatus.NOT_FOUND, ERROR_WRONG_URL, MediaType.TEXT_PLAIN)");
-        return writeToContextAndHandleKeepAlive(writer)
-                .endMethod();
+                .endControlFlow()
+//                .addJavadoc("no matching handler found -- issue a 404 error")
+                .addStatement("LOGGER.info($S, request.uri(), request.method())", "Could not locate a JAX-RS resource for path '{}' and method {}")
+                .addStatement("$T response = new $T(request.id(), $T.NOT_FOUND, ERROR_WRONG_URL, $T.TEXT_PLAIN)",
+                        ApiResponse.class, ApiResponse.class, HttpResponseStatus.class, MediaType.class)
+                .addStatement("$T future = ctx.writeAndFlush(response)", ChannelFuture.class)
+                .beginControlFlow("if (!$N(request))", isKeepAliveMethod)
+                    .addStatement("future.addListener($T.CLOSE)", ChannelFutureListener.class)
+                .endControlFlow()
+                .build();
+
     }
 
-    private JavaWriter generateIsKeepAliveMethod(JavaWriter writer) throws IOException {
-        return writer
-                .emitEmptyLine()
-                .beginMethod("boolean", "isKeepAlive", EnumSet.of(PRIVATE), "ApiRequest", "request")
-                    .emitStatement("String connection = request.headers().getFirst(HttpHeaders.Names.CONNECTION.toString())")
-                    .beginControlFlow("if (HttpHeaders.Values.CLOSE.toString().equalsIgnoreCase(connection))")
-                        .emitStatement("return false")
-                    .endControlFlow()
-                    .emitStatement("return !HttpHeaders.Values.CLOSE.toString().equalsIgnoreCase(connection)")
-                .endMethod();
+    private MethodSpec generateIsKeepAliveMethod() throws IOException {
+        return MethodSpec.methodBuilder("isKeepAlive")
+                .addModifiers(PRIVATE)
+                .addParameter(ApiRequest.class, "request")
+                .returns(boolean.class)
+                .addStatement("$T connection = $L.headers().getFirst($T.CONNECTION.toString())",
+                        String.class, "request", HttpHeaders.Names.class)
+                .beginControlFlow("if ($T.CLOSE.toString().equalsIgnoreCase(connection))", HttpHeaders.Values.class)
+                .addStatement("return false")
+                .endControlFlow()
+                .addStatement("return !$T.CLOSE.toString().equalsIgnoreCase(connection)", HttpHeaders.Values.class)
+                .build();
     }
 
-    private JavaWriter generateExceptionCaughtMethod(JavaWriter writer) throws IOException {
-        return writer
-                .emitEmptyLine()
-                .emitAnnotation(Override.class)
-                .beginMethod("void", "exceptionCaught", EnumSet.of(PUBLIC),
-                        Arrays.asList(
-                                "ChannelHandlerContext", "ctx",
-                                "Throwable", "cause"),
-                        Arrays.asList("Exception"))
-                .emitStatement("LOGGER.error(\"Unexpected decoder exception\", cause)")
-                .emitStatement("super.exceptionCaught(ctx, cause)")
-                .endMethod();
-    }
-
-    private JavaWriter writeToContextAndHandleKeepAlive(JavaWriter writer) throws IOException {
-        return writer
-                .emitStatement("ChannelFuture future = ctx.writeAndFlush(response)")
-                .beginControlFlow("if (!isKeepAlive(request))")
-                .emitStatement("future.addListener(ChannelFutureListener.CLOSE)")
-                .endControlFlow();
+    private MethodSpec generateExceptionCaughtMethod() throws IOException {
+        return MethodSpec.methodBuilder("exceptionCaught")
+                .addModifiers(PUBLIC)
+                .addAnnotation(Override.class)
+                .addParameter(ChannelHandlerContext.class, "ctx")
+                .addParameter(Throwable.class, "cause")
+                .addException(Exception.class)
+                .addStatement("LOGGER.error($S, cause)", "Unexpected decoder exception")
+                .addStatement("super.exceptionCaught($L, cause)", "ctx")
+                .build();
     }
 
 }

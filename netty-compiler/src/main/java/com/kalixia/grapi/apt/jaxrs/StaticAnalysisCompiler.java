@@ -22,6 +22,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -95,7 +96,7 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
                 }
                 String uriTemplate = analyzer.extractUriTemplate(resource, elem);
                 String methodName = elem.getSimpleName().toString();
-                String returnType = methodElement.getReturnType().toString();
+                TypeMirror returnType = methodElement.getReturnType();
                 List<JaxRsParamInfo> parameters = analyzer.extractParameters(methodElement);
                 // process @Produces annotations
                 Produces producesAnnotation = resource.getAnnotation(Produces.class);
@@ -131,7 +132,7 @@ public class StaticAnalysisCompiler extends AbstractProcessor {
                     shiroAnnotations.add(requiresUserAnnotation);
                 }
 
-                JaxRsMethodInfo methodInfo = new JaxRsMethodInfo(elem, verb, uriTemplate,
+                JaxRsMethodInfo methodInfo = new JaxRsMethodInfo(resource, elem, verb, uriTemplate,
                         methodName, returnType, parameters, produces, shiroAnnotations);
                 String generatedHandler = methodGenerator.generateHandlerClass(resourceClassName, resourcePackage, uriTemplate, methodInfo);
                 if (methodToHandlerName.containsKey(methodInfo)) {

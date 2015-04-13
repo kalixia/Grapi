@@ -1,5 +1,11 @@
 # Grapi Releases #
 
+### Version 0.4.6-SNAPSHOT ###
+
+This release includes:
+
+* [Enhancement #13](https://github.com/kalixia/Grapi/issues/13) Migrate from JavaWriter to JavaPoet
+
 ### Version 0.4.5 ###
 
 This release includes:

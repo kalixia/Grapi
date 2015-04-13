@@ -1,8 +1,12 @@
 package com.kalixia.grapi.apt.jaxrs;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.squareup.javawriter.JavaWriter;
-import com.squareup.javawriter.StringLiteral;
+import com.codahale.metrics.MetricRegistry;
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeSpec;
+import dagger.Module;
+import dagger.Provides;
 
 import javax.annotation.Generated;
 import javax.annotation.processing.Filer;
@@ -15,11 +19,9 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.SortedSet;
 
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
 
@@ -44,50 +46,34 @@ public class JaxRsDaggerModuleGenerator {
         if (!useDagger) {
             return;
         }
-        Writer handlerWriter = null;
+        Writer writer = null;
         try {
-            // TODO: only uppercase the first character
-            String daggerModuleClassName = destPackage + '.' + MODULE_HANDLER;
-            JavaFileObject handlerFile = filer.createSourceFile(daggerModuleClassName);
-            handlerWriter = handlerFile.openWriter();
-            JavaWriter writer = new JavaWriter(handlerWriter);
-            writer
-                    .emitPackage(destPackage)
-                    .emitImports("dagger.Module")
-                    .emitImports("dagger.Provides")
-                    .emitImports(ObjectMapper.class)
-                    .emitImports(Validator.class)
-                    .emitImports(Validation.class)
-                    .emitImports(ValidatorFactory.class);
+            TypeSpec.Builder daggerModule = TypeSpec.classBuilder(MODULE_HANDLER)
+                .addModifiers(Modifier.PUBLIC);
 
+            daggerModule.addAnnotation(AnnotationSpec.builder(Module.class)
+                    .addMember("library", "$L", "true")
+                    .build());
+            daggerModule.addAnnotation(AnnotationSpec.builder(Generated.class)
+                    .addMember("value", "$S", StaticAnalysisCompiler.GENERATOR_NAME)
+                    .build());
+
+            daggerModule.addMethod(generateValidationFactoryMethod());
+            daggerModule.addMethod(generateValidatorMethod());
             if (useMetrics) {
-                writer.emitImports("com.codahale.metrics.MetricRegistry");
+                daggerModule.addMethod(generateProvideMetricRegistryMethod());
             }
 
-            writer
-                    .emitImports(Singleton.class)
-                    .emitImports(Generated.class)
-                    .emitEmptyLine()
-                            // begin class
-                    .emitJavadoc("Dagger module for all generated classes.")
-                    .emitAnnotation("Module(library = true)")
-                    .emitAnnotation(Generated.class.getSimpleName(), StringLiteral.forValue(StaticAnalysisCompiler.GENERATOR_NAME))
-                    .beginType(daggerModuleClassName, "class", EnumSet.of(PUBLIC));
-
-            generateValidationFactoryMethod(writer);
-            generateValidatorMethod(writer);
-            if (useMetrics) {
-                generateProvideMetricRegistryMethod(writer);
-            }
-
-            // end class
-            writer.endType();
+            JavaFile javaFile = JavaFile.builder(destPackage, daggerModule.build()).build();
+            JavaFileObject sourceFile = filer.createSourceFile(destPackage + '.' + MODULE_HANDLER);
+            writer = sourceFile.openWriter();
+            javaFile.writeTo(writer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            if (handlerWriter != null) {
+            if (writer != null) {
                 try {
-                    handlerWriter.close();
+                    writer.close();
                     messager.printMessage(MANDATORY_WARNING, "Grapi: generated Dagger module for Netty handlers");
                 } catch (IOException e) {
                     messager.printMessage(ERROR, "Can't close generated source file");
@@ -96,31 +82,32 @@ public class JaxRsDaggerModuleGenerator {
         }
     }
 
-    private JavaWriter generateValidationFactoryMethod(JavaWriter writer) throws IOException {
-        return writer
-                .emitEmptyLine()
-                .emitAnnotation("Provides").emitAnnotation("Singleton")
-                .beginMethod("ValidatorFactory", "provideValidationFactory", EnumSet.noneOf(Modifier.class))
-                .emitStatement("return Validation.buildDefaultValidatorFactory()")
-                .endMethod();
+    private MethodSpec generateValidationFactoryMethod() throws IOException {
+        return MethodSpec.methodBuilder("provideValidationFactory")
+                .addAnnotation(Provides.class)
+                .addAnnotation(Singleton.class)
+                .returns(ValidatorFactory.class)
+                .addStatement("return $T.buildDefaultValidatorFactory()", Validation.class)
+                .build();
     }
 
-    private JavaWriter generateValidatorMethod(JavaWriter writer) throws IOException {
-        return writer
-                .emitEmptyLine()
-                .emitAnnotation("Provides").emitAnnotation("Singleton")
-                .beginMethod("Validator", "provideValidator", EnumSet.noneOf(Modifier.class), "ValidatorFactory", "factory")
-                .emitStatement("return factory.getValidator()")
-                .endMethod();
+    private MethodSpec generateValidatorMethod() throws IOException {
+        return MethodSpec.methodBuilder("provideValidator")
+                .addAnnotation(Provides.class)
+                .addAnnotation(Singleton.class)
+                .addParameter(ValidatorFactory.class, "factory")
+                .returns(Validator.class)
+                .addStatement("return $L.getValidator()", "factory")
+                .build();
     }
 
-    private JavaWriter generateProvideMetricRegistryMethod(JavaWriter writer) throws IOException {
-        return writer
-                .emitEmptyLine()
-                .emitAnnotation("Provides").emitAnnotation("Singleton")
-                .beginMethod("MetricRegistry", "provideMetricRegistry", EnumSet.noneOf(Modifier.class))
-                .emitStatement("return new MetricRegistry()")
-                .endMethod();
+    private MethodSpec generateProvideMetricRegistryMethod() throws IOException {
+        return MethodSpec.methodBuilder("provideMetricRegistry")
+                .addAnnotation(Provides.class)
+                .addAnnotation(Singleton.class)
+                .returns(MetricRegistry.class)
+                .addStatement("return new $T()", MetricRegistry.class)
+                .build();
     }
 
 }
