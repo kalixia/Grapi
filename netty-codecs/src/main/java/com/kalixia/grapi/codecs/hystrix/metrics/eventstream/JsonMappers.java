@@ -30,7 +30,7 @@ final class JsonMappers {
         HystrixCircuitBreaker circuitBreaker = HystrixCircuitBreaker.Factory.getInstance(key);
 
         StringWriter jsonString = new StringWriter();
-        JsonGenerator json = jsonFactory.createJsonGenerator(jsonString);
+        JsonGenerator json = jsonFactory.createGenerator(jsonString);
 
         json.writeStartObject();
         json.writeStringField("type", "HystrixCommand");
@@ -137,7 +137,7 @@ final class JsonMappers {
         HystrixThreadPoolKey key = threadPoolMetrics.getThreadPoolKey();
 
         StringWriter jsonString = new StringWriter();
-        JsonGenerator json = jsonFactory.createJsonGenerator(jsonString);
+        JsonGenerator json = jsonFactory.createGenerator(jsonString);
         json.writeStartObject();
 
         json.writeStringField("type", "HystrixThreadPool");

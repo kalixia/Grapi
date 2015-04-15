@@ -11,7 +11,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.cors.CorsConfig;
 import io.netty.handler.codec.http.cors.CorsHandler;
@@ -52,9 +52,9 @@ public class ApiProtocolSwitcher extends MessageToMessageDecoder<FullHttpRequest
                         HttpMethod.OPTIONS)
                 .maxAge(1 * 60 * 60)                                    // 1 hour
                 .allowedRequestHeaders(
-                        HttpHeaders.Names.CONTENT_TYPE,
+                        HttpHeaderNames.CONTENT_TYPE.toString(),
                         RESTCodec.HEADER_REQUEST_ID,                    // header for tracking request ID
-                        HttpHeaders.Names.AUTHORIZATION)                // header for OAuth2 authentication
+                        HttpHeaderNames.AUTHORIZATION.toString())       // header for OAuth2 authentication
                 .exposeHeaders(RESTCodec.HEADER_REQUEST_ID)
                 .build();
     }

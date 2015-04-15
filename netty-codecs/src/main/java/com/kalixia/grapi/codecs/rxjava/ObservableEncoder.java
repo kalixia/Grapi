@@ -10,7 +10,7 @@ import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
-import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpHeaderUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -20,7 +20,7 @@ import rx.Subscription;
 import java.nio.charset.Charset;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
@@ -48,9 +48,8 @@ public class ObservableEncoder extends MessageToMessageEncoder<ObservableApiResp
     protected void encode(final ChannelHandlerContext ctx, final ObservableApiResponse<?> apiResponse,
                           final List<Object> out) throws Exception {
         DefaultHttpResponse response = new DefaultHttpResponse(HTTP_1_1, apiResponse.status());
-        HttpHeaders.setTransferEncodingChunked(response);
+        HttpHeaderUtil.setTransferEncodingChunked(response, true);
         response.headers().set(CONTENT_TYPE, apiResponse.contentType());
-//        response.headers().set(CONNECTION, KEEP_ALIVE);
         // insert request ID header
         if (apiResponse.id() != null) {
             response.headers().set("X-Api-Request-ID", apiResponse.id().toString());

@@ -40,7 +40,6 @@ import javax.annotation.processing.Messager;
 import javax.inject.Inject;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -86,7 +85,7 @@ public class JaxRsMethodGenerator {
         this.useMetrics = options.containsKey(Options.METRICS.getValue())
                 && "true".equals(options.get(Options.METRICS.getValue()));
         this.useShiro = options.containsKey(Options.SHIRO.getValue())
-                        && "true".equals(options.get(Options.SHIRO.getValue()));
+                && "true".equals(options.get(Options.SHIRO.getValue()));
         this.useRxJava = options.containsKey(Options.RXJAVA.getValue())
                 && "true".equals(options.get(Options.RXJAVA.getValue()));
     }
@@ -152,7 +151,6 @@ public class JaxRsMethodGenerator {
             if (writer != null) {
                 try {
                     writer.close();
-                    messager.printMessage(Diagnostic.Kind.MANDATORY_WARNING, "Grapi: generated Netty JAX-RS call dispatcher handler");
                 } catch (IOException e) {
                     messager.printMessage(ERROR, "Can't close generated source file");
                 }

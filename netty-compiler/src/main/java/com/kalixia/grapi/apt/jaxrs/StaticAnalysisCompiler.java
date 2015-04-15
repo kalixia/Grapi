@@ -40,7 +40,7 @@ import java.util.TreeSet;
 import static javax.tools.Diagnostic.Kind;
 
 @SupportedAnnotationTypes({ "javax.ws.rs.*", "org.apache.shiro.authz.annotation" })
-@SupportedOptions({ "dagger", "metrics" })
+@SupportedOptions({ "dagger", "metrics", "shiro" })
 @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class StaticAnalysisCompiler extends AbstractProcessor {
     private Elements elementUtils;

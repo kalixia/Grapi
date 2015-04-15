@@ -18,7 +18,7 @@ dependencies {
 }
 
 compileJava {
-    options.compilerArgs << '-Adagger=true' << '-Ametrics=true' << '-Ashiro=true' << "-Arxjava=true"
+    options.compilerArgs << '-Adagger=true' << '-Ametrics=true' << '-Ashiro=true'
 //    options.compilerArgs << '-XprintProcessorInfo' << '-XprintRounds'
 }
 

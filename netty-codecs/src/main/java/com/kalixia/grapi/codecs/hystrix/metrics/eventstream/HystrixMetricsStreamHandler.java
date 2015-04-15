@@ -31,10 +31,10 @@ import java.util.concurrent.TimeUnit;
 
 import static com.kalixia.grapi.codecs.hystrix.metrics.eventstream.JsonMappers.toJson;
 import static io.netty.channel.ChannelFutureListener.CLOSE_ON_FAILURE;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CACHE_CONTROL;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaders.Names.PRAGMA;
-import static io.netty.handler.codec.http.HttpHeaders.Values.NO_CACHE;
+import static io.netty.handler.codec.http.HttpHeaderNames.CACHE_CONTROL;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.PRAGMA;
+import static io.netty.handler.codec.http.HttpHeaderValues.NO_CACHE;
 
 /**
  * Handler exposing Hystrix Metrics like the servlet available in <code>hystrix-metrics-event-stream</code> Servlet.

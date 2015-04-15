@@ -20,7 +20,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
-import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
@@ -196,12 +197,12 @@ public class JaxRsModuleGenerator {
                 .addModifiers(PRIVATE)
                 .addParameter(ApiRequest.class, "request")
                 .returns(boolean.class)
-                .addStatement("$T connection = $L.headers().getFirst($T.CONNECTION.toString())",
-                        String.class, "request", HttpHeaders.Names.class)
-                .beginControlFlow("if ($T.CLOSE.toString().equalsIgnoreCase(connection))", HttpHeaders.Values.class)
+                .addStatement("$T connection = $L.headerParameter($T.CONNECTION.toString())",
+                        String.class, "request", HttpHeaderNames.class)
+                .beginControlFlow("if ($T.CLOSE.toString().equalsIgnoreCase(connection))", HttpHeaderValues.class)
                 .addStatement("return false")
                 .endControlFlow()
-                .addStatement("return !$T.CLOSE.toString().equalsIgnoreCase(connection)", HttpHeaders.Values.class)
+                .addStatement("return !$T.CLOSE.toString().equalsIgnoreCase(connection)", HttpHeaderValues.class)
                 .build();
     }
 
