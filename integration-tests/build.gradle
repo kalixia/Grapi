@@ -7,13 +7,13 @@ dependencies {
     compile 'com.squareup.dagger:dagger-compiler:1.2.2'
     compile 'io.dropwizard.metrics:metrics-core:3.1.1'
     compile 'io.dropwizard.metrics:metrics-annotation:3.1.1'
-    compile 'io.reactivex:rxjava:1.0.9'
+    compile 'io.reactivex:rxjava:1.0.10'
 
     apt project(':netty-compiler')
     apt 'com.squareup.dagger:dagger-compiler:1.2.2'
 
     testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
-    testCompile 'io.reactivex:rxnetty:0.4.8'
+    testCompile 'io.reactivex:rxnetty:0.4.9'
     testCompile 'org.codehaus.groovy:groovy-all:2.4.3'
 }
 

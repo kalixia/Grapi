@@ -10,7 +10,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
-import io.netty.handler.codec.http.Cookie;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -19,7 +18,8 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import io.netty.handler.codec.http.ServerCookieDecoder;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.multipart.Attribute;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
@@ -122,7 +122,7 @@ public class RESTCodec extends MessageToMessageCodec<FullHttpRequest, ApiRespons
         MultivaluedMap<String, String> cookies = new MultivaluedHashMap<>();
         String cookiesHeader = requestHeaders.get(COOKIE);
         if (cookiesHeader != null) {
-            Set<Cookie> rawCookies = ServerCookieDecoder.decode(cookiesHeader);
+            Set<Cookie> rawCookies = ServerCookieDecoder.STRICT.decode(cookiesHeader);
             for (Cookie cookie : rawCookies) {
                 cookies.add(cookie.name(), cookie.value());
             }
